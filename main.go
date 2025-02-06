@@ -35,7 +35,7 @@ func main() {
 				elevalgo.DoorObstructed()
 			}
 		case <-poll_timer:
-			elevalgo.StopTimer()
+			elevalgo.WaitTime()
 			elevalgo.FsmOnDoorTimeout()
 		}
 	}

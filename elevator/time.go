@@ -5,24 +5,24 @@ import "time"
 var (
 	pollRate  = 20 * time.Millisecond
 	timeOut   = 3 * time.Second
-	startTime time.Time
-	active    bool
+	timeOfStart time.Time
+	On    bool
 )
 
 func StartTimer() {
-	startTime = time.Now()
-	active = true
+	timeOfStart = time.Now()
+	On = true
 }
 
-func StopTimer() {
-	active = false
+func WaitTime() {
+	On = false
 }
 
 func PollTimer(receiver chan<- bool) {
 	prev := false
 	for {
 		time.Sleep(pollRate)
-		timedOut := active && time.Since(startTime) > timeOut
+		timedOut := On && time.Since(timeOfStart) > timeOut
 		if timedOut && timedOut != prev {
 			receiver <- true
 		}
@@ -31,5 +31,5 @@ func PollTimer(receiver chan<- bool) {
 }
 
 func TimedOut() bool {
-	return active && time.Since(startTime) > timeOut
+	return On && time.Since(timeOfStart) > timeOut
 }

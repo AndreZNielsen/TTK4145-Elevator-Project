@@ -1,6 +1,7 @@
 package elevator
 
 func (e *Elevator) RequestsAbove() bool {
+	//self explainatory, the different buttons are BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
 	for f := e.floor + 1; f < NUM_FLOORS; f++ {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
 			if e.requests[f][btn] {
@@ -12,6 +13,7 @@ func (e *Elevator) RequestsAbove() bool {
 }
 
 func (e *Elevator) RequestsBelow() bool {
+	//also self explainatory
 	for f := 0; f < e.floor; f++ {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
 			if e.requests[f][btn] {
@@ -23,6 +25,7 @@ func (e *Elevator) RequestsBelow() bool {
 }
 
 func (e *Elevator) RequestsHere() bool {
+	//shouldnt need to explain this either
 	for btn := 0; btn < NUM_BUTTONS; btn++ {
 		if e.requests[e.floor][btn] {
 			return true
