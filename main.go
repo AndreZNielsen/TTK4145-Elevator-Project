@@ -10,7 +10,7 @@ import (
 func main() {
 	fmt.Println("Started!")
 
-	elevio.Init("localhost:24689", elevalgo.NUM_FLOORS)
+	elevio.Init("localhost:15657", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
 
@@ -29,14 +29,22 @@ func main() {
 		case button := <-drv_buttons:
 			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
 		case floor := <-drv_floors:
-			elevalgo.FsmOnFloorArrival(floor)
+			if !elevalgo.IsDoorObstructed() {
+				elevalgo.FsmOnFloorArrival(floor)
+			}
 		case obstructed := <-drv_obstr:
 			if obstructed {
 				elevalgo.DoorObstructed()
+			} else {
+				elevalgo.DoorUnobstructed()
 			}
 		case <-poll_timer:
-			elevalgo.WaitTime()
-			elevalgo.FsmOnDoorTimeout()
+			if !elevalgo.IsDoorObstructed() {
+				elevalgo.StopTimer()
+				elevalgo.FsmOnDoorTimeout()
+			} else {
+				elevalgo.StartTimer() // Restart the timer if the door is obstructed
+			}
 		}
 	}
 }

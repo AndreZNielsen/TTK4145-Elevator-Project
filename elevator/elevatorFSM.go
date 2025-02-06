@@ -140,8 +140,22 @@ func FsmOnDoorTimeout() {
 	elevator.print()
 }
 
+var doorObstructed bool
+
 func DoorObstructed() {
-	if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
-		StartTimer()
-	}
+    doorObstructed = true
+    if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
+        StartTimer()
+    }
+}
+
+func DoorUnobstructed() {
+    doorObstructed = false
+    if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
+        StartTimer()
+    }
+}
+
+func IsDoorObstructed() bool {
+    return doorObstructed
 }
