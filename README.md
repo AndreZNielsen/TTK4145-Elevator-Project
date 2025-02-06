@@ -1,22 +1,6 @@
-Elevator driver for Go
-======================
+# How to run the elevators
 
-See [`main.go`](main.go) for usage example. The code is runnable with just `go run main.go`
-
----
-
-Add these lines to your `go.mod` file:
-```
-require Driver-go v0.0.0
-replace Driver-go => ./Driver-go
-```
-Where `./Driver-go` is the relative path to this folder, after you have downloaded it.
-
-
-
-
-
-
-
-
-
+1. Set the parameters in config.go to determine the number of elevators, number of floors etc.
+2. Run the command `go run main.go -port=xxxx -id=x`. Alternatively run the `program` executable with the same command line arguments.\
+The id's must be integers and the first id has to be 0. Additional elevators increment the id by 1.
+3. Enjoy the ride(s)
