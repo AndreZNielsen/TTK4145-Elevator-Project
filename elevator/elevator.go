@@ -3,6 +3,8 @@ package elevator
 import (
 	"fmt"
 	"time"
+
+	"net"
 )
 
 type ElevatorBehaviour int
@@ -130,6 +132,12 @@ func (e *Elevator) print() {
 		fmt.Println("|")
 	}
 	fmt.Println("  +--------------------+")
+
+
+
+
+	go send_requests(e)
+
 }
 
 //Defalult elevator that starts in floor: -1, this doesnt make sense, but it does
@@ -146,4 +154,28 @@ func MakeUninitializedelevator() Elevator {
 			doorOpenDuration:      3.0,
 		},
 	}
+}
+func send_requests(e *Elevator) {
+	conn, err := net.Dial("tcp", "10.100.23.33:8080")
+	if err != nil {
+		fmt.Println("Error connecting to server:", err)
+	}
+	defer conn.Close()
+
+
+	str := "requests:"
+	for i := 0; i < 4; i++ {
+		for j := 0; j < 3; j++ {
+			str += "_" + fmt.Sprint(e.requests[i][j])
+		}
+	}
+
+	
+	_, err = conn.Write([]byte(str))
+	if err != nil {
+		fmt.Println("Error sending message:", err)
+		return
+	}
+	time.Sleep(time.Second)
+	
 }
