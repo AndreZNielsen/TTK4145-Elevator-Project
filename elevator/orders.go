@@ -1,5 +1,8 @@
 package elevator
 
+// e.requests is a 2D matrix that stores what type of button is pushed at a given floor
+//buttons are: BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
+
 func (e *Elevator) RequestsAbove() bool {
 	//self explainatory, the different buttons are BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
 	for f := e.floor + 1; f < NUM_FLOORS; f++ {
