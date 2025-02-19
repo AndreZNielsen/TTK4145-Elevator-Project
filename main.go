@@ -43,7 +43,7 @@ func main() {
 				elevalgo.StopTimer()
 				elevalgo.FsmOnDoorTimeout()
 			} else {
-				elevalgo.StartTimer() // Restart the timer if the door is obstructed
+				elevalgo.StartTimer() 
 			}
 		}
 	}
