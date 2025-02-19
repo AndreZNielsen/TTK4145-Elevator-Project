@@ -2,8 +2,8 @@ package elevator
 
 import (
 	"fmt"
-	"time"
 	"net"
+	"time"
 )
 
 type ElevatorBehaviour int
@@ -67,39 +67,39 @@ const (
 func ElevioDirToString(d Dir) string {
 	switch d {
 	case DIR_UP:
-		return "D_Up"
+		return "up"
 	case DIR_DOWN:
-		return "D_Down"
+		return "down"
 	case DIR_STOP:
-		return "D_Stop"
+		return "stop"
 	default:
-		return "D_UNDEFINED"
+		return "udefined"
 	}
 }
 
 func ElevioButtonToString(b Button) string {
 	switch b {
 	case BTN_HALLUP:
-		return "B_HallUp"
+		return "HallUp"
 	case BTN_HALLDOWN:
-		return "B_HallDown"
+		return "HallDown"
 	case BTN_HALLCAB:
-		return "B_Cab"
+		return "Cab"
 	default:
-		return "B_UNDEFINED"
+		return "undefined"
 	}
 }
 
 func EbToString(behaviour ElevatorBehaviour) string {
 	switch behaviour {
 	case BEHAVIOUR_IDLE:
-		return "EB_Idle"
+		return "idle"
 	case BEHAVIOUR_DOOR_OPEN:
-		return "EB_DoorOpen"
+		return "doorOpen"
 	case BEHAVIOUR_MOVING:
-		return "EB_Moving"
+		return "moving"
 	default:
-		return "EB_UNDEFINED"
+		return "undefined"
 	}
 }
 
@@ -132,9 +132,6 @@ func (e *Elevator) print() {
 	}
 	fmt.Println("  +--------------------+")
 
-
-
-
 	go send_requests(e)
 
 }
@@ -161,7 +158,6 @@ func send_requests(e *Elevator) {
 	}
 	defer conn.Close()
 
-
 	str := "requests:"
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 3; j++ {
@@ -169,12 +165,11 @@ func send_requests(e *Elevator) {
 		}
 	}
 
-	
 	_, err = conn.Write([]byte(str))
 	if err != nil {
 		fmt.Println("Error sending message:", err)
 		return
 	}
 	time.Sleep(time.Second)
-	
+
 }
