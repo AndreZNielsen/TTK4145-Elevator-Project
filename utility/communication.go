@@ -11,7 +11,7 @@ import (
 	//"bufio"
 )
 
-func start_tcp_call(port string, ip string) net.Conn {
+func Start_tcp_call(port string, ip string) net.Conn {
 	conn, err := net.Dial("tcp", ip+":"+port)
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
@@ -20,7 +20,7 @@ func start_tcp_call(port string, ip string) net.Conn {
 	// må huske defer conn.Close() etter den er brukt
 	return conn
 }
-func start_tcp_listen(port string) net.Listener {
+func Start_tcp_listen(port string) net.Listener {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("Error starting listen:", err)
@@ -30,7 +30,7 @@ func start_tcp_listen(port string) net.Listener {
 	return ln
 }
 
-func send_tcp(conn net.Conn, data []int) {
+func Send_tcp(conn net.Conn, data []int) {
 	encoder := gob.NewEncoder(conn)
 	err := encoder.Encode(data)
 	if err != nil {
@@ -39,17 +39,17 @@ func send_tcp(conn net.Conn, data []int) {
 	}
 }
 
-func listen_recive(ln net.Listener) {
+func Listen_recive(ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection:", err)
 		}
-		go decode(conn)
+		go Decode(conn)
 	}
 }
 
-func decode(conn net.Conn) {
+func Decode(conn net.Conn) {
 	defer conn.Close()
 
 	// Decode the received data
