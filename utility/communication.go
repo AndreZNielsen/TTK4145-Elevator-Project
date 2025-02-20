@@ -20,14 +20,18 @@ func Start_tcp_call(port string, ip string) net.Conn {
 	// må huske defer conn.Close() etter den er brukt
 	return conn
 }
-func Start_tcp_listen(port string) net.Listener {
+func Start_tcp_listen(port string) net.Conn {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("Error starting listen:", err)
 		os.Exit(1)
 	}
-	// må huske defer defer ln.Close() etter den er brukt
-	return ln
+	conn, err := ln.Accept()
+	if err != nil {
+		fmt.Println("Error accepting connection:", err)
+	}
+	// må huske defer defer con.Close() etter den er brukt
+	return conn
 }
 
 func Send_tcp(conn net.Conn, data []int) {
@@ -39,21 +43,16 @@ func Send_tcp(conn net.Conn, data []int) {
 	}
 }
 
-func Listen_recive(ln net.Listener) {
+func Listen_recive(conn net.Conn) {
 	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			fmt.Println("Error accepting connection:", err)
-		}
-		go Decode(conn)
+		Decode(conn)
 	}
 }
 
 func Decode(conn net.Conn) {
-	defer conn.Close()
 
 	// Decode the received data
-	var data []int
+	var data [4][3]bool
 	decoder := gob.NewDecoder(conn)
 	err := decoder.Decode(&data)
 	if err != nil {
@@ -63,3 +62,4 @@ func Decode(conn net.Conn) {
 
 	fmt.Println("Received data:", data)
 }
+
