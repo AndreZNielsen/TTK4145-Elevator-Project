@@ -19,6 +19,10 @@ func MakeFsm() {
 	//The elevator will now know what floor it is on, and will update its state accordingly
 }
 
+func GetElevatorRequests() [4][3]bool {
+	return elevator.requests
+}
+
 func SetAllLights(elevator Elevator) {
 	//Basically just takes the requests from the button presses and lights up the corresponding button lights
 	for floor := 0; floor < NUM_FLOORS; floor++ {
@@ -80,6 +84,8 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 	fmt.Printf("\nNew state:\n")
 	elevator.print()
 }
+
+
 
 func FsmOnFloorArrival(newFloor int) {
 	pc := make([]uintptr, 15)
