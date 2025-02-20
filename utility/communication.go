@@ -34,10 +34,10 @@ func Start_tcp_listen(port string) net.Conn {
 	return conn
 }
 
-func Send_tcp(conn net.Conn, data []int) {
+func Send_tcp(conn net.Conn, data [4][3]bool) {
 	encoder := gob.NewEncoder(conn)
 	err := encoder.Encode(data)
-	if err != nil {
+	if err != nil {	
 		fmt.Println("Error encoding data:", err)
 		return
 	}
