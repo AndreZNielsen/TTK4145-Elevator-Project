@@ -3,39 +3,44 @@ package utility
 import (
 	"encoding/gob"
 	"fmt"
-	"os"
+	//"os"
 
 	//"os/exec"
 	"net"
-	//"time"
+	"time"
 	//"bufio"
 )
+var conn_lift1 net.Conn
+//var conn_lift2 net.Conn
 
-func Start_tcp_call(port string, ip string) net.Conn {
-	conn, err := net.Dial("tcp", ip+":"+port)
+var lis_lift1 net.Conn
+//var lis_lift2 net.Conn
+
+
+func Start_tcp_call(port string, ip string){
+	var err error
+	conn_lift1, err = net.Dial("tcp", ip+":"+port)
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
-		os.Exit(1)
+		time.Sleep(5*time.Second)
+		Start_tcp_call(port, ip)
 	}
-	// må huske defer conn.Close() etter den er brukt
-	return conn
+
 }
-func Start_tcp_listen(port string) net.Conn {
+func Start_tcp_listen(port string) {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("Error starting listen:", err)
-		os.Exit(1)
 	}
-	conn, err := ln.Accept()
+	lis_lift1, err = ln.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection:", err)
 	}
-	// må huske defer defer con.Close() etter den er brukt
-	return conn
+
 }
 
-func Send_tcp(conn net.Conn, data [4][3]bool) {
-	encoder := gob.NewEncoder(conn)
+func Send_tcp(data [4][3]bool) {
+	encoder := gob.NewEncoder(conn_lift1)
 	err := encoder.Encode(data)
 	if err != nil {	
 		fmt.Println("Error encoding data:", err)
@@ -43,17 +48,17 @@ func Send_tcp(conn net.Conn, data [4][3]bool) {
 	}
 }
 
-func Listen_recive(conn net.Conn) {
+func Listen_recive() {
 	for {
-		Decode(conn)
+		Decode()
 	}
 }
 
-func Decode(conn net.Conn) {
+func Decode() {
 
 	// Decode the received data
 	var data [4][3]bool
-	decoder := gob.NewDecoder(conn)
+	decoder := gob.NewDecoder(lis_lift1)
 	err := decoder.Decode(&data)
 	if err != nil {
 		fmt.Println("Error decoding data:", err)
