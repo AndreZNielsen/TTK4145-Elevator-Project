@@ -11,18 +11,13 @@ import (
 func main() {
 	fmt.Println("Started!")
 
-	go utility.Start_tcp_call("8080","10.100.23.23")
+	go utility.Start_tcp_call("8080", "10.22.171.46")
 	utility.Start_tcp_listen("8081")
-
 
 	elevio.Init("localhost:15657", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
-	
-	
-	
-		
-	
+
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
@@ -33,8 +28,6 @@ func main() {
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
 	go utility.Listen_recive()
-	
-	
 
 	for {
 		select {
@@ -57,7 +50,7 @@ func main() {
 				elevalgo.StopTimer()
 				elevalgo.FsmOnDoorTimeout()
 			} else {
-				elevalgo.StartTimer() 
+				elevalgo.StartTimer()
 			}
 		}
 	}

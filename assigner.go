@@ -22,7 +22,7 @@ type HRAInput struct {
 	States       map[string]HRAElevState `json:"states"`
 }
 
-func main() {
+func Assigner() {
 
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -48,12 +48,6 @@ func main() {
 				Floor:       1,
 				Direction:   "stop",
 				CabRequests: []bool{false, false, false, false},
-			},
-			"C": HRAElevState{
-				Behavior:    "idle",
-				Floor:       0,
-				Direction:   "stop",
-				CabRequests: []bool{false, true, false, false},
 			},
 		},
 	}
