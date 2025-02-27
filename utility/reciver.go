@@ -37,16 +37,35 @@ func Listen_recive() {
 }
 
 func Decode() {
-
-	// Decode the received data
-	var data Elevator_data
 	decoder := gob.NewDecoder(lis_lift1)
-	
-	err := decoder.Decode(&data)
+
+	var typeID string
+	err := decoder.Decode(&typeID) // Read type identifier
 	if err != nil {
-		fmt.Println("Error decoding data:", err)
+		fmt.Println("Error decoding type:", err)
 		return
 	}
 
-	fmt.Println("Received data:", data)
+	switch typeID {
+	case "elevator_data":
+		var data Elevator_data
+		err = decoder.Decode(&data)
+		if err != nil {
+			fmt.Println("Error decoding Elevator_data:", err)
+			return
+		}
+		fmt.Println("Received Elevator_data:", data)
+
+	case "int":
+		var num [3]int
+		err = decoder.Decode(&num)
+		if err != nil {
+			fmt.Println("Error decoding int:", err)
+			return
+		}
+		fmt.Println("Received int:", num)
+
+	default:
+		fmt.Println("Unknown type received:", typeID)
+	}
 }

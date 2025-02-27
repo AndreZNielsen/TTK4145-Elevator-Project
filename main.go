@@ -34,7 +34,7 @@ func main() {
 		case button := <-drv_buttons:
 			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
 			e := elevalgo.GetElevatordata()
-			utility.Send_tcp(e)
+			utility.Send_Elevator_data(e)
 		case floor := <-drv_floors:
 			if !elevalgo.IsDoorObstructed() {
 				elevalgo.FsmOnFloorArrival(floor)

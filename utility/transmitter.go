@@ -27,10 +27,29 @@ func Start_tcp_call(port string, ip string){
 }
 
 
-func Send_tcp(data Elevator_data) {
+func Send_Elevator_data(data Elevator_data) {
 	encoder := gob.NewEncoder(conn_lift1)
-	err := encoder.Encode(data)
+	err := encoder.Encode("elevator_data") // Type ID
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+	err = encoder.Encode(data)
 	if err != nil {	
+		fmt.Println("Error encoding data:", err)
+		return
+	}
+}
+
+func Send_update(update [3]int){
+	encoder := gob.NewEncoder(conn_lift1)
+	err := encoder.Encode("int") // Type ID
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+	err = encoder.Encode(update)
+	if err != nil {
 		fmt.Println("Error encoding data:", err)
 		return
 	}
