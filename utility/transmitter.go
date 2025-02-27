@@ -27,7 +27,7 @@ func Start_tcp_call(port string, ip string){
 }
 
 
-func Send_tcp(data [4][3]bool) {
+func Send_tcp(data Elevator_data) {
 	encoder := gob.NewEncoder(conn_lift1)
 	err := encoder.Encode(data)
 	if err != nil {	

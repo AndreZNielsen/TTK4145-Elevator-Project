@@ -4,13 +4,19 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net"
-	"time"
+	//"time"
 	
 )
 
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
-
+type Elevator_data struct {
+	Behavior    string 
+	Floor       int
+	Direction   string 
+	CabRequests []bool 
+	HallRequests [][2]bool        
+}
 
 func Start_tcp_listen(port string) {
 	ln, err := net.Listen("tcp", ":"+port)
@@ -33,7 +39,7 @@ func Listen_recive() {
 func Decode() {
 
 	// Decode the received data
-	var data [4][6]int8
+	var data Elevator_data
 	decoder := gob.NewDecoder(lis_lift1)
 	
 	err := decoder.Decode(&data)

@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"root/elevio"
 	"runtime"
+	"root/utility"
 )
 
 var (
 	elevator Elevator
 )
+
 
 func MakeFsm() {
 	elevator = MakeUninitializedelevator()
@@ -19,8 +21,8 @@ func MakeFsm() {
 	//The elevator will now know what floor it is on, and will update its state accordingly
 }
 
-func GetElevatorRequests() [4][3]bool {
-	return elevator.requests
+func GetElevatordata() utility.Elevator_data {
+	return utility.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests), HallRequests: GetHallRequests(elevator.requests)}	
 }
 
 func SetAllLights(elevator Elevator) {
@@ -164,4 +166,22 @@ func DoorUnobstructed() {
 
 func IsDoorObstructed() bool {
     return doorObstructed
+}
+
+func GetCabRequests(matrix [NUM_FLOORS][3]bool)[]bool{
+	var column []bool
+	for i := 0; i < len(matrix); i++ {
+		column = append(column, matrix[i][2]) 
+	}
+	return column
+}
+
+func GetHallRequests(matrix [NUM_FLOORS][3]bool)[][2]bool{
+	var newMatrix [][2]bool
+
+	// Extract columns 1 and 2 (index 0 and 1)
+	for i := 0; i < len(matrix); i++ {
+		newMatrix = append(newMatrix, [2]bool{matrix[i][0], matrix[i][1]})
+	}
+	return newMatrix
 }
