@@ -22,8 +22,9 @@ func MakeFsm() {
 }
 
 func GetElevatordata() utility.Elevator_data {
-	return utility.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests), HallRequests: GetHallRequests(elevator.requests)}	
+	return utility.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: elevator.cabRequests[:], HallRequests: elevator.hallRequests[:]}	
 }
+
 
 func SetAllLights(elevator Elevator) {
 	//Basically just takes the requests from the button presses and lights up the corresponding button lights
@@ -33,7 +34,11 @@ func SetAllLights(elevator Elevator) {
 				fmt.Println("floor ", floor)
 				fmt.Println("button ", btn)
 			}
-			elevio.SetButtonLamp(elevio.ButtonType(btn), floor, elevator.requests[floor][btn])
+			if (btn <= 1) {
+			elevio.SetButtonLamp(elevio.ButtonType(btn), floor, elevator.hallRequests[floor][btn])
+			} else {
+				elevio.SetButtonLamp(elevio.ButtonType(btn), floor, elevator.cabRequests[floor])
+			}
 		}
 	}
 }
@@ -45,46 +50,58 @@ func FsmOnInitBetweenFloors() {
 }
 
 func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
-	//This is the important module in the FSM. Here button-presses are handled
-	//and depending on the state of the elevator, the elevator will find the correct next behacior
-	//communication with the elevator is done with runtime. instead of printf. like in the provided C program
+    // This is the important module in the FSM. Here button-presses are handled
+    // and depending on the state of the elevator, the elevator will find the correct next behavior
+    // communication with the elevator is done with runtime. instead of printf. like in the provided C program
 
-	pc := make([]uintptr, 15)
-	n := runtime.Callers(2, pc)
-	frames := runtime.CallersFrames(pc[:n])
-	frame, _ := frames.Next()
+    pc := make([]uintptr, 15)
+    n := runtime.Callers(2, pc)
+    frames := runtime.CallersFrames(pc[:n])
+    frame, _ := frames.Next()
 
-	fmt.Printf("\n\n%s(%d, %s)\n", frame.Function, btn_floor, ElevioButtonToString(btn_type))
-	elevator.print()
+    fmt.Printf("\n\n%s(%d, %s)\n", frame.Function, btn_floor, ElevioButtonToString(btn_type))
+    elevator.print()
 
-	switch elevator.behaviour {
-	case BEHAVIOUR_DOOR_OPEN:
-		if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-			StartTimer()
-		} else {
-			elevator.requests[btn_floor][btn_type] = true
-		}
-	case BEHAVIOUR_MOVING:
-		elevator.requests[btn_floor][btn_type] = true
-	case BEHAVIOUR_IDLE:
-		elevator.requests[btn_floor][btn_type] = true
-		pair := elevator.RequestsChooseDirection()
-		elevator.direction = pair.dir
-		elevator.behaviour = pair.behaviour
-		switch pair.behaviour {
-		case BEHAVIOUR_DOOR_OPEN:
-			elevio.SetDoorOpenLamp(true)
-			StartTimer()
-			elevator = RequestsClearAtCurrentFloor(elevator)
-		case BEHAVIOUR_MOVING:
-			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
-		}
-	}
+    switch elevator.behaviour {
+    case BEHAVIOUR_DOOR_OPEN:
+        if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
+            StartTimer()
+        } else {
+            if btn_type == BTN_HALLUP || btn_type == BTN_HALLDOWN {
+                elevator.hallRequests[btn_floor][btn_type] = true
+            } else if btn_type == BTN_HALLCAB {
+                elevator.cabRequests[btn_floor] = true
+            }
+        }
+    case BEHAVIOUR_MOVING:
+        if btn_type == BTN_HALLUP || btn_type == BTN_HALLDOWN {
+            elevator.hallRequests[btn_floor][btn_type] = true
+        } else if btn_type == BTN_HALLCAB {
+            elevator.cabRequests[btn_floor] = true
+        }
+    case BEHAVIOUR_IDLE:
+        if btn_type == BTN_HALLUP || btn_type == BTN_HALLDOWN {
+            elevator.hallRequests[btn_floor][btn_type] = true
+        } else if btn_type == BTN_HALLCAB {
+            elevator.cabRequests[btn_floor] = true
+        }
+        pair := elevator.RequestsChooseDirection()
+        elevator.direction = pair.dir
+        elevator.behaviour = pair.behaviour
+        switch pair.behaviour {
+        case BEHAVIOUR_DOOR_OPEN:
+            elevio.SetDoorOpenLamp(true)
+            StartTimer()
+            elevator = RequestsClearAtCurrentFloor(elevator)
+        case BEHAVIOUR_MOVING:
+            elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
+        }
+    }
 
-	SetAllLights(elevator)
+    SetAllLights(elevator)
 
-	fmt.Printf("\nNew state:\n")
-	elevator.print()
+    fmt.Printf("\nNew state:\n")
+    elevator.print()
 }
 
 

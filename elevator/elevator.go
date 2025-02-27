@@ -24,7 +24,8 @@ const (
 type Elevator struct {
 	floor     int
 	direction Dir
-	requests  [NUM_FLOORS][NUM_BUTTONS]bool
+	cabRequests  [NUM_FLOORS]bool
+	hallRequests [NUM_FLOORS][NUM_HALL_BUTTONS]bool
 	behaviour ElevatorBehaviour
 	config    config
 }
@@ -44,6 +45,8 @@ type DirBehaviourPair struct {
 
 const (
 	NUM_FLOORS  = 4
+	NUM_CAB_BUTTON = 1
+	NUM_HALL_BUTTONS = 2
 	NUM_BUTTONS = 3
 )
 
@@ -120,13 +123,19 @@ func (e *Elevator) print() {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
 			if (f == NUM_FLOORS-1 && btn == int(BTN_HALLUP)) || (f == 0 && btn == int(BTN_HALLDOWN)) {
 				fmt.Print("|     ")
-			} else {
-				if e.requests[f][btn] {
+			} else if (btn<=1){
+				if e.hallRequests[f][btn] {
 					fmt.Print("|  #  ")
 				} else {
 					fmt.Print("|  -  ")
 				}
-					}
+			}else {
+				if e.cabRequests[f] {
+					fmt.Print("|  #  ")
+				} else {
+					fmt.Print("|  -  ")
+				}
+			}
 		}
 		fmt.Println("|")
 	}

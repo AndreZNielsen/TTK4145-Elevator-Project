@@ -1,38 +1,45 @@
 package elevator
 
-// e.requests is a 2D matrix that stores what type of button is pushed at a given floor
-//buttons are: BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
+// e.hallRequests is a 2D matrix that stores hall button requests at a given floor
+// e.cabRequests is a 1D matrix that stores cab button requests at a given floor
+// buttons are: BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
 
 func (e *Elevator) RequestsAbove() bool {
-	//self explainatory, the different buttons are BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
 	for f := e.floor + 1; f < NUM_FLOORS; f++ {
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
-			if e.requests[f][btn] {
+		for btn := 0; btn < 2; btn++ { // Only hall buttons
+			if e.hallRequests[f][btn] {
 				return true
 			}
+		}
+		if e.cabRequests[f] {
+			return true
 		}
 	}
 	return false
 }
 
 func (e *Elevator) RequestsBelow() bool {
-	//also self explainatory
 	for f := 0; f < e.floor; f++ {
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
-			if e.requests[f][btn] {
+		for btn := 0; btn < 2; btn++ { // Only hall buttons
+			if e.hallRequests[f][btn] {
 				return true
 			}
+		}
+		if e.cabRequests[f] {
+			return true
 		}
 	}
 	return false
 }
 
 func (e *Elevator) RequestsHere() bool {
-	//shouldnt need to explain this either
-	for btn := 0; btn < NUM_BUTTONS; btn++ {
-		if e.requests[e.floor][btn] {
+	for btn := 0; btn < 2; btn++ { // Only hall buttons
+		if e.hallRequests[e.floor][btn] {
 			return true
 		}
+	}
+	if e.cabRequests[e.floor] {
+		return true
 	}
 	return false
 }
@@ -59,7 +66,7 @@ func (e *Elevator) RequestsChooseDirection() DirBehaviourPair {
 		} else {
 			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_IDLE}
 		}
-	case DIR_STOP: // there should only be one request in the Stop case. Checking up or down first is arbitrary.
+	case DIR_STOP:
 		if e.RequestsHere() {
 			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_DOOR_OPEN}
 		} else if e.RequestsAbove() {
@@ -77,9 +84,9 @@ func (e *Elevator) RequestsChooseDirection() DirBehaviourPair {
 func (e *Elevator) RequestsShouldStop() bool {
 	switch e.direction {
 	case DIR_DOWN:
-		return e.requests[e.floor][BTN_HALLDOWN] || e.requests[e.floor][BTN_HALLCAB] || !e.RequestsBelow()
+		return e.hallRequests[e.floor][BTN_HALLDOWN] || e.cabRequests[e.floor] || !e.RequestsBelow()
 	case DIR_UP:
-		return e.requests[e.floor][BTN_HALLUP] || e.requests[e.floor][BTN_HALLCAB] || !e.RequestsAbove()
+		return e.hallRequests[e.floor][BTN_HALLUP] || e.cabRequests[e.floor] || !e.RequestsAbove()
 	default:
 		return true
 	}
@@ -102,26 +109,27 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 	switch e.config.clearRequestVariation {
 	case CV_All:
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
-			e.requests[e.floor][btn] = false
+		for btn := 0; btn < 2; btn++ {
+			e.hallRequests[e.floor][btn] = false
 		}
+		e.cabRequests[e.floor] = false
 
 	case CV_InDirn:
-		e.requests[e.floor][BTN_HALLCAB] = false
+		e.cabRequests[e.floor] = false
 		switch e.direction {
 		case DIR_UP:
-			if !e.RequestsAbove() && !e.requests[e.floor][BTN_HALLUP] {
-				e.requests[e.floor][BTN_HALLDOWN] = false
+			if !e.RequestsAbove() && !e.hallRequests[e.floor][BTN_HALLUP] {
+				e.hallRequests[e.floor][BTN_HALLDOWN] = false
 			}
-			e.requests[e.floor][BTN_HALLUP] = false
+			e.hallRequests[e.floor][BTN_HALLUP] = false
 		case DIR_DOWN:
-			if !e.RequestsBelow() && !e.requests[e.floor][BTN_HALLDOWN] {
-				e.requests[e.floor][BTN_HALLUP] = false
+			if !e.RequestsBelow() && !e.hallRequests[e.floor][BTN_HALLDOWN] {
+				e.hallRequests[e.floor][BTN_HALLUP] = false
 			}
-			e.requests[e.floor][BTN_HALLDOWN] = false
+			e.hallRequests[e.floor][BTN_HALLDOWN] = false
 		default:
-			e.requests[e.floor][BTN_HALLUP] = false
-			e.requests[e.floor][BTN_HALLDOWN] = false
+			e.hallRequests[e.floor][BTN_HALLUP] = false
+			e.hallRequests[e.floor][BTN_HALLDOWN] = false
 		}
 	}
 
