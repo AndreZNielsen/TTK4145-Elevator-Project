@@ -5,6 +5,8 @@ import (
 	"root/elevio"
 	"runtime"
 	"root/utility"
+	"root/sharedData"
+
 )
 
 var (
@@ -27,13 +29,10 @@ func GetElevatordata() utility.Elevator_data {
 
 func SetAllLights(elevator Elevator) {
 	//Basically just takes the requests from the button presses and lights up the corresponding button lights
+	requests := makeRequests(sharedData.GetsharedHallRequests(),GetCabRequests(elevator.requests))
 	for floor := 0; floor < NUM_FLOORS; floor++ {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
-			if floor == 4 {
-				fmt.Println("floor ", floor)
-				fmt.Println("button ", btn)
-			}
-			elevio.SetButtonLamp(elevio.ButtonType(btn), floor, elevator.requests[floor][btn])
+			elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])
 		}
 	}
 }
@@ -53,7 +52,7 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 	n := runtime.Callers(2, pc)
 	frames := runtime.CallersFrames(pc[:n])
 	frame, _ := frames.Next()
-
+	var update [3]int
 	fmt.Printf("\n\n%s(%d, %s)\n", frame.Function, btn_floor, ElevioButtonToString(btn_type))
 	elevator.print()
 
@@ -63,11 +62,20 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 			StartTimer()
 		} else {
 			elevator.requests[btn_floor][btn_type] = true
+			update=[3]int{btn_floor, int(btn_type), 1}
+			sharedData.UpdatesharedHallRequests(update)
+			utility.Send_update(update)
 		}
 	case BEHAVIOUR_MOVING:
 		elevator.requests[btn_floor][btn_type] = true
+		update=[3]int{btn_floor, int(btn_type), 1}
+		sharedData.UpdatesharedHallRequests(update)
+		utility.Send_update(update)
 	case BEHAVIOUR_IDLE:
 		elevator.requests[btn_floor][btn_type] = true
+		update=[3]int{btn_floor, int(btn_type), 1}
+		sharedData.UpdatesharedHallRequests(update)
+		utility.Send_update(update)
 		pair := elevator.RequestsChooseDirection()
 		elevator.direction = pair.dir
 		elevator.behaviour = pair.behaviour
@@ -184,4 +192,14 @@ func GetHallRequests(matrix [NUM_FLOORS][3]bool)[][2]bool{
 		newMatrix = append(newMatrix, [2]bool{matrix[i][0], matrix[i][1]})
 	}
 	return newMatrix
+}
+
+func makeRequests(HallRequests [NUM_FLOORS][2]bool,GetCabRequests []bool)[NUM_FLOORS][3]bool{
+	var result [NUM_FLOORS][3]bool
+	for i := 0; i < NUM_FLOORS; i++ {
+        result[i][0] = HallRequests[i][0]
+        result[i][1] = HallRequests[i][1]
+        result[i][2] = GetCabRequests[i]
+    }
+	return result
 }

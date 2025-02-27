@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	//"time"
+	"root/sharedData"
+
 	
 )
 
@@ -64,6 +66,7 @@ func Decode() {
 			return
 		}
 		fmt.Println("Received int:", num)
+		sharedData.UpdatesharedHallRequests(num)
 
 	default:
 		fmt.Println("Unknown type received:", typeID)
