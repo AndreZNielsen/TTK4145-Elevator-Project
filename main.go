@@ -11,8 +11,8 @@ import (
 func main() {
 	fmt.Println("Started!")
 
-	go utility.Start_tcp_call("8080", "10.22.171.46")
-	utility.Start_tcp_listen("8081")
+	go utility.Start_tcp_call("8080", "10.100.23.23")
+	utility.Start_tcp_listen("8080")
 
 	elevio.Init("localhost:15657", elevalgo.NUM_FLOORS)
 
