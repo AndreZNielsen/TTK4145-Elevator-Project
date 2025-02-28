@@ -32,13 +32,13 @@ func Start_tcp_listen(port string) {
 
 }
 
-func Listen_recive() {
+func Listen_recive(receiver chan<- bool) {
 	for {
-		Decode()
+		Decode(receiver)
 	}
 }
 
-func Decode() {
+func Decode(receiver chan<- bool) {
 	decoder := gob.NewDecoder(lis_lift1)
 
 	var typeID string
@@ -57,6 +57,7 @@ func Decode() {
 			return
 		}
 		fmt.Println("Received Elevator_data:", data)
+		receiver <- true
 
 	case "int":
 		var num [3]int
@@ -67,6 +68,7 @@ func Decode() {
 		}
 		fmt.Println("Received int:", num)
 		sharedData.UpdatesharedHallRequests(num)
+		receiver <- true
 
 	default:
 		fmt.Println("Unknown type received:", typeID)

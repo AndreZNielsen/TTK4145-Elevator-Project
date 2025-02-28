@@ -7,10 +7,12 @@ import (
 	//"os/exec"
 	"net"
 	"time"
-	//"bufio"
+
 )
 var conn_lift1 net.Conn
 //var conn_lift2 net.Conn
+
+
 
 
 
@@ -27,6 +29,7 @@ func Start_tcp_call(port string, ip string){
 
 
 func Send_Elevator_data(data Elevator_data) {
+
 	encoder := gob.NewEncoder(conn_lift1)
 	err := encoder.Encode("elevator_data") // Type ID
 	if err != nil {
@@ -38,9 +41,11 @@ func Send_Elevator_data(data Elevator_data) {
 		fmt.Println("Error encoding data:", err)
 		return
 	}
+
 }
 
 func Send_update(update [3]int){
+
 	encoder := gob.NewEncoder(conn_lift1)
 	err := encoder.Encode("int") // Type ID
 	if err != nil {
