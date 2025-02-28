@@ -4,10 +4,10 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net"
+	"time"
+
 	//"time"
 	"root/SharedData"
-
-	
 )
 
 var lis_lift1 net.Conn
@@ -45,15 +45,18 @@ func Decode(receiver chan<- bool) {
 	err := decoder.Decode(&typeID) // Read type identifier
 	if err != nil {
 		fmt.Println("Error decoding type:", err)
+		time.Sleep(1*time.Second)
 		return
 	}
 
 	switch typeID {
 	case "elevator_data":
 		var data Elevator_data
+
 		err = decoder.Decode(&data)
 		if err != nil {
 			fmt.Println("Error decoding Elevator_data:", err)
+	
 			return
 		}
 		fmt.Println("Received Elevator_data:", data)

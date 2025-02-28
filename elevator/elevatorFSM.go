@@ -63,19 +63,18 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 		} else {
 			elevator.requests[btn_floor][btn_type] = true
 			update=[3]int{btn_floor, int(btn_type), 1}
-			sharedData.UpdatesharedHallRequests(update)
-			utility.Send_update(update)
+			go utility.Transmitt_update_and_update_localHallRequests(update)
 		}
 	case BEHAVIOUR_MOVING:
 		elevator.requests[btn_floor][btn_type] = true
 		update=[3]int{btn_floor, int(btn_type), 1}
-		sharedData.UpdatesharedHallRequests(update)
-		utility.Send_update(update)
+		go utility.Transmitt_update_and_update_localHallRequests(update)
+
 	case BEHAVIOUR_IDLE:
 		elevator.requests[btn_floor][btn_type] = true
 		update=[3]int{btn_floor, int(btn_type), 1}
-		sharedData.UpdatesharedHallRequests(update)
-		utility.Send_update(update)
+		go utility.Transmitt_update_and_update_localHallRequests(update)
+
 		pair := elevator.RequestsChooseDirection()
 		elevator.direction = pair.dir
 		elevator.behaviour = pair.behaviour

@@ -13,10 +13,10 @@ import (
 func main() {
 	fmt.Println("Started!")
 
-	go utility.Start_tcp_call("8080", "localhost")
-	utility.Start_tcp_listen("8081")
+	go utility.Start_tcp_call("8081", "localhost")
+	utility.Start_tcp_listen("8080")
 	time.Sleep(5*time.Second)
-	elevio.Init("localhost:12346", elevalgo.NUM_FLOORS)
+	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
 
