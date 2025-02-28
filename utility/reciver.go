@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 	//"time"
-	"root/sharedData"
+	"root/SharedData"
 
 	
 )
