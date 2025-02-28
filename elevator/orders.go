@@ -3,7 +3,7 @@ package elevator
 // e.requests is a 2D matrix that stores what type of button is pushed at a given floor
 //buttons are: BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
 import(
-	"root/sharedData"
+	"root/SharedData"
 	"root/utility"
 
 )

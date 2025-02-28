@@ -5,7 +5,7 @@ import (
 	"root/elevio"
 	"runtime"
 	"root/utility"
-	"root/sharedData"
+	"root/SharedData"
 
 )
 
@@ -27,7 +27,7 @@ func GetElevatordata() utility.Elevator_data {
 	return utility.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests), HallRequests: GetHallRequests(elevator.requests)}	
 }
 
-func SetAllLights(elevator Elevator) {
+func SetAllLights() {
 	//Basically just takes the requests from the button presses and lights up the corresponding button lights
 	requests := makeRequests(sharedData.GetsharedHallRequests(),GetCabRequests(elevator.requests))
 	for floor := 0; floor < NUM_FLOORS; floor++ {
@@ -89,7 +89,7 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 		}
 	}
 
-	SetAllLights(elevator)
+
 
 	fmt.Printf("\nNew state:\n")
 	elevator.print()
@@ -117,7 +117,7 @@ func FsmOnFloorArrival(newFloor int) {
 			elevio.SetDoorOpenLamp(true)
 			elevator = RequestsClearAtCurrentFloor(elevator)
 			StartTimer()
-			SetAllLights(elevator)
+			SetAllLights()
 			elevator.behaviour = BEHAVIOUR_DOOR_OPEN
 		}
 	}
@@ -145,7 +145,7 @@ func FsmOnDoorTimeout() {
 		case BEHAVIOUR_DOOR_OPEN:
 			StartTimer()
 			elevator = RequestsClearAtCurrentFloor(elevator)
-			SetAllLights(elevator)
+			SetAllLights()
 		case BEHAVIOUR_MOVING, BEHAVIOUR_IDLE:
 			elevio.SetDoorOpenLamp(false)
 			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
