@@ -4,19 +4,15 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net"
-	//"time"
-	
+	"sync"
+	"root/SharedData"
 )
 
+var mu sync.Mutex
+var a sync.Mutex   // Mutex to protect the sending of data to the receiver channel
 var lis_lift1 net.Conn
-//var lis_lift2 net.Conn
-type Elevator_data struct {
-	Behavior    string 
-	Floor       int
-	Direction   string 
-	CabRequests []bool 
-	HallRequests [][2]bool        
-}
+
+
 
 func Start_tcp_listen(port string) {
 	ln, err := net.Listen("tcp", ":"+port)
@@ -27,16 +23,17 @@ func Start_tcp_listen(port string) {
 	if err != nil {
 		fmt.Println("Error accepting connection:", err)
 	}
-
 }
 
-func Listen_recive() {
+func Listen_recive(receiver chan<- bool) {
 	for {
-		Decode()
+		mu.Lock()
+		Decode(receiver)
+		mu.Unlock()
 	}
 }
 
-func Decode() {
+func Decode(receiver chan<- bool) {
 	decoder := gob.NewDecoder(lis_lift1)
 
 	var typeID string
@@ -55,6 +52,11 @@ func Decode() {
 			return
 		}
 		fmt.Println("Received Elevator_data:", data)
+		
+		// Protecting the sending operation with a mutex to ensure that only one goroutine can send at a time
+		a.Lock()
+		receiver <- true
+		a.Unlock()
 
 	case "int":
 		var num [3]int
@@ -64,6 +66,12 @@ func Decode() {
 			return
 		}
 		fmt.Println("Received int:", num)
+		
+		// Protecting the sending operation with a mutex to ensure that only one goroutine can send at a time
+		a.Lock()
+		sharedData.UpdatesharedHallRequests(num)
+		receiver <- true
+		a.Unlock()
 
 	default:
 		fmt.Println("Unknown type received:", typeID)
