@@ -4,8 +4,8 @@ import (
 	"encoding/gob"
 	"fmt"
 	"net"
-	"time"
 	"sync"
+	"time"
 )
 
 var conn_lift1 net.Conn
