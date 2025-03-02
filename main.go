@@ -10,11 +10,20 @@ import (
 
 )
 
+var elevator_1_ip = "localhost"
+
+
+
+
+
 func main() {
 	fmt.Println("Started!")
-
-	go utility.Start_tcp_call("8080", "localhost")
-	utility.Start_tcp_listen("8081")
+	go utility.Start_tcp_call("8080", elevator_1_ip)
+	utility.Start_tcp_listen("8080")
+	/*
+	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
+	utility.Start_tcp_listen2("8081")
+	*/
 	time.Sleep(5*time.Second)
 	elevio.Init("localhost:12346", elevalgo.NUM_FLOORS)
 
@@ -37,7 +46,7 @@ func main() {
 		case button := <-drv_buttons:
 			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
 			e := elevalgo.GetElevatordata()
-			go utility.Send_Elevator_data(e)
+			go utility.Send_Elevator_data(e) //skal flystes 
 			elevalgo.SetAllLights()
 			
 		case floor := <-drv_floors:

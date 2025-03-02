@@ -19,11 +19,11 @@ var sendMu sync.Mutex
 
 func Start_tcp_call(port string, ip string){
 	var err error
-	conn_lift1, err = net.Dial("tcp", ip+":"+port)
+	conn_lift1, err = net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
 		time.Sleep(5*time.Second)
-		Start_tcp_call(port, ip)
+		Start_tcp_call(port, ip)//trys again
 	}
 
 }
@@ -34,13 +34,13 @@ func Send_Elevator_data(data Elevator_data) {
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(5*time.Millisecond)
 	encoder := gob.NewEncoder(conn_lift1)
-	err := encoder.Encode("elevator_data") // Type ID
+	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
 		return
 	}
 	time.Sleep(5*time.Millisecond)
-	err = encoder.Encode(data)
+	err = encoder.Encode(data) //sendes the Elevator_data
 	if err != nil {	
 		fmt.Println("Error encoding data:", err)
 		return
@@ -53,20 +53,20 @@ func Send_update(update [3]int){
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(5*time.Millisecond)
 	encoder := gob.NewEncoder(conn_lift1)
-	err := encoder.Encode("int") // Type ID
+	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
 		return
 	}
 	time.Sleep(5*time.Millisecond)
-	err = encoder.Encode(update)
+	err = encoder.Encode(update) //sendes the update
 	if err != nil {
 		fmt.Println("Error encoding data:", err)
 		return
 	}
 }
 
-func Transmitt_update_and_update_localHallRequests(update [3]int){
+func Transmitt_update_and_update_localHallRequests(update [3]int){ //sends the hall requests update to the other elevator and updates the local hall requests
 	sharedData.UpdatesharedHallRequests(update)
 	Send_update(update)
 }

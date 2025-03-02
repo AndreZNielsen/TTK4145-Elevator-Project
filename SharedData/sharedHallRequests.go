@@ -13,7 +13,7 @@ var sharedHallRequests [4][2]bool // om buttonEvent eller update skal sharedHall
 //og fra TCP-meldings-datastrukturen får en oppdatering. 
 
 func UpdatesharedHallRequests(update [3]int){
-	if update[2] == 1 && update[1] != 2{
+	if update[2] == 1 && update[1] != 2{//igneores updates to cab requests(update[1] != 2)
 	sharedHallRequests[update[0]][update[1]] = true
 		
 	}else if update[1] != 2{

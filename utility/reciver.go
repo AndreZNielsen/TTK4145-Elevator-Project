@@ -12,7 +12,8 @@ import (
 
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
-type Elevator_data struct {
+
+type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
 	Behavior    string 
 	Floor       int
 	Direction   string 
@@ -42,14 +43,14 @@ func Decode(receiver chan<- bool) {
 	decoder := gob.NewDecoder(lis_lift1)
 
 	var typeID string
-	err := decoder.Decode(&typeID) // Read type identifier
+	err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
 	if err != nil {
 		fmt.Println("Error decoding type:", err)
 		time.Sleep(1*time.Second)
 		return
 	}
 
-	switch typeID {
+	switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
 	case "elevator_data":
 		var data Elevator_data
 
@@ -60,7 +61,7 @@ func Decode(receiver chan<- bool) {
 			return
 		}
 		fmt.Println("Received Elevator_data:", data)
-		receiver <- true
+
 
 	case "int":
 		var num [3]int
@@ -71,7 +72,7 @@ func Decode(receiver chan<- bool) {
 		}
 		fmt.Println("Received int:", num)
 		sharedData.UpdatesharedHallRequests(num)
-		receiver <- true
+		receiver <- true //sends signal to main that hall requests have been updated and that the lights need to be updated
 
 	default:
 		fmt.Println("Unknown type received:", typeID)
