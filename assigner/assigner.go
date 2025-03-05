@@ -21,19 +21,7 @@ type HRAInput struct {
 	States       map[string]utility.Elevator_data `json:"states"`
 }
 
-func convertArrayToSlice(arr [4][2]bool) [][2]bool {
-	// Create a slice to hold the converted data
-	slice := make([][2]bool, len(arr))
 
-	// Copy elements from the array to the slice
-	for i, v := range arr {
-		slice[i] = v
-	}
-
-	return slice
-}
-[[false false] [false true] [true true] [false false]]
-     B :  [[false false] [false false] [false false] [false true]]
 
 func Assigner() {
 
@@ -48,7 +36,7 @@ func Assigner() {
 	}
 
 	input := HRAInput{
-		HallRequests: convertArrayToSlice(sharedData.GetsharedHallRequests()),
+		HallRequests: sharedData.GetsharedHallRequests(),
 		States: map[string]utility.Elevator_data{
 			"A": elevator.GetElevatordata(),
 			"B": utility.GetRemoteElevatorData(),

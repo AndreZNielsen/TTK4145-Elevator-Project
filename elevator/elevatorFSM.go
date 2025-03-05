@@ -188,12 +188,15 @@ func GetHallRequests(matrix [NUM_FLOORS][3]bool) [][2]bool {
 	return newMatrix
 }
 
-func makeRequests(HallRequests [NUM_FLOORS][2]bool, GetCabRequests []bool) [NUM_FLOORS][3]bool {
-	var result [NUM_FLOORS][3]bool
-	for i := 0; i < NUM_FLOORS; i++ {
-		result[i][0] = HallRequests[i][0]
-		result[i][1] = HallRequests[i][1]
-		result[i][2] = GetCabRequests[i]
-	}
-	return result
+
+
+func makeRequests(HallRequests [][2]bool, GetCabRequests []bool) [NUM_FLOORS][3]bool {
+    var result [NUM_FLOORS][3]bool
+
+    for i := 0; i < NUM_FLOORS; i++ {
+        result[i][0] = HallRequests[i][0]
+        result[i][1] = HallRequests[i][1]
+        result[i][2] = GetCabRequests[i]
+    }
+    return result
 }
