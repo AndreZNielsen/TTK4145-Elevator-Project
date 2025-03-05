@@ -1,7 +1,5 @@
 package sharedData
 
-
-
 var sharedHallRequests [4][2]bool // om buttonEvent eller update skal sharedHallRequests oppdateres
 //sharedHallRequests er input i assigner.go og setAllLights() (skal skru på/av hallLys)
 //output fra assigner.go skal oppdatere elevator.requests 
@@ -12,10 +10,14 @@ var sharedHallRequests [4][2]bool // om buttonEvent eller update skal sharedHall
 //Funksjonen som henter data til sharedHallRequests må hente data fra både når buttonEvent skjer(lokalt)
 //og fra TCP-meldings-datastrukturen får en oppdatering. 
 
-func UpdatesharedHallRequests(update [3]int) {
-    if update[1] != 2 {
-        sharedHallRequests[update[0]][update[1]] = (update[2] == 1)
-    }
+func UpdatesharedHallRequests(update [3]int){
+	if update[2] == 1 && update[1] != 2{//igneores updates to cab requests(update[1] != 2)
+	sharedHallRequests[update[0]][update[1]] = true
+		
+	}else if update[1] != 2{
+	sharedHallRequests[update[0]][update[1]] = false
+	}
+
 }
 
 func GetsharedHallRequests()[4][2]bool{

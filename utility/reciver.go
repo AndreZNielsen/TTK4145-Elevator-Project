@@ -1,58 +1,84 @@
 package utility
 
 import (
-    "encoding/gob"
-    "fmt"
-    "net"
-    "time"
-    "root/SharedData"
+	"encoding/gob"
+	"fmt"
+	"net"
+	"time"
+
+	//"time"
+	"root/SharedData"
 )
 
+var data Elevator_data
 var lis_lift1 net.Conn
+//var lis_lift2 net.Conn
 
-type Elevator_data struct {
-    Behavior    string
-    Floor       int
-    Direction   string
-    CabRequests []bool
-    HallRequests [][2]bool
-}
-
-
-func init() {
-    gob.Register(ElevatorUpdate{})
+type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
+	Behavior    string `json:"behaviour"`
+	Floor       int    `json:"floor"`
+	Direction   string `json:"direction"`
+	CabRequests []bool `json:"cabRequests"`
 }
 
 func Start_tcp_listen(port string) {
-    ln, err := net.Listen("tcp", ":"+port)
-    if err != nil {
-        fmt.Println("Error starting listen:", err)
-    }
-    lis_lift1, err = ln.Accept()
-    if err != nil {
-        fmt.Println("Error accepting connection:", err)
-    }
+	ln, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		fmt.Println("Error starting listen:", err)
+	}
+	lis_lift1, err = ln.Accept()
+	if err != nil {
+		fmt.Println("Error accepting connection:", err)
+	}
+
 }
 
 func Listen_recive(receiver chan<- bool) {
-    for {
-        Decode(receiver)
-    }
+	for {
+		Decode(receiver)
+	}
 }
 
 func Decode(receiver chan<- bool) {
-    decoder := gob.NewDecoder(lis_lift1)
+	decoder := gob.NewDecoder(lis_lift1)
 
-    var elevatorUpdate ElevatorUpdate
-    err := decoder.Decode(&elevatorUpdate)
-    if err != nil {
-        fmt.Println("Error decoding ElevatorUpdate:", err)
-        time.Sleep(1 * time.Second)
-        return
-    }
+	var typeID string
+	err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
+	if err != nil {
+		fmt.Println("Error decoding type:", err)
+		time.Sleep(1*time.Second)
+		return
+	}
 
-    fmt.Println("Received ElevatorUpdate:", elevatorUpdate)
-    sharedData.UpdatesharedHallRequests(elevatorUpdate.Update)
-    // Process elevator state as needed
-    receiver <- true
+	switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
+	case "elevator_data":
+		
+
+		err = decoder.Decode(&data)
+		if err != nil {
+			fmt.Println("Error decoding Elevator_data:", err)
+	
+			return
+		}
+		fmt.Println("Received Elevator_data:", data)
+
+
+	case "int":
+		var num [3]int
+		err = decoder.Decode(&num)
+		if err != nil {
+			fmt.Println("Error decoding int:", err)
+			return
+		}
+		fmt.Println("Received int:", num)
+		sharedData.UpdatesharedHallRequests(num)
+		receiver <- true //sends signal to main that hall requests have been updated and that the lights need to be updated
+
+	default:
+		fmt.Println("Unknown type received:", typeID)
+	}
+}
+
+func GetRemoteElevatorData() Elevator_data {
+	return data
 }

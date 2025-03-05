@@ -103,49 +103,52 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 }
 
 func RequestsClearAtCurrentFloor(e Elevator) Elevator {
-    var update [3]int
-    elevatorData := GetElevatordata()
-    switch e.config.clearRequestVariation {
-    case CV_All:
-        for btn := 0; btn < NUM_BUTTONS; btn++ {
-            e.requests[e.floor][btn] = false
-            update = [3]int{e.floor, btn, 0}
-            go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
-        }
+	var update [3]int
+	switch e.config.clearRequestVariation {
+	case CV_All:
+		for btn := 0; btn < NUM_BUTTONS; btn++ {
+			e.requests[e.floor][btn] = false
+			update = [3]int{e.floor, btn, 0}
+			go utility.Transmitt_update_and_update_localHallRequests(update,GetElevatordata())
 
-    case CV_InDirn:
-        e.requests[e.floor][BTN_HALLCAB] = false
-        switch e.direction {
-        case DIR_UP:
-            if !e.RequestsAbove() && !e.requests[e.floor][BTN_HALLUP] {
-                e.requests[e.floor][BTN_HALLDOWN] = false
-                update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-                go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
-            }
-            e.requests[e.floor][BTN_HALLUP] = false
-            update = [3]int{e.floor, int(BTN_HALLUP), 0}
-            go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
+		}
 
-        case DIR_DOWN:
-            if !e.RequestsBelow() && !e.requests[e.floor][BTN_HALLDOWN] {
-                e.requests[e.floor][BTN_HALLUP] = false
-                update = [3]int{e.floor, int(BTN_HALLUP), 0}
-                go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
-            }
-            e.requests[e.floor][BTN_HALLDOWN] = false
-            update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-            go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
+	case CV_InDirn:
+		e.requests[e.floor][BTN_HALLCAB] = false
+		switch e.direction {
+		case DIR_UP:
+			if !e.RequestsAbove() && !e.requests[e.floor][BTN_HALLUP] {
+				e.requests[e.floor][BTN_HALLDOWN] = false
+				update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
+				go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			}
+			e.requests[e.floor][BTN_HALLUP] = false
+			update = [3]int{e.floor, int(BTN_HALLUP), 0}
+			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
-        default:
-            e.requests[e.floor][BTN_HALLUP] = false
-            update = [3]int{e.floor, int(BTN_HALLUP), 0}
-            go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
+		case DIR_DOWN:
+			if !e.RequestsBelow() && !e.requests[e.floor][BTN_HALLDOWN] {
+				e.requests[e.floor][BTN_HALLUP] = false
+				update = [3]int{e.floor, int(BTN_HALLUP), 0}
+				go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			}
+			e.requests[e.floor][BTN_HALLDOWN] = false
+			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
+			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
-            e.requests[e.floor][BTN_HALLDOWN] = false
-            update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-            go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
-        }
-    }
+		default:
+			e.requests[e.floor][BTN_HALLUP] = false
+			update = [3]int{e.floor, int(BTN_HALLUP), 0}
+			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
-    return e
+			e.requests[e.floor][BTN_HALLDOWN] = false
+			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
+			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+
+		}
+
+	}
+	SetAllLights()
+
+	return e
 }

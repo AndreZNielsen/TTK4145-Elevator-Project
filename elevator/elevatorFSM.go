@@ -2,17 +2,15 @@ package elevator
 
 import (
 	"fmt"
+	sharedData "root/SharedData"
 	"root/elevio"
-	"runtime"
 	"root/utility"
-	"root/SharedData"
-
+	"runtime"
 )
 
 var (
 	elevator Elevator
 )
-
 
 func MakeFsm() {
 	elevator = MakeUninitializedelevator()
@@ -24,12 +22,12 @@ func MakeFsm() {
 }
 
 func GetElevatordata() utility.Elevator_data {
-	return utility.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests), HallRequests: GetHallRequests(elevator.requests)}	
+	return utility.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests)}
 }
 
 func SetAllLights() {
 	//Basically just takes the requests from the button presses and lights up the corresponding button lights
-	requests := makeRequests(sharedData.GetsharedHallRequests(),GetCabRequests(elevator.requests))
+	requests := makeRequests(sharedData.GetsharedHallRequests(), GetCabRequests(elevator.requests))
 	for floor := 0; floor < NUM_FLOORS; floor++ {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
 			elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])
@@ -44,53 +42,54 @@ func FsmOnInitBetweenFloors() {
 }
 
 func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
-    pc := make([]uintptr, 15)
-    n := runtime.Callers(2, pc)
-    frames := runtime.CallersFrames(pc[:n])
-    frame, _ := frames.Next()
-    var update [3]int
-    fmt.Printf("\n\n%s(%d, %s)\n", frame.Function, btn_floor, ElevioButtonToString(btn_type))
-    elevator.print()
+	//This is the important module in the FSM. Here button-presses are handled
+	//and depending on the state of the elevator, the elevator will find the correct next behacior
+	//communication with the elevator is done with runtime. instead of printf. like in the provided C program
 
-    switch elevator.behaviour {
-    case BEHAVIOUR_DOOR_OPEN:
-        if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-            StartTimer()
-        } else {
-            elevator.requests[btn_floor][btn_type] = true
-            update = [3]int{btn_floor, int(btn_type), 1}
-            elevatorData := GetElevatordata()
-            go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
-        }
-    case BEHAVIOUR_MOVING:
-        elevator.requests[btn_floor][btn_type] = true
-        update = [3]int{btn_floor, int(btn_type), 1}
-        elevatorData := GetElevatordata()
-        go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	frames := runtime.CallersFrames(pc[:n])
+	frame, _ := frames.Next()
+	var update [3]int
+	fmt.Printf("\n\n%s(%d, %s)\n", frame.Function, btn_floor, ElevioButtonToString(btn_type))
+	elevator.print()
 
-    case BEHAVIOUR_IDLE:
-        elevator.requests[btn_floor][btn_type] = true
-        update = [3]int{btn_floor, int(btn_type), 1}
-        elevatorData := GetElevatordata()
-        go utility.Transmitt_update_and_update_localHallRequests(update, elevatorData)
+	switch elevator.behaviour {
+	case BEHAVIOUR_DOOR_OPEN:
+		if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
+			StartTimer()
+		} else {
+			elevator.requests[btn_floor][btn_type] = true
+			update = [3]int{btn_floor, int(btn_type), 1}
+			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+		}
+	case BEHAVIOUR_MOVING:
+		elevator.requests[btn_floor][btn_type] = true
+		update = [3]int{btn_floor, int(btn_type), 1}
+		go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
-        pair := elevator.RequestsChooseDirection()
-        elevator.direction = pair.dir
-        elevator.behaviour = pair.behaviour
-        switch pair.behaviour {
-        case BEHAVIOUR_DOOR_OPEN:
-            elevio.SetDoorOpenLamp(true)
-            StartTimer()
-            elevator = RequestsClearAtCurrentFloor(elevator)
-        case BEHAVIOUR_MOVING:
-            elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
-        }
-    }
+	case BEHAVIOUR_IDLE:
+		elevator.requests[btn_floor][btn_type] = true
+		update = [3]int{btn_floor, int(btn_type), 1}
+		go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
-    fmt.Printf("\nNew state:\n")
-    elevator.print()
+		pair := elevator.RequestsChooseDirection()
+		elevator.direction = pair.dir
+		elevator.behaviour = pair.behaviour
+		switch pair.behaviour {
+		case BEHAVIOUR_DOOR_OPEN:
+			elevio.SetDoorOpenLamp(true)
+			StartTimer()
+			elevator = RequestsClearAtCurrentFloor(elevator)
+
+		case BEHAVIOUR_MOVING:
+			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
+		}
+	}
+
+	fmt.Printf("\nNew state:\n")
+	elevator.print()
 }
-
 
 func FsmOnFloorArrival(newFloor int) {
 	pc := make([]uintptr, 15)
@@ -154,32 +153,32 @@ func FsmOnDoorTimeout() {
 var doorObstructed bool
 
 func DoorObstructed() {
-    doorObstructed = true
-    if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
-        StartTimer()
-    }
+	doorObstructed = true
+	if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
+		StartTimer()
+	}
 }
 
 func DoorUnobstructed() {
-    doorObstructed = false
-    if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
-        StartTimer()
-    }
+	doorObstructed = false
+	if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
+		StartTimer()
+	}
 }
 
 func IsDoorObstructed() bool {
-    return doorObstructed
+	return doorObstructed
 }
 
-func GetCabRequests(matrix [NUM_FLOORS][3]bool)[]bool{
+func GetCabRequests(matrix [NUM_FLOORS][3]bool) []bool {
 	var column []bool
 	for i := 0; i < len(matrix); i++ {
-		column = append(column, matrix[i][2]) 
+		column = append(column, matrix[i][2])
 	}
 	return column
 }
 
-func GetHallRequests(matrix [NUM_FLOORS][3]bool)[][2]bool{
+func GetHallRequests(matrix [NUM_FLOORS][3]bool) [][2]bool {
 	var newMatrix [][2]bool
 
 	// Extract columns 1 and 2 (index 0 and 1)
@@ -189,12 +188,12 @@ func GetHallRequests(matrix [NUM_FLOORS][3]bool)[][2]bool{
 	return newMatrix
 }
 
-func makeRequests(HallRequests [NUM_FLOORS][2]bool,GetCabRequests []bool)[NUM_FLOORS][3]bool{
+func makeRequests(HallRequests [NUM_FLOORS][2]bool, GetCabRequests []bool) [NUM_FLOORS][3]bool {
 	var result [NUM_FLOORS][3]bool
 	for i := 0; i < NUM_FLOORS; i++ {
-        result[i][0] = HallRequests[i][0]
-        result[i][1] = HallRequests[i][1]
-        result[i][2] = GetCabRequests[i]
-    }
+		result[i][0] = HallRequests[i][0]
+		result[i][1] = HallRequests[i][1]
+		result[i][2] = GetCabRequests[i]
+	}
 	return result
 }

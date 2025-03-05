@@ -22,7 +22,7 @@ const (
 )
 
 type Elevator struct {
-	floor     int
+	floor     int 
 	direction Dir
 	requests  [NUM_FLOORS][NUM_BUTTONS]bool
 	behaviour ElevatorBehaviour
@@ -155,4 +155,25 @@ func MakeUninitializedelevator() Elevator {
 
 
 
+// func send_requests(e *Elevator) {
+// 	conn, err := net.Dial("tcp", "10.100.23.33:8080")
+// 	if err != nil {
+// 		fmt.Println("Error connecting to server:", err)
+// 	}
+// 	defer conn.Close()
 
+// 	str := "requests:"
+// 	for i := 0; i < 4; i++ {
+// 		for j := 0; j < 3; j++ {
+// 			str += "_" + fmt.Sprint(e.requests[i][j])
+// 		}
+// 	}
+
+// 	_, err = conn.Write([]byte(str))
+// 	if err != nil {
+// 		fmt.Println("Error sending message:", err)
+// 		return
+// 	}
+// 	time.Sleep(time.Second)
+
+// }

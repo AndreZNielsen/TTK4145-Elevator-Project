@@ -1,73 +1,74 @@
 package utility
 
 import (
-    "encoding/gob"
-    "fmt"
-    sharedData "root/SharedData"
-    "net"
-    "sync"
-    "time"
+	"encoding/gob"
+	"fmt"
+	sharedData "root/SharedData"
+	"net"
+	"sync"
+	"time"
 )
-
 var conn_lift1 net.Conn
-var sendMu sync.Mutex
+//var conn_lift2 net.Conn
 
-func init() {
-    gob.Register(ElevatorUpdate{})
+var sendMu sync.Mutex 
+
+
+
+func Start_tcp_call(port string, ip string){
+	var err error
+	conn_lift1, err = net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
+	if err != nil {
+		fmt.Println("Error connecting to pc:", ip, err)
+		time.Sleep(5*time.Second)
+		Start_tcp_call(port, ip)//trys again
+	}
+
 }
 
-func Start_tcp_call(port string, ip string) {
-    var err error
-    conn_lift1, err = net.Dial("tcp", ip+":"+port)
-    if err != nil {
-        fmt.Println("Error connecting to pc:", ip, err)
-        time.Sleep(5 * time.Second)
-        Start_tcp_call(port, ip)
-    }
-}
 
 func Send_Elevator_data(data Elevator_data) {
-    sendMu.Lock()         // Locking before sending
-    defer sendMu.Unlock() // Ensure to unlock after sending
-    time.Sleep(5 * time.Millisecond)
-    encoder := gob.NewEncoder(conn_lift1)
-    err := encoder.Encode("elevator_data") // Type ID
-    if err != nil {
-        fmt.Println("Encoding error:", err)
-        return
-    }
-    time.Sleep(5 * time.Millisecond)
-    err = encoder.Encode(data)
-    if err != nil {
-        fmt.Println("Error encoding data:", err)
-        return
-    }
+	sendMu.Lock() // Locking before sending
+	defer sendMu.Unlock() // Ensure to unlock after sending
+	time.Sleep(5*time.Millisecond)
+	encoder := gob.NewEncoder(conn_lift1)
+	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+	time.Sleep(5*time.Millisecond)
+	err = encoder.Encode(data) //sendes the Elevator_data
+	if err != nil {	
+		fmt.Println("Error encoding data:", err)
+		return
+	}
+
 }
 
-func Send_ElevatorUpdate(update [3]int, data Elevator_data) {
-    sendMu.Lock()         // Locking before sending
-    defer sendMu.Unlock() // Ensure to unlock after sending
-    time.Sleep(5 * time.Millisecond)
-
-    elevatorUpdate := ElevatorUpdate{
-        Update:        update,
-        ElevatorState: data,
-    }
-
-    encoder := gob.NewEncoder(conn_lift1)
-    err := encoder.Encode(elevatorUpdate)
-    if err != nil {
-        fmt.Println("Error encoding ElevatorUpdate:", err)
-        return
-    }
+func Send_update(update [3]int){
+	sendMu.Lock() // Locking before sending
+	defer sendMu.Unlock() // Ensure to unlock after sending
+	time.Sleep(5*time.Millisecond)
+	encoder := gob.NewEncoder(conn_lift1)
+	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+	time.Sleep(5*time.Millisecond)
+	err = encoder.Encode(update) //sendes the update
+	if err != nil {
+		fmt.Println("Error encoding data:", err)
+		return
+	}
 }
 
-func Transmitt_update_and_update_localHallRequests(update [3]int, data Elevator_data) {
-    sharedData.UpdatesharedHallRequests(update)
-    Send_ElevatorUpdate(update, data)
+func Transmitt_update_and_update_localHallRequests(update [3]int, elevatorData Elevator_data){ //sends the hall requests update to the other elevator and updates the local hall requests
+	sharedData.UpdatesharedHallRequests(update)
+	Send_update(update)
+	Send_Elevator_data(elevatorData)
 }
 
-type ElevatorUpdate struct {
-    Update        [3]int
-    ElevatorState Elevator_data
-}
+
+
