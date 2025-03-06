@@ -10,15 +10,15 @@ import (
 	"root/SharedData"
 )
 
-var data Elevator_data
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
 
 type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
-	Behavior    string `json:"behaviour"`
-	Floor       int    `json:"floor"`
-	Direction   string `json:"direction"`
-	CabRequests []bool `json:"cabRequests"`
+	Behavior    string 
+	Floor       int
+	Direction   string 
+	CabRequests []bool 
+	HallRequests [][2]bool        
 }
 
 func Start_tcp_listen(port string) {
@@ -52,7 +52,7 @@ func Decode(receiver chan<- bool) {
 
 	switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
 	case "elevator_data":
-		
+		var data Elevator_data
 
 		err = decoder.Decode(&data)
 		if err != nil {
