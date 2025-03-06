@@ -4,7 +4,6 @@ import (
 	"fmt"
 	sharedData "root/SharedData"
 	"root/elevio"
-	"root/utility"
 	"runtime"
 )
 
@@ -61,17 +60,17 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 		} else {
 			elevator.requests[btn_floor][btn_type] = true
 			update = [3]int{btn_floor, int(btn_type), 1}
-			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 		}
 	case BEHAVIOUR_MOVING:
 		elevator.requests[btn_floor][btn_type] = true
 		update = [3]int{btn_floor, int(btn_type), 1}
-		go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+		go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
 	case BEHAVIOUR_IDLE:
 		elevator.requests[btn_floor][btn_type] = true
 		update = [3]int{btn_floor, int(btn_type), 1}
-		go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+		go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
 		pair := elevator.RequestsChooseDirection()
 		elevator.direction = pair.dir
@@ -199,4 +198,8 @@ func makeRequests(HallRequests [][2]bool, GetCabRequests []bool) [NUM_FLOORS][3]
         result[i][2] = GetCabRequests[i]
     }
     return result
+}
+
+func GetElevator()Elevator{
+	return elevator
 }

@@ -2,10 +2,7 @@ package elevator
 
 // e.requests is a 2D matrix that stores what type of button is pushed at a given floor
 //buttons are: BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
-import(
-	"root/utility"
 
-)
 func (e *Elevator) RequestsAbove() bool {
 	//self explainatory, the different buttons are BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
 	for f := e.floor + 1; f < NUM_FLOORS; f++ {
@@ -109,7 +106,7 @@ func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
 			e.requests[e.floor][btn] = false
 			update = [3]int{e.floor, btn, 0}
-			go utility.Transmitt_update_and_update_localHallRequests(update,GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update,GetElevatordata())
 
 		}
 
@@ -120,30 +117,30 @@ func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 			if !e.RequestsAbove() && !e.requests[e.floor][BTN_HALLUP] {
 				e.requests[e.floor][BTN_HALLDOWN] = false
 				update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-				go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+				go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 			}
 			e.requests[e.floor][BTN_HALLUP] = false
 			update = [3]int{e.floor, int(BTN_HALLUP), 0}
-			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
 		case DIR_DOWN:
 			if !e.RequestsBelow() && !e.requests[e.floor][BTN_HALLDOWN] {
 				e.requests[e.floor][BTN_HALLUP] = false
 				update = [3]int{e.floor, int(BTN_HALLUP), 0}
-				go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+				go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 			}
 			e.requests[e.floor][BTN_HALLDOWN] = false
 			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
 		default:
 			e.requests[e.floor][BTN_HALLUP] = false
 			update = [3]int{e.floor, int(BTN_HALLUP), 0}
-			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
 			e.requests[e.floor][BTN_HALLDOWN] = false
 			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-			go utility.Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
 
 		}
 

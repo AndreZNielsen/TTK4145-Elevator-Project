@@ -1,13 +1,13 @@
-package utility
+package reciver
 
 import (
 	"encoding/gob"
 	"fmt"
 	"net"
 	"time"
-
-	//"time"
 	"root/SharedData"
+
+	
 )
 
 var lis_lift1 net.Conn
@@ -28,13 +28,13 @@ func Start_tcp_listen(port string) {
 
 }
 
-func Listen_recive(receiver chan<- bool) {
+func Listen_recive(receiver chan<- [3]int) {
 	for {
 		Decode(receiver)
 	}
 }
 
-func Decode(receiver chan<- bool) {
+func Decode(receiver chan<- [3]int) {
 	decoder := gob.NewDecoder(lis_lift1)
 
 	var typeID string
@@ -56,6 +56,7 @@ func Decode(receiver chan<- bool) {
 			return
 		}
 		fmt.Println("Received Elevator_data:", data)
+		
 
 
 	case "int":
@@ -66,8 +67,7 @@ func Decode(receiver chan<- bool) {
 			return
 		}
 		fmt.Println("Received int:", num)
-		sharedData.UpdatesharedHallRequests(num)
-		receiver <- true //sends signal to main that hall requests have been updated and that the lights need to be updated
+		receiver <- num //sends signal to main that hall requests have been updated and that the lights need to be updated
 
 	default:
 		fmt.Println("Unknown type received:", typeID)

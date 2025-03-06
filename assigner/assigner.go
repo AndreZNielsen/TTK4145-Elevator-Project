@@ -25,7 +25,7 @@ type HRAInput struct {
 
 
 
-func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallRequests [][2]bool) {
+func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallRequests [][2]bool) [][2]bool{
 
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -48,25 +48,27 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallR
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
 		fmt.Println("json.Marshal error: ", err)
-		return
+		return nil
 	}
 
 	ret, err := exec.Command("assignerExecutables/" + hraExecutable, "-i", "--includeCab", string(jsonBytes)).CombinedOutput()
 	if err != nil {
 		fmt.Println("exec.Command error: ", err)
 		fmt.Println(string(ret))
-		return
+		return nil
 	}
 
-	output := new(map[string][][2]bool)
+	output := make((map[string][][2]bool))
 	err = json.Unmarshal(ret, &output)
 	if err != nil {
 		fmt.Println("json.Unmarshal error: ", err)
-		return
+		return nil
 	}
 
 	fmt.Printf("output: \n")
-	for k, v := range *output {
+	for k, v := range output {
 		fmt.Printf("%6v :  %+v\n", k, v)
 	}
+	
+	return output["A"]
 }
