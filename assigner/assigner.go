@@ -10,7 +10,7 @@ import (
 
 // Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
 // This means they must start with a capital letter, so we need to use field renaming struct tags to make them camelCase
-
+var elevator_id = "A"
 type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
 	Behavior    string `json:"behaviour"`
 	Floor       int    `json:"floor"`
@@ -26,7 +26,7 @@ type HRAInput struct {
 
 
 func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallRequests [][2]bool) [][2]bool{
-
+	var input HRAInput
 	hraExecutable := ""
 	switch runtime.GOOS {
 	case "linux":
@@ -36,15 +36,22 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallR
 	default:
 		panic("OS not supported")
 	}
-
-	input := HRAInput{
+	switch elevator_id{
+	case "A":
+		input = HRAInput{
 		HallRequests: hallRequests,
 		States: map[string]Elevator_data{
 			"A": localelvator,
 			"B": RemoteElevatorData,
-		},
+		},}
+	case "B":
+		input = HRAInput{
+			HallRequests: hallRequests,
+			States: map[string]Elevator_data{
+				"A": RemoteElevatorData ,
+				"B": localelvator,
+			},}
 	}
-
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
 		fmt.Println("json.Marshal error: ", err)
@@ -64,11 +71,11 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallR
 		fmt.Println("json.Unmarshal error: ", err)
 		return nil
 	}
-
+	
 	fmt.Printf("output: \n")
 	for k, v := range output {
 		fmt.Printf("%6v :  %+v\n", k, v)
 	}
 	
-	return output["A"]
+	return output[elevator_id]
 }

@@ -13,9 +13,8 @@ import (
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
 
-
-
-var data sharedData.Elevator_data
+var a = []bool{true, false, false, false}
+var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: a}
 func Start_tcp_listen(port string) {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -55,7 +54,12 @@ func Decode(receiver chan<- [3]int) {
 	
 			return
 		}
-		fmt.Println("Received Elevator_data:", data)
+		if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
+		sharedData.ChangeRemoteElevatorData(data)
+		//fmt.Println("Received Elevator_data:", data)
+		}
+			
+		//fmt.Println("Received Elevator_data:", data)
 		
 
 
@@ -66,7 +70,7 @@ func Decode(receiver chan<- [3]int) {
 			fmt.Println("Error decoding int:", err)
 			return
 		}
-		fmt.Println("Received int:", num)
+		//fmt.Println("Received int:", num)
 		receiver <- num //sends signal to main that hall requests have been updated and that the lights need to be updated
 
 	default:

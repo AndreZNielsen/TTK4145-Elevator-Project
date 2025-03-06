@@ -11,28 +11,21 @@ import (
 
 var elevator_1_ip = "localhost"
 
-/*
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______)
-kjør go run -ldflags="-X root/assigner.elevator_id=A" main.go
-og så go run -ldflags="-X root/assigner.elevator_id=B" main2.go
-på samme maskin
-*/
-
 
 func main() {
 	fmt.Println("Started!")
-	go transmitter.Start_tcp_call("8081", elevator_1_ip)
-	reciver.Start_tcp_listen("8080")
+	go transmitter.Start_tcp_call("8080", elevator_1_ip)
+	reciver.Start_tcp_listen("8081")
 	/*
 	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
 	utility.Start_tcp_listen2("8081")
 	*/
 	time.Sleep(5*time.Second)
-	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
+	elevio.Init("localhost:12346", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
 
+	
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)

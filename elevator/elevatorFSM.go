@@ -69,8 +69,7 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 
 	case BEHAVIOUR_IDLE:
 		elevator.requests[btn_floor][btn_type] = true
-		update = [3]int{btn_floor, int(btn_type), 1}
-		go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+
 
 		pair := elevator.RequestsChooseDirection()
 		elevator.direction = pair.dir
@@ -84,6 +83,9 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 		case BEHAVIOUR_MOVING:
 			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
 		}
+		update = [3]int{btn_floor, int(btn_type), 1}
+		go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+
 	}
 
 	fmt.Printf("\nNew state:\n")
