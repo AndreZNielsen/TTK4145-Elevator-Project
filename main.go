@@ -13,7 +13,7 @@ var elevator_1_ip = "localhost"
 
 /*
 hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______)
+start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
 kjør go run -ldflags="-X root/assigner.elevator_id=A" main.go
 og så go run -ldflags="-X root/assigner.elevator_id=B" main2.go
 på samme maskin
