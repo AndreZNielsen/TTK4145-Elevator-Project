@@ -30,12 +30,12 @@ func main() {
 	drv_obstr := make(chan bool)
 	poll_timer := make(chan bool)
 	update_recived := make(chan bool)
-
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
 	go utility.Listen_recive(update_recived)
+	utility.Send_Elevator_data(elevalgo.GetElevatordata())
 
 	for {
 		select {

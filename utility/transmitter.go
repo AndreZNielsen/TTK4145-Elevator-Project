@@ -32,14 +32,14 @@ func Start_tcp_call(port string, ip string){
 func Send_Elevator_data(data sharedData.Elevator_data) {
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
-	time.Sleep(5*time.Millisecond)
+	time.Sleep(7*time.Millisecond)
 	encoder := gob.NewEncoder(conn_lift1)
 	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
 		return
 	}
-	time.Sleep(5*time.Millisecond)
+	time.Sleep(7*time.Millisecond)
 	err = encoder.Encode(data) //sendes the Elevator_data
 	if err != nil {	
 		fmt.Println("Error encoding data:", err)
@@ -51,14 +51,14 @@ func Send_Elevator_data(data sharedData.Elevator_data) {
 func Send_update(update [3]int){
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
-	time.Sleep(5*time.Millisecond)
+	time.Sleep(7*time.Millisecond)
 	encoder := gob.NewEncoder(conn_lift1)
 	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
 		return
 	}
-	time.Sleep(5*time.Millisecond)
+	time.Sleep(7*time.Millisecond)
 	err = encoder.Encode(update) //sendes the update
 	if err != nil {
 		fmt.Println("Error encoding data:", err)
