@@ -29,7 +29,7 @@ func Start_tcp_call(port string, ip string){
 }
 
 
-func Send_Elevator_data(data Elevator_data) {
+func Send_Elevator_data(data sharedData.Elevator_data) {
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(5*time.Millisecond)
@@ -66,7 +66,7 @@ func Send_update(update [3]int){
 	}
 }
 
-func Transmitt_update_and_update_localHallRequests(update [3]int){ //sends the hall requests update to the other elevator and updates the local hall requests
+func Transmitt_update_and_update_localHallRequests(update [3]int, elevatorData sharedData.Elevator_data){ //sends the hall requests update to the other elevator and updates the local hall requests
 	sharedData.UpdatesharedHallRequests(update)
 	Send_update(update)
 }

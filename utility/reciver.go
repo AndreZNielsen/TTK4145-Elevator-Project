@@ -13,14 +13,9 @@ import (
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
 
-type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
-	Behavior    string 
-	Floor       int
-	Direction   string 
-	CabRequests []bool 
-	HallRequests [][2]bool        
-}
 
+
+var data sharedData.Elevator_data
 func Start_tcp_listen(port string) {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -52,7 +47,7 @@ func Decode(receiver chan<- bool) {
 
 	switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
 	case "elevator_data":
-		var data Elevator_data
+		var data sharedData.Elevator_data
 
 		err = decoder.Decode(&data)
 		if err != nil {
@@ -77,4 +72,8 @@ func Decode(receiver chan<- bool) {
 	default:
 		fmt.Println("Unknown type received:", typeID)
 	}
+}
+
+func GetRemoteElevatorData() sharedData.Elevator_data {
+	return data
 }

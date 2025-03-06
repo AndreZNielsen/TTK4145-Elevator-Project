@@ -3,17 +3,13 @@ package main
 import (
 	"fmt"
 	elevalgo "root/elevator"
-
 	"root/elevio"
 	"root/utility"
 	"time"
 
 )
 
-var elevator_1_ip = "localhost"
-
-
-
+var elevator_1_ip = "10.100.23.172"
 
 
 func main() {
@@ -25,7 +21,7 @@ func main() {
 	utility.Start_tcp_listen2("8081")
 	*/
 	time.Sleep(5*time.Second)
-	elevio.Init("localhost:12346", elevalgo.NUM_FLOORS)
+	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
 
