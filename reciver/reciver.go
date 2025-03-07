@@ -56,7 +56,6 @@ func Decode(receiver chan<- [3]int) {
 		}
 		if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
 		sharedData.ChangeRemoteElevatorData(data)
-		//fmt.Println("Received Elevator_data:", data)
 		}
 			
 		//fmt.Println("Received Elevator_data:", data)
@@ -78,6 +77,3 @@ func Decode(receiver chan<- [3]int) {
 	}
 }
 
-func GetRemoteElevatorData() sharedData.Elevator_data {
-	return data
-}

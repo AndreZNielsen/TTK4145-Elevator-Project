@@ -14,20 +14,21 @@ var conn_lift1 net.Conn
 var sendMu sync.Mutex 
 
 
-
-func Start_tcp_call(port string, ip string){
+func Start_tcp_call(port string, ip string, transmitter__initialized chan<- bool){
 	var err error
 	conn_lift1, err = net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
 		time.Sleep(5*time.Second)
-		Start_tcp_call(port, ip)//trys again
+		Start_tcp_call(port, ip,transmitter__initialized)//trys again
+		return
 	}
-
+	transmitter__initialized <- true
 }
 
 
 func Send_Elevator_data(data sharedData.Elevator_data) {
+
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(7*time.Millisecond)
@@ -44,9 +45,12 @@ func Send_Elevator_data(data sharedData.Elevator_data) {
 		return
 	}
 
+
 }
 
 func Send_update(update [3]int){
+
+
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(7*time.Millisecond)
@@ -62,6 +66,7 @@ func Send_update(update [3]int){
 		fmt.Println("Error encoding data:", err)
 		return
 	}
+
 }
 
 

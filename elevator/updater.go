@@ -30,7 +30,7 @@ func ChangeLocalHallRequests(){
 	if GetElevatordata().Floor != -1 && !(GetElevatordata().Floor == 0 && GetElevatordata().Direction == "down") && !(GetElevatordata().Floor == 3 && GetElevatordata().Direction == "up") {//stops the elavator data form crashing the assigner 
 
 	elevator.requests = makeRequests(assigner.Assigner(GetElevatordata(), sharedData.GetRemoteElevatorData(),sharedData.GetsharedHallRequests()),GetCabRequests(elevator.requests))
-	start_if_idle()
+	Start_if_idle()
 	SetAllLights()
 	elevator.print()
 }
@@ -39,10 +39,18 @@ func ChangeLocalHallRequests(){
 func Send_Elevator_data( elevatorData sharedData.Elevator_data){
 	transmitter.Send_Elevator_data(elevatorData)
 }
-func start_if_idle(){
-	if elevator.behaviour == BEHAVIOUR_IDLE{
-	pair := elevator.RequestsChooseDirection()
-	elevator.direction = pair.dir
-	elevator.behaviour = pair.behaviour
-	elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))}
+func Start_if_idle(){
+	switch elevator.behaviour{
+	case BEHAVIOUR_IDLE:	
+		pair := elevator.RequestsChooseDirection()
+		elevator.direction = pair.dir
+		elevator.behaviour = pair.behaviour
+		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
+	case BEHAVIOUR_DOOR_OPEN:
+		StartTimer()
+		elevio.SetDoorOpenLamp(true)
+
 }
+	}
+
+

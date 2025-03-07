@@ -4,7 +4,6 @@ import (
 	"fmt"
 	elevalgo "root/elevator"
 	"root/elevio"
-	"time"
 	"root/reciver"
 	"root/transmitter"
 )
@@ -22,13 +21,15 @@ på samme maskin
 
 func main() {
 	fmt.Println("Started!")
-	go transmitter.Start_tcp_call("8081", elevator_1_ip)
+	transmitter__initialized := make(chan bool)
+
+	go transmitter.Start_tcp_call("8081", elevator_1_ip, transmitter__initialized)
 	reciver.Start_tcp_listen("8080")
 	/*
 	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
 	utility.Start_tcp_listen2("8081")
 	*/
-	time.Sleep(5*time.Second)
+	<-transmitter__initialized
 	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
@@ -43,8 +44,9 @@ func main() {
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
 	go reciver.Listen_recive(update_recived)
+	
+	elevalgo.Start_if_idle()
 	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
-
 	for {
 		select {
 		case button := <-drv_buttons:
