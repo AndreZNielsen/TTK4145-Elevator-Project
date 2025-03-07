@@ -49,8 +49,6 @@ func main() {
 		select {
 		case button := <-drv_buttons:
 			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
-			e := elevalgo.GetElevatordata()
-			go transmitter.Send_Elevator_data(e) //skal flystes 
 			elevalgo.SetAllLights()
 			
 		case floor := <-drv_floors:

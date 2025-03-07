@@ -93,7 +93,7 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 		return e.floor == buttonFloor && ((e.direction == DIR_UP && buttonType == BTN_HALLUP) ||
 			(e.direction == DIR_DOWN && buttonType == BTN_HALLDOWN) ||
 			e.direction == DIR_STOP ||
-			buttonType == BTN_HALLCAB)
+			buttonType == BTN_HALLCAB ) 
 	default:
 		return false
 	}
@@ -106,7 +106,8 @@ func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 		for btn := 0; btn < NUM_BUTTONS; btn++ {
 			e.requests[e.floor][btn] = false
 			update = [3]int{e.floor, btn, 0}
-			go Transmitt_update_and_update_localHallRequests(update,GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update)
+
 
 		}
 
@@ -117,30 +118,36 @@ func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 			if !e.RequestsAbove() && !e.requests[e.floor][BTN_HALLUP] {
 				e.requests[e.floor][BTN_HALLDOWN] = false
 				update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-				go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+				go Transmitt_update_and_update_localHallRequests(update)
+
 			}
 			e.requests[e.floor][BTN_HALLUP] = false
 			update = [3]int{e.floor, int(BTN_HALLUP), 0}
-			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update)
+
 
 		case DIR_DOWN:
 			if !e.RequestsBelow() && !e.requests[e.floor][BTN_HALLDOWN] {
 				e.requests[e.floor][BTN_HALLUP] = false
 				update = [3]int{e.floor, int(BTN_HALLUP), 0}
-				go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+				go Transmitt_update_and_update_localHallRequests(update)
+
 			}
 			e.requests[e.floor][BTN_HALLDOWN] = false
 			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update)
+
 
 		default:
 			e.requests[e.floor][BTN_HALLUP] = false
 			update = [3]int{e.floor, int(BTN_HALLUP), 0}
-			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update)
+
 
 			e.requests[e.floor][BTN_HALLDOWN] = false
 			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
-			go Transmitt_update_and_update_localHallRequests(update, GetElevatordata())
+			go Transmitt_update_and_update_localHallRequests(update)
+
 
 		}
 
