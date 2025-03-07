@@ -27,8 +27,9 @@ func Transmitt_update_and_update_localHallRequests(update_val [3]int, elevatorDa
 func ChangeLocalHallRequests(){
 	fmt.Println(GetElevatordata())
 	fmt.Println(sharedData.GetRemoteElevatorData())
+	if GetElevatordata().Floor != -1 && !(GetElevatordata().Floor == 0 && GetElevatordata().Direction == "down") && !(GetElevatordata().Floor == 3 && GetElevatordata().Direction == "up") {//stops the elavator data form crashing the assigner 
 
 	elevator.requests = makeRequests(assigner.Assigner(GetElevatordata(), sharedData.GetRemoteElevatorData(),sharedData.GetsharedHallRequests()),GetCabRequests(elevator.requests))
-
+	}
 }
 

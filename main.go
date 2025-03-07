@@ -72,6 +72,8 @@ func main() {
 			}
 		case update := <-update_recived:
 			elevalgo.UpdatesharedHallRequests(update)
+			elevalgo.ChangeLocalHallRequests()
+
 			elevalgo.SetAllLights()
 
 		}
