@@ -6,44 +6,69 @@ import (
 	"net"
 	"time"
 	"root/SharedData"
+	"errors"
 
 	
 )
-
+var ln net.Listener
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
 
-var possibleIDs = removeElement([]string{"A", "B", "C"}, sharedData.GetElevatorID())
-
+var port1 string 
 var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
+var Connected bool
 func Start_tcp_listen(port string) {
-	ln, err := net.Listen("tcp", ":"+port)
+	port1 = port
+
+	if ln != nil {	// Close the previous listener if it's still open.
+		ln.Close()
+	}
+	var err error
+	ln, err = net.Listen("tcp", ":"+port)
 	if err != nil {
 		fmt.Println("Error starting listen:", err)
+		return
 	}
 	lis_lift1, err = ln.Accept()
 	if err != nil {
 		fmt.Println("Error accepting connection:", err)
+		return
 	}
+	Connected = true
 
 }
 
 func Listen_recive(receiver chan<- [3]int) {
 	for {
-		Decode(receiver)
+		if Connected {
+			Decode(receiver)
+		}
+
 	}
 }
+var possibleIDs = removeElement([]string{"A", "B", "C"}, sharedData.GetElevatorID())
 
 func Decode(receiver chan<- [3]int) {
+
 	decoder := gob.NewDecoder(lis_lift1)
 
 	var typeID string
 	err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
+	var netErr *net.OpError
+	if errors.As(err, &netErr) { // check if it is a network-related error
+		fmt.Println("Network error:", netErr)
+		fmt.Println("Trying to reconnect")
+		go Start_tcp_listen(port1)
+		Connected = false
+		time.Sleep(1*time.Second)
+		return
+	}
 	if err != nil {
 		fmt.Println("Error decoding type:", err)
 		time.Sleep(1*time.Second)
 		return
 	}
+
 
 	switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
 	case "elevator_data":
