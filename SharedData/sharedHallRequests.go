@@ -5,12 +5,12 @@ import("root/assigner"
 )
 
 type Elevator_data = assigner.Elevator_data
-var a = []bool{false, false, false, false}
+var elevator_id = assigner.GetElevatorID()
 
 var NUM_FLOORS = 4
 var sharedHallRequests = make([][2]bool, NUM_FLOORS)
-var RemoteElevatorData = Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "up",CabRequests: a}
-
+//var RemoteElevatorData = Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "up",CabRequests: a}
+var RemoteElevatorData =  make(map[string]Elevator_data)
 // om buttonEvent eller update skal sharedHallRequests oppdateres
 //sharedHallRequests er input i assigner.go og setAllLights() (skal skru på/av hallLys)
 //output fra assigner.go skal oppdatere elevator.requests 
@@ -25,12 +25,15 @@ var RemoteElevatorData = Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: 
 func GetsharedHallRequests()[][2]bool{
 	return sharedHallRequests
 }
-func GetRemoteElevatorData()Elevator_data{
+func GetRemoteElevatorData()map[string]Elevator_data{
 	return RemoteElevatorData
 }
-func ChangeRemoteElevatorData(NewRemoteElevatorData Elevator_data){
-	RemoteElevatorData = NewRemoteElevatorData
+func ChangeRemoteElevatorData(NewRemoteElevatorData Elevator_data, id string){
+	RemoteElevatorData[id] = NewRemoteElevatorData
 }
 func ChangeSharedHallRequests(NewSharedHallRequests [][2]bool){
 	sharedHallRequests = NewSharedHallRequests
+}
+func GetElevatorID() string{
+	return elevator_id
 }

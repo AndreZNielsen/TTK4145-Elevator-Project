@@ -13,8 +13,9 @@ import (
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
 
-var a = []bool{true, false, false, false}
-var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: a}
+var possibleIDs = removeElement([]string{"A", "B", "C"}, sharedData.GetElevatorID())
+
+var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 func Start_tcp_listen(port string) {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -55,7 +56,7 @@ func Decode(receiver chan<- [3]int) {
 			return
 		}
 		if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-		sharedData.ChangeRemoteElevatorData(data)
+		sharedData.ChangeRemoteElevatorData(data,possibleIDs[0])
 		}
 			
 		//fmt.Println("Received Elevator_data:", data)
@@ -77,3 +78,11 @@ func Decode(receiver chan<- [3]int) {
 	}
 }
 
+func removeElement(slice []string, element string) []string {
+    for i, v := range slice {
+        if v == element {
+            return append(slice[:i], slice[i+1:]...)
+        }
+    }
+    return slice 
+}

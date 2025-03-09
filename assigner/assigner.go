@@ -25,7 +25,7 @@ type HRAInput struct {
 
 
 
-func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallRequests [][2]bool) [][2]bool{
+func Assigner(localelvator Elevator_data,RemoteElevatorData map[string]Elevator_data, hallRequests [][2]bool) [][2]bool{
 	var input HRAInput
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -36,22 +36,32 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallR
 	default:
 		panic("OS not supported")
 	}
-	switch elevator_id{
-	case "A":
-		input = HRAInput{
-		HallRequests: hallRequests,
-		States: map[string]Elevator_data{
-			"A": localelvator,
-			"B": RemoteElevatorData,
-		},}
-	case "B":
-		input = HRAInput{
-			HallRequests: hallRequests,
-			States: map[string]Elevator_data{
-				"A": RemoteElevatorData ,
-				"B": localelvator,
-			},}
+
+
+	states := map[string]Elevator_data{
+		elevator_id: localelvator,
 	}
+
+	// List of all possible elevator IDs.
+	possibleIDs := []string{"A", "B", "C"}
+
+	// Loop over possible IDs and add remote data if available.
+	for _, id := range possibleIDs {
+		if id == elevator_id {
+			continue // Local elevator already added.
+		}
+		// Only add the remote elevator if its data exists.
+		if remote, ok := RemoteElevatorData[id]; ok {
+			states[id] = remote
+		}
+	}
+
+	input = HRAInput{
+		HallRequests: hallRequests,
+		States:       states,
+	}
+
+
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
 		fmt.Println("json.Marshal error: ", err)
@@ -78,4 +88,8 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData Elevator_data, hallR
 	}
 	
 	return output[elevator_id]
+}
+
+func GetElevatorID() string{
+	return elevator_id
 }
