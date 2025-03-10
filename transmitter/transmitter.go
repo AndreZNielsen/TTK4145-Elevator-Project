@@ -16,6 +16,7 @@ var sendMu sync.Mutex
 var port1 string
 var ip1 string
 var transmitter__initialized_1 chan<- bool
+var RemoteElevatorConn =  make(map[string]net.Conn)
 
 func Start_tcp_call(port string, ip string, transmitter__initialized chan<- bool){
 	var err error
@@ -36,14 +37,43 @@ func Start_tcp_call(port string, ip string, transmitter__initialized chan<- bool
 	transmitter__initialized <- true
 }
 
+func Start_tcp_call2(port string, ip string)net.Conn{
+	var err error
+	if conn_lift1 != nil {	// Close the previous listener if it's still open.
+	conn_lift1.Close()
+	}
+	conn_lift1, err = net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
+	
+	if err != nil {
+		fmt.Println("Error connecting to pc:", ip, err)
+		time.Sleep(5*time.Second)
+		conn_lift1 = Start_tcp_call2(port, ip)//trys again
+		return conn_lift1
+	}
+	return conn_lift1
+}
+
+func SetConn(){
+	RemoteElevatorConn = sharedData.RemoteElevatorConnections
+}
+
 
 func Send_Elevator_data(data sharedData.Elevator_data) {
+	for _, id := range sharedData.GetRemoteIDs(){
+	go transmitt_Elevator_data(data,id)
+	}
+
+
+}
+
+func transmitt_Elevator_data(data sharedData.Elevator_data,id string){
+	SetConn()//Ensure conn is up-to-date
 	var netErr *net.OpError
 
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(conn_lift1)
+	encoder := gob.NewEncoder(RemoteElevatorConn[id])
 	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
@@ -65,17 +95,21 @@ func Send_Elevator_data(data sharedData.Elevator_data) {
 		fmt.Println("Error encoding data:", err)
 		return
 	}
-
-
 }
 
 func Send_update(update [3]int){
+	for _, id := range sharedData.GetRemoteIDs(){
+		go transmitt_update(update,id)
+		}
+}
 
+func transmitt_update(update [3]int, id string){
+	SetConn()//Ensure conn is up-to-date
 
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
 	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(conn_lift1)
+	encoder := gob.NewEncoder(RemoteElevatorConn[id])
 	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
@@ -91,12 +125,19 @@ func Send_update(update [3]int){
 }
 
 func Send_alive(){
-	encoder := gob.NewEncoder(conn_lift1)
+	for _, id := range sharedData.GetRemoteIDs(){
+		go transmitt_alive(id)
+	}
+
+}
+func transmitt_alive(id string){
+	SetConn()//Ensure conn is up-to-date
 	var netErr *net.OpError
+
+	encoder := gob.NewEncoder(RemoteElevatorConn[id])
 	
 	for {
 		sendMu.Lock() // Locking before sending
-		defer sendMu.Unlock()
 		err := encoder.Encode("alive")
 		if errors.As(err, &netErr) { // check if it is a network-related error
 			fmt.Println("Network error:", netErr)
@@ -105,10 +146,12 @@ func Send_alive(){
 			fmt.Println("reconnect reconekted")
 			time.Sleep(1*time.Second)
 			go Send_alive()
+			sendMu.Unlock() // Ensure to unlock after sending
 			return
 		}
 		if err != nil {
 			fmt.Println("Encoding error:", err)
+			sendMu.Unlock() // Ensure to unlock after sending
 			return
 		}
 		sendMu.Unlock() // Ensure to unlock after sending

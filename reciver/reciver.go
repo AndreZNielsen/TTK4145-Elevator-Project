@@ -13,6 +13,7 @@ import (
 var ln net.Listener
 var lis_lift1 net.Conn
 //var lis_lift2 net.Conn
+var RemoteElevatorConn =  make(map[string]net.Conn)
 
 var port1 string 
 var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
@@ -38,31 +39,55 @@ func Start_tcp_listen(port string) {
 	fmt.Println("Connected")
 
 }
+func Start_tcp_listen2(port string) net.Conn{
+	port1 = port
+
+	if ln != nil {	// Close the previous listener if it's still open.
+		ln.Close()
+	}
+	var err error
+	ln, err = net.Listen("tcp", ":"+port)
+	if err != nil {
+		fmt.Println("Error starting listen:", err)
+		return nil
+	}
+	lis_lift1, err = ln.Accept()
+	if err != nil {
+		fmt.Println("Error accepting connection:", err)
+		return nil
+	}
+	Connected = true
+	fmt.Println("Connected")
+	return lis_lift1
+
+
+}
+
+func SetConn(){
+	RemoteElevatorConn = sharedData.RemoteElevatorConnections
+}
 
 func Listen_recive(receiver chan<- [3]int) {
-	for {
-		if Connected {
-			Decode(receiver)
-		}else{
-		go Start_tcp_listen(port1)
-		time.Sleep(1*time.Second)
-
-		}
+	for _, id := range sharedData.GetRemoteIDs(){
+		fmt.Println("yoooooooooooo")
+		go recive(receiver,id)
+	}
+}
+func recive(receiver chan<- [3]int,id string){
+	for {	
+			Decode(receiver,id)
 
 	}
 }
-var possibleIDs = removeElement([]string{"A", "B", "C"}, sharedData.GetElevatorID())
-
-func Decode(receiver chan<- [3]int) {
-
-	decoder := gob.NewDecoder(lis_lift1)
+func Decode(receiver chan<- [3]int,id string) {
+	SetConn()//Ensure conn is up-to-date
+	decoder := gob.NewDecoder(RemoteElevatorConn[id])
 
 	var typeID string
 	err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
 	var netErr *net.OpError
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
-		fmt.Println("Trying to reconnect")
 		go Start_tcp_listen(port1)
 		Connected = false
 		time.Sleep(1*time.Second)
@@ -86,7 +111,7 @@ func Decode(receiver chan<- [3]int) {
 			return
 		}
 		if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-		sharedData.ChangeRemoteElevatorData(data,possibleIDs[0])
+		sharedData.ChangeRemoteElevatorData(data,sharedData.GetRemoteIDs()[0])
 		}
 			
 		//fmt.Println("Received Elevator_data:", data)
@@ -112,14 +137,7 @@ func Decode(receiver chan<- [3]int) {
 	}
 }
 
-func removeElement(slice []string, element string) []string {
-    for i, v := range slice {
-        if v == element {
-            return append(slice[:i], slice[i+1:]...)
-        }
-    }
-    return slice 
-}
+
 
 func Connection_lost(){
 	Connected = false

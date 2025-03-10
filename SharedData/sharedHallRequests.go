@@ -1,11 +1,14 @@
 package sharedData
 
-
-import("root/assigner"
+import (
+	"net"
+	"root/assigner"
 )
 
 type Elevator_data = assigner.Elevator_data
 var elevator_id = assigner.GetElevatorID()
+var RemoteElevatorConnections =  make(map[string]net.Conn)
+
 
 var NUM_FLOORS = 4
 var sharedHallRequests = make([][2]bool, NUM_FLOORS)
@@ -21,6 +24,8 @@ var RemoteElevatorData =  make(map[string]Elevator_data)
 //Funksjonen som henter data til sharedHallRequests må hente data fra både når buttonEvent skjer(lokalt)
 //og fra TCP-meldings-datastrukturen får en oppdatering. 
 
+var possibleIDs = []string{"A", "B"}
+var remoteIDs = removeElement(possibleIDs, elevator_id)
 	
 func GetsharedHallRequests()[][2]bool{
 	return sharedHallRequests
@@ -36,4 +41,25 @@ func ChangeSharedHallRequests(NewSharedHallRequests [][2]bool){
 }
 func GetElevatorID() string{
 	return elevator_id
+}
+func GetPossibleIDs()[]string{
+	return possibleIDs
+}
+func GetRemoteIDs()[]string{
+	return remoteIDs
+}
+
+ 
+
+func removeElement(slice []string, element string) []string {
+    // Create a copy of the slice to avoid modifying the original underlying array.
+    copiedSlice := make([]string, len(slice))
+    copy(copiedSlice, slice)
+
+    for i, v := range copiedSlice {
+        if v == element {
+            return append(copiedSlice[:i], copiedSlice[i+1:]...)
+        }
+    }
+    return copiedSlice
 }

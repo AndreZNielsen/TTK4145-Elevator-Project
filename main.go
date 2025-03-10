@@ -6,6 +6,7 @@ import (
 	"root/elevio"
 	"root/reciver"
 	"root/transmitter"
+	"root/network"
 )
 
 var elevator_1_ip = "localhost"
@@ -21,15 +22,13 @@ på samme maskin
 
 func main() {
 	fmt.Println("Started!")
-	transmitter__initialized := make(chan bool)
 
-	go transmitter.Start_tcp_call("8081", elevator_1_ip, transmitter__initialized)
-	go reciver.Start_tcp_listen("8080")
+
+	network.Start_network()
 	/*
 	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
 	utility.Start_tcp_listen2("8081")
 	*/
-	<-transmitter__initialized
 	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
