@@ -31,12 +31,15 @@ func main() {
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
 	poll_timer := make(chan bool)
+	alive_timer := make(chan bool)
 	update_recived := make(chan [3]int)
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
 	go reciver.Listen_recive(update_recived)
+	go reciver.AliveTimer(alive_timer)
+	go transmitter.Send_alive()
 	
 	elevalgo.Start_if_idle()
 	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
@@ -70,6 +73,9 @@ func main() {
 			elevalgo.UpdatesharedHallRequests(update)
 			elevalgo.SetAllLights()
 			elevalgo.ChangeLocalHallRequests()
+		case <-alive_timer:
+			reciver.Connection_lost()
+		
 		}
 	}
 }

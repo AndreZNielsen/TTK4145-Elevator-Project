@@ -22,7 +22,11 @@ func Start_tcp_call(port string, ip string, transmitter__initialized chan<- bool
 	port1 = port
 	ip1 = ip
 	transmitter__initialized_1 = transmitter__initialized
+	if conn_lift1 != nil {	// Close the previous listener if it's still open.
+	conn_lift1.Close()
+	}
 	conn_lift1, err = net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
+	
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
 		time.Sleep(5*time.Second)
@@ -44,7 +48,10 @@ func Send_Elevator_data(data sharedData.Elevator_data) {
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
 		fmt.Println("Trying to reconnect")
-		go Start_tcp_call(port1,ip1,transmitter__initialized_1)
+		Start_tcp_call(port1,ip1,nil)
+		Send_Elevator_data(data)
+		fmt.Println("reconnect reconekted")
+
 		time.Sleep(1*time.Second)
 		return
 	}
@@ -82,6 +89,34 @@ func Send_update(update [3]int){
 	}
 
 }
+
+func Send_alive(){
+	encoder := gob.NewEncoder(conn_lift1)
+	var netErr *net.OpError
+	
+	for {
+		sendMu.Lock() // Locking before sending
+		defer sendMu.Unlock()
+		err := encoder.Encode("alive")
+		if errors.As(err, &netErr) { // check if it is a network-related error
+			fmt.Println("Network error:", netErr)
+			fmt.Println("Trying to reconnect")
+			Start_tcp_call(port1,ip1,nil)
+			fmt.Println("reconnect reconekted")
+			time.Sleep(1*time.Second)
+			go Send_alive()
+			return
+		}
+		if err != nil {
+			fmt.Println("Encoding error:", err)
+			return
+		}
+		sendMu.Unlock() // Ensure to unlock after sending
+		fmt.Println("sent alive")
+		time.Sleep(time.Second)
+	}
+}
+
 
 
 

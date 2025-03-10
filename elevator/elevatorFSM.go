@@ -124,7 +124,7 @@ func FsmOnFloorArrival(newFloor int) {
 			elevator.behaviour = BEHAVIOUR_DOOR_OPEN
 		}
 	}
-	Send_Elevator_data(GetElevatordata())
+	go Send_Elevator_data(GetElevatordata())
 	//fmt.Printf("\nNew state:\n")
 	//elevator.print()
 }
@@ -155,7 +155,7 @@ func FsmOnDoorTimeout() {
 			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
 		}
 	}
-	Send_Elevator_data(GetElevatordata())
+	go Send_Elevator_data(GetElevatordata())
 	/*
 	fmt.Printf("\nNew state:\n")
 	elevator.print()

@@ -35,6 +35,7 @@ func Start_tcp_listen(port string) {
 		return
 	}
 	Connected = true
+	fmt.Println("Connected")
 
 }
 
@@ -42,6 +43,10 @@ func Listen_recive(receiver chan<- [3]int) {
 	for {
 		if Connected {
 			Decode(receiver)
+		}else{
+		go Start_tcp_listen(port1)
+		time.Sleep(1*time.Second)
+
 		}
 
 	}
@@ -98,6 +103,10 @@ func Decode(receiver chan<- [3]int) {
 		//fmt.Println("Received int:", num)
 		receiver <- num //sends signal to main that hall requests have been updated and that the lights need to be updated
 
+	case "alive":
+		StartTimer()
+		fmt.Println("StartTimer")
+	
 	default:
 		fmt.Println("Unknown type received:", typeID)
 	}
@@ -110,4 +119,8 @@ func removeElement(slice []string, element string) []string {
         }
     }
     return slice 
+}
+
+func Connection_lost(){
+	Connected = false
 }
