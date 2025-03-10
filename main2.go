@@ -10,13 +10,14 @@ import (
 
 )
 
-var elevator_1_ip = "localhost"
+
 
 
 func main() {
 	fmt.Println("Started!")
 
-	network.Start_network()
+
+	
 	/*
 	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
 	utility.Start_tcp_listen2("8081")
@@ -25,7 +26,6 @@ func main() {
 
 	elevalgo.MakeFsm()
 
-	
 	drv_buttons := make(chan elevio.ButtonEvent)
 	drv_floors := make(chan int)
 	drv_obstr := make(chan bool)
@@ -36,19 +36,16 @@ func main() {
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
-	go reciver.Listen_recive(update_recived)
+	go network.Start_network(update_recived)
 	go reciver.AliveTimer(alive_timer)
 	go transmitter.Send_alive()
-	
+
 	elevalgo.Start_if_idle()
 	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
-
 	for {
 		select {
 		case button := <-drv_buttons:
 			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
-			e := elevalgo.GetElevatordata()
-			go transmitter.Send_Elevator_data(e) //skal flystes 
 			elevalgo.SetAllLights()
 			
 		case floor := <-drv_floors:
@@ -70,12 +67,15 @@ func main() {
 			}
 		case update := <-update_recived:
 			elevalgo.UpdatesharedHallRequests(update)
-			elevalgo.SetAllLights()
 			elevalgo.ChangeLocalHallRequests()
+
+			elevalgo.SetAllLights()
+
 		case <-alive_timer:
-			reciver.Connection_lost()
-		
+
 		}
+		
 	}
 }
+
 

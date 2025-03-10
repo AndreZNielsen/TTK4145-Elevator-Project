@@ -3,11 +3,15 @@ package sharedData
 import (
 	"net"
 	"root/assigner"
+	"sort"
+	"fmt"
 )
 
 type Elevator_data = assigner.Elevator_data
 var elevator_id = assigner.GetElevatorID()
 var RemoteElevatorConnections =  make(map[string]net.Conn)
+var Disconnected = make(chan string)
+var Connected_conn = make(map[string]bool)
 
 
 var NUM_FLOORS = 4
@@ -25,7 +29,7 @@ var RemoteElevatorData =  make(map[string]Elevator_data)
 //og fra TCP-meldings-datastrukturen får en oppdatering. 
 
 var possibleIDs = []string{"A", "B"}
-var remoteIDs = removeElement(possibleIDs, elevator_id)
+var remoteIDs = RemoveElement(possibleIDs, elevator_id)
 	
 func GetsharedHallRequests()[][2]bool{
 	return sharedHallRequests
@@ -51,7 +55,7 @@ func GetRemoteIDs()[]string{
 
  
 
-func removeElement(slice []string, element string) []string {
+func RemoveElement(slice []string, element string) []string {
     // Create a copy of the slice to avoid modifying the original underlying array.
     copiedSlice := make([]string, len(slice))
     copy(copiedSlice, slice)
@@ -63,3 +67,21 @@ func removeElement(slice []string, element string) []string {
     }
     return copiedSlice
 }
+
+func PortGenerateor(localID, targetID string) string {
+	// Combine the two IDs in a deterministic order
+	ids := []string{localID, targetID}
+	sort.Strings(ids) // ensures the order is consistent regardless of input order
+	combined := ids[0] + ids[1]
+
+	// makes a hash
+	var hash int
+	for _, ch := range combined {
+		hash += int(ch)
+	}
+
+	//we choose 8000 as the base to make it in typical port range
+	port := 8000 + (hash % 1000)
+	return fmt.Sprintf("%d", port)
+}
+

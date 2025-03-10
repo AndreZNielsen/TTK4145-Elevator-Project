@@ -10,57 +10,40 @@ import (
 
 	
 )
-var ln net.Listener
-var lis_lift1 net.Conn
+
 //var lis_lift2 net.Conn
-var RemoteElevatorConn =  make(map[string]net.Conn)
-
-var port1 string 
-var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
-var Connected bool
-func Start_tcp_listen(port string) {
-	port1 = port
-
-	if ln != nil {	// Close the previous listener if it's still open.
-		ln.Close()
-	}
-	var err error
-	ln, err = net.Listen("tcp", ":"+port)
-	if err != nil {
-		fmt.Println("Error starting listen:", err)
-		return
-	}
-	lis_lift1, err = ln.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection:", err)
-		return
-	}
-	Connected = true
-	fmt.Println("Connected")
-
-}
-func Start_tcp_listen2(port string) net.Conn{
-	port1 = port
-
-	if ln != nil {	// Close the previous listener if it's still open.
-		ln.Close()
-	}
-	var err error
-	ln, err = net.Listen("tcp", ":"+port)
-	if err != nil {
-		fmt.Println("Error starting listen:", err)
-		return nil
-	}
-	lis_lift1, err = ln.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection:", err)
-		return nil
-	}
-	Connected = true
-	fmt.Println("Connected")
-	return lis_lift1
 
 
+
+func Start_tcp_listen(port string, id string) net.Conn {
+    // If there is an existing connection for this id, close it.
+    if existingConn := sharedData.RemoteElevatorConnections[id]; existingConn != nil {
+        existingConn.Close()
+    }
+
+    // Start a new listener locally.
+    ln, err := net.Listen("tcp", ":"+port)
+    if err != nil {
+        fmt.Println("Error starting listener:", err)
+        return nil
+    }
+    // Accept a new connection.
+    conn, err := ln.Accept()
+    if err != nil {
+        fmt.Println("Error accepting connection:", err)
+        ln.Close() // Close listener on error.
+        return nil
+    }
+
+    // Close the listener if you don't need to accept further connections.
+    ln.Close()
+
+    // Update shared data with the new connection.
+    sharedData.RemoteElevatorConnections[id] = conn
+    sharedData.Connected_conn[id] = true
+
+    fmt.Println("Connected")
+    return conn
 }
 
 func SetConn(){
@@ -69,16 +52,23 @@ func SetConn(){
 
 func Listen_recive(receiver chan<- [3]int) {
 	for _, id := range sharedData.GetRemoteIDs(){
-		fmt.Println("yoooooooooooo")
-		go recive(receiver,id)
+		go Recive(receiver,id)
 	}
 }
-func recive(receiver chan<- [3]int,id string){
+func Recive(receiver chan<- [3]int,id string){
 	for {	
+		if sharedData.Connected_conn[id]{	
 			Decode(receiver,id)
+		}else{
+			return}
 
 	}
 }
+
+var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
+
+var RemoteElevatorConn =  make(map[string]net.Conn)
+
 func Decode(receiver chan<- [3]int,id string) {
 	SetConn()//Ensure conn is up-to-date
 	decoder := gob.NewDecoder(RemoteElevatorConn[id])
@@ -88,9 +78,8 @@ func Decode(receiver chan<- [3]int,id string) {
 	var netErr *net.OpError
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
-		go Start_tcp_listen(port1)
-		Connected = false
-		time.Sleep(1*time.Second)
+		sharedData.Connected_conn[id] = false
+		sharedData.Disconnected<-id
 		return
 	}
 	if err != nil {
@@ -125,8 +114,8 @@ func Decode(receiver chan<- [3]int,id string) {
 			fmt.Println("Error decoding int:", err)
 			return
 		}
+		receiver<-num
 		//fmt.Println("Received int:", num)
-		receiver <- num //sends signal to main that hall requests have been updated and that the lights need to be updated
 
 	case "alive":
 		StartTimer()
@@ -137,8 +126,3 @@ func Decode(receiver chan<- [3]int,id string) {
 	}
 }
 
-
-
-func Connection_lost(){
-	Connected = false
-}

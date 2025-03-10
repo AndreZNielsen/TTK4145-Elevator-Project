@@ -24,7 +24,7 @@ func main() {
 	fmt.Println("Started!")
 
 
-	network.Start_network()
+	
 	/*
 	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
 	utility.Start_tcp_listen2("8081")
@@ -39,11 +39,11 @@ func main() {
 	poll_timer := make(chan bool)
 	alive_timer := make(chan bool)
 	update_recived := make(chan [3]int)
+	network.Start_network(update_recived)
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
-	go reciver.Listen_recive(update_recived)
 	go reciver.AliveTimer(alive_timer)
 	go transmitter.Send_alive()
 
@@ -79,7 +79,7 @@ func main() {
 			elevalgo.SetAllLights()
 
 		case <-alive_timer:
-			reciver.Connection_lost()
+
 		}
 		
 	}
