@@ -1,6 +1,6 @@
 package config
 
-var NUM_FLOORS = 4
+var Num_floors = 4
 
 var Elevator_id = "A"
 

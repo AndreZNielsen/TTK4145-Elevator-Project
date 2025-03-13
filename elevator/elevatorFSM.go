@@ -28,8 +28,8 @@ func GetElevatordata() Config.Elevator_data {
 func SetAllLights() {
 	//Basically just takes the requests from the button presses and lights up the corresponding button lights
 	requests := makeRequests(sharedData.GetsharedHallRequests(), GetCabRequests(elevator.requests))
-	for floor := 0; floor < NUM_FLOORS; floor++ {
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
+	for floor := 0; floor < Num_floors; floor++ {
+		for btn := 0; btn < Num_buttons; btn++ {
 			elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])
 		}
 	}
@@ -37,29 +37,19 @@ func SetAllLights() {
 
 func FsmOnInitBetweenFloors() {
 	elevio.SetMotorDirection(elevio.MD_Down)
-	elevator.direction = DIR_DOWN
-	elevator.behaviour = BEHAVIOUR_MOVING
+	elevator.direction = Dir_down
+	elevator.behaviour = Behaviour_moving
 }
 
 func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
-	//This is the important module in the FSM. Here button-presses are handled
-	//and depending on the state of the elevator, the elevator will find the correct next behacior
-	//communication with the elevator is done with runtime. instead of printf. like in the provided C program
-
-	//pc := make([]uintptr, 15)
-	//n := runtime.Callers(2, pc)
-	//frames := runtime.CallersFrames(pc[:n])
-	//frame, _ := frames.Next()
 	var update [3]int
-	//fmt.Printf("\n\n%s(%d, %s)\n", frame.Function, btn_floor, ElevioButtonToString(btn_type))
-	//elevator.print()
 
 	switch elevator.behaviour {
-	case BEHAVIOUR_DOOR_OPEN:
+	case Behaviour_door_open:
 		if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
 			StartTimer()
 		} else {
-			if btn_type == BTN_HALLCAB {
+			if btn_type == Btn_hallcab {
 				elevator.requests[btn_floor][btn_type] = true
 			}
 	
@@ -67,16 +57,16 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 			update = [3]int{btn_floor, int(btn_type), 1}
 			go Transmitt_update_and_update_localHallRequests(update)
 		}
-	case BEHAVIOUR_MOVING:
-		if btn_type == BTN_HALLCAB {
+	case Behaviour_moving:
+		if btn_type == Btn_hallcab {
 			elevator.requests[btn_floor][btn_type] = true
 		}
 		update = [3]int{btn_floor, int(btn_type), 1}
 		go Transmitt_update_and_update_localHallRequests(update)
 
 
-	case BEHAVIOUR_IDLE:
-		if btn_type == BTN_HALLCAB {
+	case Behaviour_idle:
+		if btn_type == Btn_hallup {
 			elevator.requests[btn_floor][btn_type] = true
 		}
 
@@ -86,7 +76,7 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 			elevator = RequestsClearAtCurrentFloor(elevator)
 			StartTimer()
 			SetAllLights()
-			elevator.behaviour = BEHAVIOUR_DOOR_OPEN
+			elevator.behaviour = Behaviour_door_open
 		}else {
 			update = [3]int{btn_floor, int(btn_type), 1}
 			go Transmitt_update_and_update_localHallRequests(update)
@@ -95,34 +85,22 @@ func FsmOnRequestButtonPress(btn_floor int, btn_type Button) {
 
 
 	}
-
-	//fmt.Printf("\nNew state:\n")
-	//elevator.print()
 }
 
 func FsmOnFloorArrival(newFloor int) {
-	/*
-	pc := make([]uintptr, 15)
-	n := runtime.Callers(2, pc)
-	frames := runtime.CallersFrames(pc[:n])
-	frame, _ := frames.Next()
-
-	fmt.Printf("\n\n%s(%d)\n", frame.Function, newFloor)
-	elevator.print()
-	*/
 	elevator.floor = newFloor
 
 	elevio.SetFloorIndicator(elevator.floor)
 
 	switch elevator.behaviour {
-	case BEHAVIOUR_MOVING:
+	case Behaviour_moving:
 		if elevator.RequestsShouldStop() {
 			elevio.SetMotorDirection(elevio.MD_Stop)
 			elevio.SetDoorOpenLamp(true)
 			elevator = RequestsClearAtCurrentFloor(elevator)
 			StartTimer()
 			SetAllLights()
-			elevator.behaviour = BEHAVIOUR_DOOR_OPEN
+			elevator.behaviour = Behaviour_door_open
 		}
 	}
 	go Send_Elevator_data(GetElevatordata())
@@ -131,50 +109,37 @@ func FsmOnFloorArrival(newFloor int) {
 }
 
 func FsmOnDoorTimeout() {
-		/*
-	pc := make([]uintptr, 15)
-	n := runtime.Callers(2, pc)
-	frames := runtime.CallersFrames(pc[:n])
-	frame, _ := frames.Next()
-
-	fmt.Printf("\n\n%s()\n", frame.Function)
-	elevator.print()
-	*/
 	switch elevator.behaviour {
-	case BEHAVIOUR_DOOR_OPEN:
+	case Behaviour_door_open:
 		pair := elevator.RequestsChooseDirection()
 		elevator.direction = pair.dir
 		elevator.behaviour = pair.behaviour
 
 		switch elevator.behaviour {
-		case BEHAVIOUR_DOOR_OPEN:
+		case Behaviour_door_open:
 			StartTimer()
 			elevator = RequestsClearAtCurrentFloor(elevator)
 			SetAllLights()
-		case BEHAVIOUR_MOVING, BEHAVIOUR_IDLE:
+		case Behaviour_moving, Behaviour_idle:
 			elevio.SetDoorOpenLamp(false)
 			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
 		}
 	}
 	go Send_Elevator_data(GetElevatordata())
-	/*
-	fmt.Printf("\nNew state:\n")
-	elevator.print()
-	*/
 }
 
 var doorObstructed bool
 
 func DoorObstructed() {
 	doorObstructed = true
-	if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
+	if elevator.behaviour == Behaviour_door_open {
 		StartTimer()
 	}
 }
 
 func DoorUnobstructed() {
 	doorObstructed = false
-	if elevator.behaviour == BEHAVIOUR_DOOR_OPEN {
+	if elevator.behaviour == Behaviour_door_open {
 		StartTimer()
 	}
 }
@@ -183,7 +148,7 @@ func IsDoorObstructed() bool {
 	return doorObstructed
 }
 
-func GetCabRequests(matrix [NUM_FLOORS][3]bool) []bool {
+func GetCabRequests(matrix [Num_floors][3]bool) []bool {
 	var column []bool
 	for i := 0; i < len(matrix); i++ {
 		column = append(column, matrix[i][2])
@@ -191,7 +156,7 @@ func GetCabRequests(matrix [NUM_FLOORS][3]bool) []bool {
 	return column
 }
 
-func GetHallRequests(matrix [NUM_FLOORS][3]bool) [][2]bool {
+func GetHallRequests(matrix [Num_floors][3]bool) [][2]bool {
 	var newMatrix [][2]bool
 
 	// Extract columns 1 and 2 (index 0 and 1)
@@ -203,10 +168,10 @@ func GetHallRequests(matrix [NUM_FLOORS][3]bool) [][2]bool {
 
 
 
-func makeRequests(HallRequests [][2]bool, GetCabRequests []bool) [NUM_FLOORS][3]bool {
-    var result [NUM_FLOORS][3]bool
+func makeRequests(HallRequests [][2]bool, GetCabRequests []bool) [Num_floors][3]bool {
+    var result [Num_floors][3]bool
 
-    for i := 0; i < NUM_FLOORS; i++ {
+    for i := 0; i < Num_floors; i++ {
         result[i][0] = HallRequests[i][0]
         result[i][1] = HallRequests[i][1]
         result[i][2] = GetCabRequests[i]

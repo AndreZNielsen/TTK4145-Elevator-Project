@@ -5,8 +5,8 @@ package elevator
 
 func (e *Elevator) RequestsAbove() bool {
 	//self explainatory, the different buttons are BTN_HALLUP, BTN_HALLDOWN, BTN_HALLCAB
-	for f := e.floor + 1; f < NUM_FLOORS; f++ {
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
+	for f := e.floor + 1; f < Num_floors; f++ {
+		for btn := 0; btn < Num_buttons; btn++ {
 			if e.requests[f][btn] {
 				return true
 			}
@@ -18,7 +18,7 @@ func (e *Elevator) RequestsAbove() bool {
 func (e *Elevator) RequestsBelow() bool {
 	//also self explainatory
 	for f := 0; f < e.floor; f++ {
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
+		for btn := 0; btn < Num_buttons; btn++ {
 			if e.requests[f][btn] {
 				return true
 			}
@@ -29,7 +29,7 @@ func (e *Elevator) RequestsBelow() bool {
 
 func (e *Elevator) RequestsHere() bool {
 	//shouldnt need to explain this either
-	for btn := 0; btn < NUM_BUTTONS; btn++ {
+	for btn := 0; btn < Num_buttons; btn++ {
 		if e.requests[e.floor][btn] {
 			return true
 		}
@@ -39,47 +39,47 @@ func (e *Elevator) RequestsHere() bool {
 
 func (e *Elevator) RequestsChooseDirection() DirBehaviourPair {
 	switch e.direction {
-	case DIR_UP:
+	case Dir_up:
 		if e.RequestsAbove() {
-			return DirBehaviourPair{DIR_UP, BEHAVIOUR_MOVING}
+			return DirBehaviourPair{Dir_up, Behaviour_moving}
 		} else if e.RequestsHere() {
-			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_DOOR_OPEN}
+			return DirBehaviourPair{Dir_stop, Behaviour_door_open}
 		} else if e.RequestsBelow() {
-			return DirBehaviourPair{DIR_DOWN, BEHAVIOUR_MOVING}
+			return DirBehaviourPair{Dir_down, Behaviour_moving}
 		} else {
-			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_IDLE}
+			return DirBehaviourPair{Dir_stop, Behaviour_idle}
 		}
-	case DIR_DOWN:
+	case Dir_down:
 		if e.RequestsBelow() {
-			return DirBehaviourPair{DIR_DOWN, BEHAVIOUR_MOVING}
+			return DirBehaviourPair{Dir_down, Behaviour_moving}
 		} else if e.RequestsHere() {
-			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_DOOR_OPEN}
+			return DirBehaviourPair{Dir_stop, Behaviour_door_open}
 		} else if e.RequestsAbove() {
-			return DirBehaviourPair{DIR_UP, BEHAVIOUR_MOVING}
+			return DirBehaviourPair{Dir_up, Behaviour_moving}
 		} else {
-			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_IDLE}
+			return DirBehaviourPair{Dir_stop, Behaviour_idle}
 		}
-	case DIR_STOP: // there should only be one request in the Stop case. Checking up or down first is arbitrary.
+	case Dir_stop: // there should only be one request in the Stop case. Checking up or down first is arbitrary.
 		if e.RequestsHere() {
-			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_DOOR_OPEN}
+			return DirBehaviourPair{Dir_stop, Behaviour_door_open}
 		} else if e.RequestsAbove() {
-			return DirBehaviourPair{DIR_UP, BEHAVIOUR_MOVING}
+			return DirBehaviourPair{Dir_up, Behaviour_moving}
 		} else if e.RequestsBelow() {
-			return DirBehaviourPair{DIR_DOWN, BEHAVIOUR_MOVING}
+			return DirBehaviourPair{Dir_down, Behaviour_moving}
 		} else {
-			return DirBehaviourPair{DIR_STOP, BEHAVIOUR_IDLE}
+			return DirBehaviourPair{Dir_stop, Behaviour_idle}
 		}
 	default:
-		return DirBehaviourPair{DIR_STOP, BEHAVIOUR_IDLE}
+		return DirBehaviourPair{Dir_stop, Behaviour_idle}
 	}
 }
 
 func (e *Elevator) RequestsShouldStop() bool {
 	switch e.direction {
-	case DIR_DOWN:
-		return e.requests[e.floor][BTN_HALLDOWN] || e.requests[e.floor][BTN_HALLCAB] || !e.RequestsBelow()
-	case DIR_UP:
-		return e.requests[e.floor][BTN_HALLUP] || e.requests[e.floor][BTN_HALLCAB] || !e.RequestsAbove()
+	case Dir_down:
+		return e.requests[e.floor][Btn_halldown] || e.requests[e.floor][Btn_hallcab] || !e.RequestsBelow()
+	case Dir_up:
+		return e.requests[e.floor][Btn_hallup] || e.requests[e.floor][Btn_hallcab] || !e.RequestsAbove()
 	default:
 		return true
 	}
@@ -90,10 +90,10 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 	case CV_All:
 		return e.floor == buttonFloor
 	case CV_InDirn:
-		return e.floor == buttonFloor && ((e.direction == DIR_UP && buttonType == BTN_HALLUP) ||
-			(e.direction == DIR_DOWN && buttonType == BTN_HALLDOWN) ||
-			e.direction == DIR_STOP ||
-			buttonType == BTN_HALLCAB ) 
+		return e.floor == buttonFloor && ((e.direction == Dir_up && buttonType == Btn_hallup) ||
+			(e.direction == Dir_down && buttonType == Btn_halldown) ||
+			e.direction == Dir_stop ||
+			buttonType == Btn_hallcab ) 
 	default:
 		return false
 	}
@@ -103,7 +103,7 @@ func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 	var update [3]int
 	switch e.config.clearRequestVariation {
 	case CV_All:
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
+		for btn := 0; btn < Num_buttons; btn++ {
 			e.requests[e.floor][btn] = false
 			update = [3]int{e.floor, btn, 0}
 			go Transmitt_update_and_update_localHallRequests(update)
@@ -112,40 +112,40 @@ func RequestsClearAtCurrentFloor(e Elevator) Elevator {
 		}
 
 	case CV_InDirn:
-		e.requests[e.floor][BTN_HALLCAB] = false
+		e.requests[e.floor][Btn_hallcab] = false
 		switch e.direction {
-		case DIR_UP:
-			if !e.RequestsAbove() && !e.requests[e.floor][BTN_HALLUP] {
-				e.requests[e.floor][BTN_HALLDOWN] = false
-				update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
+		case Dir_up:
+			if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
+				e.requests[e.floor][Btn_halldown] = false
+				update = [3]int{e.floor, int(Btn_halldown), 0}
 				go Transmitt_update_and_update_localHallRequests(update)
 
 			}
-			e.requests[e.floor][BTN_HALLUP] = false
-			update = [3]int{e.floor, int(BTN_HALLUP), 0}
+			e.requests[e.floor][Btn_hallup] = false
+			update = [3]int{e.floor, int(Btn_hallup), 0}
 			go Transmitt_update_and_update_localHallRequests(update)
 
 
-		case DIR_DOWN:
-			if !e.RequestsBelow() && !e.requests[e.floor][BTN_HALLDOWN] {
-				e.requests[e.floor][BTN_HALLUP] = false
-				update = [3]int{e.floor, int(BTN_HALLUP), 0}
+		case Dir_down:
+			if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
+				e.requests[e.floor][Btn_hallup] = false
+				update = [3]int{e.floor, int(Btn_hallup), 0}
 				go Transmitt_update_and_update_localHallRequests(update)
 
 			}
-			e.requests[e.floor][BTN_HALLDOWN] = false
-			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
+			e.requests[e.floor][Btn_halldown] = false
+			update = [3]int{e.floor, int(Btn_halldown), 0}
 			go Transmitt_update_and_update_localHallRequests(update)
 
 
 		default:
-			e.requests[e.floor][BTN_HALLUP] = false
-			update = [3]int{e.floor, int(BTN_HALLUP), 0}
+			e.requests[e.floor][Btn_hallup] = false
+			update = [3]int{e.floor, int(Btn_hallup), 0}
 			go Transmitt_update_and_update_localHallRequests(update)
 
 
-			e.requests[e.floor][BTN_HALLDOWN] = false
-			update = [3]int{e.floor, int(BTN_HALLDOWN), 0}
+			e.requests[e.floor][Btn_halldown] = false
+			update = [3]int{e.floor, int(Btn_halldown), 0}
 			go Transmitt_update_and_update_localHallRequests(update)
 
 

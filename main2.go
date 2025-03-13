@@ -13,7 +13,7 @@ import (
 
 
 
-func main() {
+func main2() {
 	fmt.Println("Started!")
 
 
@@ -22,7 +22,7 @@ func main() {
 	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
 	utility.Start_tcp_listen2("8081")
 	*/
-	elevio.Init("localhost:12346", elevalgo.NUM_FLOORS)
+	elevio.Init("localhost:12346", elevalgo.Num_floors)
 
 	elevalgo.MakeFsm()
 

@@ -10,7 +10,7 @@ var RemoteElevatorConnections =  make(map[string]net.Conn)
 var Connected_conn = make(map[string]bool)
 
 
-var sharedHallRequests = make([][2]bool, config.NUM_FLOORS)
+var sharedHallRequests = make([][2]bool, config.Num_floors)
 //var RemoteElevatorData = Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "up",CabRequests: a}
 var RemoteElevatorData =  make(map[string]config.Elevator_data)
 // om buttonEvent eller update skal sharedHallRequests oppdateres

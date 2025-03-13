@@ -42,12 +42,12 @@ func Send_Elevator_data( elevatorData Config.Elevator_data){
 }
 func Start_if_idle(){
 	switch elevator.behaviour{
-	case BEHAVIOUR_IDLE:	
+	case Behaviour_idle:	
 		pair := elevator.RequestsChooseDirection()
 		elevator.direction = pair.dir
 		elevator.behaviour = pair.behaviour
 		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
-	case BEHAVIOUR_DOOR_OPEN:
+	case Behaviour_door_open:
 		StartTimer()
 		elevio.SetDoorOpenLamp(true)
 
