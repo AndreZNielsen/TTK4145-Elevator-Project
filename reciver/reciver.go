@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net"
 	"time"
-	"root/SharedData"
+	"root/sharedData"
+	"root/config"
 	"errors"
 
 	
@@ -50,26 +51,26 @@ func SetConn(){
 	RemoteElevatorConn = sharedData.RemoteElevatorConnections
 }
 
-func Listen_recive(receiver chan<- [3]int) {
-	for _, id := range sharedData.GetRemoteIDs(){
-		go Recive(receiver,id)
+func Listen_recive(receiver chan<- [3]int,disconnected chan<- string) {
+	for _, id := range config.RemoteIDs{
+		go Recive(receiver,id,disconnected)
 	}
 }
-func Recive(receiver chan<- [3]int,id string){
+func Recive(receiver chan<- [3]int,id string,disconnected chan<- string){
 	for {	
 		if sharedData.Connected_conn[id]{	
-			Decode(receiver,id)
+			Decode(receiver,id,disconnected)
 		}else{
 			return}
 
 	}
 }
 
-var data = sharedData.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
+var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
 var RemoteElevatorConn =  make(map[string]net.Conn)
 
-func Decode(receiver chan<- [3]int,id string) {
+func Decode(receiver chan<- [3]int,id string,disconnected chan<- string) {
 	SetConn()//Ensure conn is up-to-date
 	decoder := gob.NewDecoder(RemoteElevatorConn[id])
 
@@ -79,7 +80,7 @@ func Decode(receiver chan<- [3]int,id string) {
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
 		sharedData.Connected_conn[id] = false
-		sharedData.Disconnected<-id
+		disconnected<-id
 		return
 	}
 	if err != nil {
@@ -91,7 +92,7 @@ func Decode(receiver chan<- [3]int,id string) {
 
 	switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
 	case "elevator_data":
-		var data sharedData.Elevator_data
+		var data config.Elevator_data
 
 		err = decoder.Decode(&data)
 		if err != nil {
@@ -100,7 +101,7 @@ func Decode(receiver chan<- [3]int,id string) {
 			return
 		}
 		if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-		sharedData.ChangeRemoteElevatorData(data,sharedData.GetRemoteIDs()[0])
+		sharedData.ChangeRemoteElevatorData(data,id)
 		}
 			
 		//fmt.Println("Received Elevator_data:", data)

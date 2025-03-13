@@ -3,7 +3,8 @@ package transmitter
 import (
 	"encoding/gob"
 	"fmt"
-	sharedData "root/SharedData"
+	"root/sharedData"
+	"root/config"
 	"net"
 	"sync"
 	"time"
@@ -15,8 +16,9 @@ var conn_lift net.Conn
 var sendMu sync.Mutex 
 
 var RemoteElevatorConn =  make(map[string]net.Conn)
+var Disconnected chan<- string
 
-func Start_tcp_call(port string, ip string, id string)net.Conn{
+func Start_tcp_call(port string, ip string, id string,disconnected chan<- string)net.Conn{
 	
 	var err error
 	if conn_lift != nil {	// Close the previous listener if it's still open.
@@ -27,10 +29,11 @@ func Start_tcp_call(port string, ip string, id string)net.Conn{
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
 		time.Sleep(5*time.Second)
-		conn_lift = Start_tcp_call(port, ip,id)//trys again
+		conn_lift = Start_tcp_call(port, ip,id,disconnected)//trys again
 		return conn_lift
 	}
 	sharedData.Connected_conn[id]=true
+	Disconnected = disconnected
 	return conn_lift
 }
 
@@ -39,8 +42,8 @@ func SetConn(){
 }
 
 
-func Send_Elevator_data(data sharedData.Elevator_data) {
-	for _, id := range sharedData.GetRemoteIDs(){
+func Send_Elevator_data(data config.Elevator_data) {
+	for _, id := range config.RemoteIDs{
 		if sharedData.Connected_conn[id] {
 			go transmitt_Elevator_data(data,id)
 			
@@ -50,7 +53,7 @@ func Send_Elevator_data(data sharedData.Elevator_data) {
 
 }
 
-func transmitt_Elevator_data(data sharedData.Elevator_data,id string){
+func transmitt_Elevator_data(data config.Elevator_data,id string){
 
 	var netErr *net.OpError
 
@@ -64,7 +67,7 @@ func transmitt_Elevator_data(data sharedData.Elevator_data,id string){
 		fmt.Println("Network error:", netErr)
 		fmt.Println("Trying to reconnect")
 		sharedData.Connected_conn[id]=false
-		sharedData.Disconnected<-id
+		Disconnected<-id
 		Send_Elevator_data(data)
 		fmt.Println("reconnect reconekted")
 
@@ -84,7 +87,7 @@ func transmitt_Elevator_data(data sharedData.Elevator_data,id string){
 }
 
 func Send_update(update [3]int){
-	for _, id := range sharedData.GetRemoteIDs(){
+	for _, id := range config.RemoteIDs{
 		if sharedData.Connected_conn[id]{
 			go transmitt_update(update,id)
 			
@@ -114,7 +117,7 @@ func transmitt_update(update [3]int, id string){
 }
 
 func Send_alive(){
-	for _, id := range sharedData.GetRemoteIDs(){
+	for _, id := range config.RemoteIDs{
 		go transmitt_alive(id)
 	}
 
@@ -135,7 +138,7 @@ func transmitt_alive(id string){
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
 				fmt.Println("Trying to reconnect")
-				sharedData.Disconnected<-id
+				Disconnected<-id
 				sharedData.Connected_conn[id] = false
 				fmt.Println("reconnect reconekted")
 				time.Sleep(1*time.Second)

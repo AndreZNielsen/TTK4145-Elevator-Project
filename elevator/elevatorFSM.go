@@ -2,7 +2,8 @@ package elevator
 
 import (
 	//"fmt"
-	sharedData "root/SharedData"
+	"root/sharedData"
+	Config "root/config"
 	"root/elevio"
 	//"runtime"
 )
@@ -20,8 +21,8 @@ func MakeFsm() {
 	//The elevator will now know what floor it is on, and will update its state accordingly
 }
 
-func GetElevatordata() sharedData.Elevator_data {
-	return sharedData.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests)}
+func GetElevatordata() Config.Elevator_data {
+	return Config.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests)}
 }
 
 func SetAllLights() {

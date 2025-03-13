@@ -2,9 +2,10 @@ package elevator
 
 import(
 	"root/assigner"
-	"root/SharedData"
+	"root/sharedData"
 	"root/transmitter"
 	"root/elevio"
+	Config "root/config"
 	"fmt"
 )
 
@@ -12,7 +13,7 @@ func UpdatesharedHallRequests(update [3]int){
 	sharedHallRequests := sharedData.GetsharedHallRequests()
 	if update[2] == 1 && update[1] != 2{//igneores updates to cab requests(update[1] != 2)
 		sharedHallRequests[update[0]][update[1]] = true
-			
+		
 		}else if update[1] != 2{
 		sharedHallRequests[update[0]][update[1]] = false
 		}
@@ -36,7 +37,7 @@ func ChangeLocalHallRequests(){
 }
 }
 
-func Send_Elevator_data( elevatorData sharedData.Elevator_data){
+func Send_Elevator_data( elevatorData Config.Elevator_data){
 	transmitter.Send_Elevator_data(elevatorData)
 }
 func Start_if_idle(){

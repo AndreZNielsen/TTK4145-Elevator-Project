@@ -14,8 +14,8 @@ var elevator_1_ip = "localhost"
 /*
 hvordan kjøre:
 start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/assigner.elevator_id=A" main.go
-og så go run -ldflags="-X root/assigner.elevator_id=B" main2.go
+kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
+og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
 på samme maskin
 */
 
@@ -24,11 +24,6 @@ func main() {
 	fmt.Println("Started!")
 
 
-	
-	/*
-	go utility.Start_tcp_call2("8081", elevator_2_ip) // for the third elevator
-	utility.Start_tcp_listen2("8081")
-	*/
 	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
 
 	elevalgo.MakeFsm()
@@ -39,13 +34,14 @@ func main() {
 	poll_timer := make(chan bool)
 	alive_timer := make(chan bool)
 	update_recived := make(chan [3]int)
-	network.Start_network(update_recived)
+	disconnected := make(chan string)
+
+	network.Start_network(update_recived,disconnected)
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
 	go reciver.AliveTimer(alive_timer)
-	go transmitter.Send_alive()
 
 	elevalgo.Start_if_idle()
 	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
@@ -77,7 +73,9 @@ func main() {
 			elevalgo.ChangeLocalHallRequests()
 
 			elevalgo.SetAllLights()
-
+		
+		case id := <- disconnected:
+			go network.Network_reconnector(update_recived, disconnected,id)
 		case <-alive_timer:
 
 		}

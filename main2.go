@@ -32,13 +32,14 @@ func main() {
 	poll_timer := make(chan bool)
 	alive_timer := make(chan bool)
 	update_recived := make(chan [3]int)
+	disconnected := make(chan string)
+
+	network.Start_network(update_recived,disconnected)
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
-	go network.Start_network(update_recived)
 	go reciver.AliveTimer(alive_timer)
-	go transmitter.Send_alive()
 
 	elevalgo.Start_if_idle()
 	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
@@ -70,12 +71,13 @@ func main() {
 			elevalgo.ChangeLocalHallRequests()
 
 			elevalgo.SetAllLights()
-
+		
+		case id := <- disconnected:
+			go network.Network_reconnector(update_recived, disconnected,id)
 		case <-alive_timer:
 
 		}
 		
 	}
 }
-
 

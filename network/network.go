@@ -3,23 +3,21 @@ package network
 import(
 	"root/reciver"
 	"root/transmitter"
-	"root/SharedData"
+	"root/sharedData"
+	"root/config"
 	"net"
-	//"fmt"
+	"sort"
+	"fmt"
 	
 
 )
-var elevatoip = map[string]string{
-        "A": "localhost",
-        "B": "localhost",
-}
 
-func Start_network(receiver chan<- [3]int){
+func Start_network(receiver chan<- [3]int,disconnected chan<- string){
 	var counter int
 	var RemoteElevatorConnections =  make(map[string]net.Conn)
 
-	for _, id := range sharedData.GetPossibleIDs(){
-		if id == sharedData.GetElevatorID() {
+	for _, id := range config.PossibleIDs{
+		if id == config.Elevator_id {
 			counter +=1 
 			continue // Local elevator not needed 
 		}
@@ -27,10 +25,10 @@ func Start_network(receiver chan<- [3]int){
 
 		if counter%2 == 0 {
 
-		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(sharedData.PortGenerateor(sharedData.GetElevatorID(),id),elevatoip[id],id)	
+		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
 		}else{
 
-		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(sharedData.PortGenerateor(sharedData.GetElevatorID(),id),id)
+		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
 		}
 		counter +=1 
 		
@@ -38,49 +36,62 @@ func Start_network(receiver chan<- [3]int){
 	sharedData.RemoteElevatorConnections = RemoteElevatorConnections
 	reciver.SetConn()
 	transmitter.SetConn()
-	go network_reconnector(receiver)
-	go reciver.Listen_recive(receiver)
+	go reciver.Listen_recive(receiver,disconnected)
+	go transmitter.Send_alive()
+
 	
 
 }
 
-func network_reconnector(receiver chan<- [3]int){
+func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, needReconnecting string){
 	var counter int
 	var RemoteElevatorConnections =  make(map[string]net.Conn)
-	for {
-		NeedReconnecting := <- sharedData.Disconnected
 		counter = 0
 
-		for _, id := range sharedData.GetPossibleIDs(){
-			if id == sharedData.GetElevatorID() {
-				counter +=1 
-				continue // Local elevator not needed 
-			}
-
-
-	
-			if counter%2 == 0 && NeedReconnecting == id{
-
-			RemoteElevatorConnections[id] = transmitter.Start_tcp_call(sharedData.PortGenerateor(sharedData.GetElevatorID(),id),elevatoip[id],id)	
-			reciver.SetConn()
-			transmitter.SetConn()
-			go reciver.Recive(receiver,id)
-
-			}else if NeedReconnecting == id{
-
-			RemoteElevatorConnections[id] = reciver.Start_tcp_listen(sharedData.PortGenerateor(sharedData.GetElevatorID(),id),id)
-			reciver.SetConn()
-			transmitter.SetConn()
-			go reciver.Recive(receiver,id)
-
-			}
+	for _, id := range config.PossibleIDs{
+		if id == config.Elevator_id {
 			counter +=1 
-			
+			continue // Local elevator not needed 
 		}
-		NeedReconnecting = "nil"
+
+
+
+		if counter%2 == 0 && needReconnecting == id{
+
+		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
 		reciver.SetConn()
 		transmitter.SetConn()
+		go reciver.Recive(receiver,id,disconnected)
+
+		}else if needReconnecting == id{
+
+		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
+		reciver.SetConn()
+		transmitter.SetConn()
+		go reciver.Recive(receiver,id,disconnected)
+
+		}
+		counter +=1 
+		
 	}
+	reciver.SetConn()
+	transmitter.SetConn()
 	}
 
 
+func portGenerateor(localID, targetID string) string {
+	// Combine the two IDs in a deterministic order
+	ids := []string{localID, targetID}
+	sort.Strings(ids) // ensures the order is consistent regardless of input order
+	combined := ids[0] + ids[1]
+
+	// makes a hash
+	var hash int
+	for _, ch := range combined {
+		hash += int(ch)
+	}
+
+	//we choose 8000 as the base to make it in typical port range
+	port := 8000 + (hash % 1000)
+	return fmt.Sprintf("%d", port)
+}

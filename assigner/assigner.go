@@ -1,31 +1,26 @@
 package assigner
 
 import (
+	"root/config"
 	"encoding/json"
 	"fmt"
 	"os/exec"
 	"runtime"
+	
 
 )
 
 // Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
 // This means they must start with a capital letter, so we need to use field renaming struct tags to make them camelCase
-var elevator_id = "A"
-type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
-	Behavior    string `json:"behaviour"`
-	Floor       int    `json:"floor"`
-	Direction   string `json:"direction"`
-	CabRequests []bool `json:"cabRequests"`    
-}
 
 type HRAInput struct {
 	HallRequests [][2]bool               `json:"hallRequests"`
-	States       map[string]Elevator_data `json:"states"`
+	States       map[string]config.Elevator_data `json:"states"`
 }
 
 
 
-func Assigner(localelvator Elevator_data,RemoteElevatorData map[string]Elevator_data, hallRequests [][2]bool) [][2]bool{
+func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]config.Elevator_data, hallRequests [][2]bool) [][2]bool{
 	var input HRAInput
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -38,8 +33,8 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData map[string]Elevator_
 	}
 
 
-	states := map[string]Elevator_data{
-		elevator_id: localelvator,
+	states := map[string]config.Elevator_data{
+		config.Elevator_id: localelvator,
 	}
 
 	// List of all possible elevator IDs.
@@ -47,7 +42,7 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData map[string]Elevator_
 
 	// Loop over possible IDs and add remote data if available.
 	for _, id := range possibleIDs {
-		if id == elevator_id {
+		if id == config.Elevator_id {
 			continue // Local elevator already added.
 		}
 		// Only add the remote elevator if its data exists.
@@ -87,9 +82,6 @@ func Assigner(localelvator Elevator_data,RemoteElevatorData map[string]Elevator_
 		fmt.Printf("%6v :  %+v\n", k, v)
 	}
 	
-	return output[elevator_id]
+	return output[config.Elevator_id]
 }
 
-func GetElevatorID() string{
-	return elevator_id
-}
