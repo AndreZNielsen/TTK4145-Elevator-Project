@@ -10,8 +10,7 @@ import (
 	"time"
 	"errors"
 )
-var conn_lift net.Conn
-//var conn_lift2 net.Conn
+
 
 var sendMu sync.Mutex 
 
@@ -19,12 +18,10 @@ var RemoteElevatorConn =  make(map[string]net.Conn)
 var Disconnected chan<- string
 
 func Start_tcp_call(port string, ip string, id string,disconnected chan<- string)net.Conn{
-	
-	var err error
-	if conn_lift != nil {	// Close the previous listener if it's still open.
-	conn_lift.Close()
-	}
-	conn_lift, err = net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
+	if existingConn := sharedData.RemoteElevatorConnections[id]; existingConn != nil {// Close the previous listener if it's still open.
+        existingConn.Close()
+    }
+	conn_lift, err := net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
 	
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
