@@ -34,8 +34,6 @@ func Start_network(receiver chan<- [3]int,disconnected chan<- string){
 		
 	}
 	sharedData.RemoteElevatorConnections = RemoteElevatorConnections
-	reciver.SetConn()
-	transmitter.SetConn()
 	go reciver.Listen_recive(receiver,disconnected)
 	go transmitter.Send_alive()
 
@@ -59,23 +57,17 @@ func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, need
 		if counter%2 == 0 && needReconnecting == id{
 
 		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
-		reciver.SetConn()
-		transmitter.SetConn()
 		go reciver.Recive(receiver,id,disconnected)
 
 		}else if needReconnecting == id{
 
 		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
-		reciver.SetConn()
-		transmitter.SetConn()
 		go reciver.Recive(receiver,id,disconnected)
 
 		}
 		counter +=1 
 		
 	}
-	reciver.SetConn()
-	transmitter.SetConn()
 	}
 
 
