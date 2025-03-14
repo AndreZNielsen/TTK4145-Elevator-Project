@@ -5,7 +5,7 @@ import(
 	"root/transmitter"
 	"root/sharedData"
 	"root/config"
-	"net"
+	
 	"sort"
 	"fmt"
 	
@@ -14,7 +14,6 @@ import(
 
 func Start_network(receiver chan<- [3]int,disconnected chan<- string){
 	var counter int
-	var RemoteElevatorConnections =  make(map[string]net.Conn)
 
 	for _, id := range config.PossibleIDs{
 		if id == config.Elevator_id {
@@ -25,15 +24,15 @@ func Start_network(receiver chan<- [3]int,disconnected chan<- string){
 
 		if counter%2 == 0 {
 
-		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
+		sharedData.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
 		}else{
 
-		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
+		sharedData.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
 		}
 		counter +=1 
 		
 	}
-	sharedData.RemoteElevatorConnections = RemoteElevatorConnections
+
 	go reciver.Listen_recive(receiver,disconnected)
 	go transmitter.Send_alive()
 
@@ -43,7 +42,6 @@ func Start_network(receiver chan<- [3]int,disconnected chan<- string){
 
 func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, needReconnecting string){
 	var counter int
-	var RemoteElevatorConnections =  make(map[string]net.Conn)
 		counter = 0
 
 	for _, id := range config.PossibleIDs{
@@ -56,12 +54,12 @@ func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, need
 
 		if counter%2 == 0 && needReconnecting == id{
 
-		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
+		sharedData.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
 		go reciver.Recive(receiver,id,disconnected)
 
 		}else if needReconnecting == id{
 
-		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
+		sharedData.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
 		go reciver.Recive(receiver,id,disconnected)
 
 		}

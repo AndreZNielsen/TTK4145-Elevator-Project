@@ -26,12 +26,10 @@ func Start_tcp_call(port string, ip string, id string,disconnected chan<- string
 		fmt.Println("Error connecting to pc:", ip, err)
 		time.Sleep(5*time.Second)
 		conn_lift = Start_tcp_call(port, ip,id,disconnected)//trys again
-		sharedData.RemoteElevatorConnections[id] = conn_lift
 		return conn_lift
 	}
 	sharedData.Connected_conn[id]=true
 	Disconnected = disconnected
-    sharedData.RemoteElevatorConnections[id] = conn_lift
 
 	return conn_lift
 }
