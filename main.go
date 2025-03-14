@@ -1,85 +1,48 @@
 package main
 
 import (
-	"fmt"
-	elevalgo "root/elevator"
-	"root/elevio"
-	"root/reciver"
-	"root/transmitter"
-	"root/network"
+    "fmt"
+    "root/elevator"
+    "root/network"
+    "root/reciver"
+    "root/transmitter"
+    "root/config"
 )
 
-var elevator_1_ip = "localhost"
-
-/*
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
-og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
-på samme maskin
-*/
-
+var elevator_1_ip = "localhost:12345"
 
 func main() {
-	fmt.Println("Started!")
+    fmt.Println("Started!")
 
+    localEventRecived 	:= make(chan elevator.LocalEvent)
+    aliveTimer 			:= make(chan bool)
+    remoteEventRecived 	:= make(chan [3]int)
+    disconnected 		:= make(chan string)
 
-	elevio.Init("localhost:12345", elevalgo.Num_floors)
+    var elev elevator.Elevator
+    elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
+    elevator.Start_if_idle(&elev)
+    go elevator.FSM_DetectLocalEvents(localEventRecived)
 
-	elevalgo.MakeFsm()
+    network.Start_network(remoteEventRecived, disconnected)
+    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev))
+    go reciver.AliveTimer(aliveTimer)
 
-	drv_buttons := make(chan elevio.ButtonEvent)
-	drv_floors := make(chan int)
-	drv_obstr := make(chan bool)
-	poll_timer := make(chan bool)
-	alive_timer := make(chan bool)
-	update_recived := make(chan [3]int)
-	disconnected := make(chan string)
+    for {
+        select {
+        case localEvent := <-localEventRecived:
+            elevator.FSM_HandleLocalEvent(&elev, localEvent)
 
-	network.Start_network(update_recived,disconnected)
-	go elevio.PollButtons(drv_buttons)
-	go elevio.PollFloorSensor(drv_floors)
-	go elevio.PollObstructionSwitch(drv_obstr)
-	go elevalgo.PollTimer(poll_timer)
-	go reciver.AliveTimer(alive_timer)
+        case remoteEvent := <-remoteEventRecived:
+            elevator.UpdatesharedHallRequests(&elev, remoteEvent)
+            elevator.ChangeLocalHallRequests(&elev)
+            elevator.SetAllLights(&elev)
 
-	elevalgo.Start_if_idle()
-	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
-	for {
-		select {
-		case button := <-drv_buttons:
-			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
-			elevalgo.SetAllLights()
-			
-		case floor := <-drv_floors:
-			if !elevalgo.IsDoorObstructed() {
-				elevalgo.FsmOnFloorArrival(floor)
-			}
-		case obstructed := <-drv_obstr:
-			if obstructed {
-				elevalgo.DoorObstructed()
-			} else {
-				elevalgo.DoorUnobstructed()
-			}
-		case <-poll_timer:
-			if !elevalgo.IsDoorObstructed() {
-				elevalgo.StopTimer()
-				elevalgo.FsmOnDoorTimeout()
-			} else {
-				elevalgo.StartTimer()
-			}
-		case update := <-update_recived:
-			elevalgo.UpdatesharedHallRequests(update)
-			elevalgo.ChangeLocalHallRequests()
+        case id := <-disconnected:
+            go network.Network_reconnector(remoteEventRecived, disconnected, id)
 
-			elevalgo.SetAllLights()
-		
-		case id := <- disconnected:
-			go network.Network_reconnector(update_recived, disconnected,id)
-		case <-alive_timer:
+        case <-aliveTimer:
 
-		}
-		
-	}
+        }
+    }
 }
-
