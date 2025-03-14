@@ -65,15 +65,9 @@ func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, need
 
 
 func portGenerateor(localID, targetID string) string {
-	var port int 
 	localIndex := indexOfElevatorID(localID)
 	targetIndex := indexOfElevatorID(targetID)
-	if localIndex < targetIndex{
-		port = 8000 + localIndex
-	}else {
-		port = 8000 + targetIndex
-
-	}
+	port := 8000 + localIndex + targetIndex 
 
 
 	return fmt.Sprintf("%d", port)
