@@ -14,7 +14,6 @@ import (
 
 var sendMu sync.Mutex 
 
-var RemoteElevatorConn =  make(map[string]net.Conn)
 var Disconnected chan<- string
 
 func Start_tcp_call(port string, ip string, id string,disconnected chan<- string)net.Conn{
@@ -31,12 +30,10 @@ func Start_tcp_call(port string, ip string, id string,disconnected chan<- string
 	}
 	sharedData.Connected_conn[id]=true
 	Disconnected = disconnected
+
 	return conn_lift
 }
 
-func SetConn(){
-	RemoteElevatorConn = sharedData.RemoteElevatorConnections
-}
 
 
 func Send_Elevator_data(data config.Elevator_data) {
@@ -56,9 +53,8 @@ func transmitt_Elevator_data(data config.Elevator_data,id string){
 
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
-	SetConn()//Ensure conn is up-to-date
 	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(RemoteElevatorConn[id])
+	encoder := gob.NewEncoder(sharedData.RemoteElevatorConnections[id])
 	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
@@ -95,10 +91,9 @@ func Send_update(update [3]int){
 func transmitt_update(update [3]int, id string){
 	sendMu.Lock() // Locking before sending
 	defer sendMu.Unlock() // Ensure to unlock after sending
-	SetConn()//Ensure conn is up-to-date
 
 	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(RemoteElevatorConn[id])
+	encoder := gob.NewEncoder(sharedData.RemoteElevatorConnections[id])
 	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
@@ -120,14 +115,13 @@ func Send_alive(){
 
 }
 func transmitt_alive(id string){
-	SetConn()//Ensure conn is up-to-date
+
 	var netErr *net.OpError
 
 
 	
 	for {
-		SetConn()//Ensure conn is up-to-date
-		encoder := gob.NewEncoder(RemoteElevatorConn[id])
+		encoder := gob.NewEncoder(sharedData.RemoteElevatorConnections[id])
 		
 		sendMu.Lock() // Locking before sending
 		if sharedData.Connected_conn[id]{

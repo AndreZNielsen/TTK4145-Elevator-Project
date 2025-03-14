@@ -37,8 +37,3 @@ func ChangeRemoteElevatorData(NewRemoteElevatorData config.Elevator_data, id str
 func ChangeSharedHallRequests(NewSharedHallRequests [][2]bool){
 	sharedHallRequests = NewSharedHallRequests
 }
-
-
-
-
-

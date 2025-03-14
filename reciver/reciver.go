@@ -12,7 +12,6 @@ import (
 	
 )
 
-//var lis_lift2 net.Conn
 
 
 
@@ -36,20 +35,15 @@ func Start_tcp_listen(port string, id string) net.Conn {
         return nil
     }
 
-    // Close the listener if you don't need to accept further connections.
     ln.Close()
 
     // Update shared data with the new connection.
-    sharedData.RemoteElevatorConnections[id] = conn
     sharedData.Connected_conn[id] = true
 
     fmt.Println("Connected")
     return conn
 }
 
-func SetConn(){
-	RemoteElevatorConn = sharedData.RemoteElevatorConnections
-}
 
 func Listen_recive(receiver chan<- [3]int,disconnected chan<- string) {
 	for _, id := range config.RemoteIDs{
@@ -68,11 +62,10 @@ func Recive(receiver chan<- [3]int,id string,disconnected chan<- string){
 
 var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-var RemoteElevatorConn =  make(map[string]net.Conn)
+
 
 func Decode(receiver chan<- [3]int,id string,disconnected chan<- string) {
-	SetConn()//Ensure conn is up-to-date
-	decoder := gob.NewDecoder(RemoteElevatorConn[id])
+	decoder := gob.NewDecoder(sharedData.RemoteElevatorConnections[id])
 
 	var typeID string
 	err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
