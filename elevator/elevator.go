@@ -8,9 +8,9 @@ import (
 type ElevatorBehaviour int
 
 const (
-	BEHAVIOUR_IDLE = iota
-	BEHAVIOUR_DOOR_OPEN
-	BEHAVIOUR_MOVING
+	Behaviour_idle = iota
+	Behaviour_door_open
+	Behaviour_moving
 )
 
 type ClearRequestVariant int
@@ -24,7 +24,7 @@ const (
 type Elevator struct {
 	floor     int
 	direction Dir
-	requests  [NUM_FLOORS][NUM_BUTTONS]bool
+	requests  [Num_floors][Num_buttons]bool
 	behaviour ElevatorBehaviour
 	config    config
 }
@@ -43,34 +43,34 @@ type DirBehaviourPair struct {
 }
 
 const (
-	NUM_FLOORS  = 4
-	NUM_BUTTONS = 3
+	Num_floors  = 4
+	Num_buttons = 3
 )
 
 type Dir int
 
 const (
-	DIR_DOWN Dir = iota - 1
-	DIR_STOP
-	DIR_UP
+	Dir_down Dir = iota - 1
+	Dir_stop
+	Dir_up
 )
 
 type Button int
 
 const (
-	BTN_HALLUP Button = iota
-	BTN_HALLDOWN
-	BTN_HALLCAB
+	Btn_hallup Button = iota
+	Btn_halldown
+	Btn_hallcab
 )
 
 
 func ElevioDirToString(d Dir) string {
 	switch d {
-	case DIR_UP:
+	case Dir_up:
 		return "up"
-	case DIR_DOWN:
+	case Dir_down:
 		return "down"
-	case DIR_STOP:
+	case Dir_stop:
 		return "stop"
 	default:
 		return "udefined"
@@ -79,11 +79,11 @@ func ElevioDirToString(d Dir) string {
 
 func ElevioButtonToString(b Button) string {
 	switch b {
-	case BTN_HALLUP:
+	case Btn_hallup:
 		return "HallUp"
-	case BTN_HALLDOWN:
+	case Btn_halldown:
 		return "HallDown"
-	case BTN_HALLCAB:
+	case Btn_hallcab:
 		return "Cab"
 	default:
 		return "undefined"
@@ -92,11 +92,11 @@ func ElevioButtonToString(b Button) string {
 
 func EbToString(behaviour ElevatorBehaviour) string {
 	switch behaviour {
-	case BEHAVIOUR_IDLE:
+	case Behaviour_idle:
 		return "idle"
-	case BEHAVIOUR_DOOR_OPEN:
+	case Behaviour_door_open:
 		return "doorOpen"
-	case BEHAVIOUR_MOVING:
+	case Behaviour_moving:
 		return "moving"
 	default:
 		return "undefined"
@@ -115,10 +115,10 @@ func (e *Elevator) print() {
 
 	fmt.Println("  +--------------------+")
 	fmt.Println("  |  | up  | dn  | cab |")
-	for f := NUM_FLOORS - 1; f >= 0; f-- {
+	for f := Num_floors - 1; f >= 0; f-- {
 		fmt.Printf("  | %d", f)
-		for btn := 0; btn < NUM_BUTTONS; btn++ {
-			if (f == NUM_FLOORS-1 && btn == int(BTN_HALLUP)) || (f == 0 && btn == int(BTN_HALLDOWN)) {
+		for btn := 0; btn < Num_buttons; btn++ {
+			if (f == Num_floors-1 && btn == int(Btn_hallup)) || (f == 0 && btn == int(Btn_halldown)) {
 				fmt.Print("|     ")
 			} else {
 				if e.requests[f][btn] {
@@ -142,8 +142,8 @@ func (e *Elevator) print() {
 func MakeUninitializedelevator() Elevator {
 	return Elevator{
 		floor:     -1,
-		direction: DIR_STOP,
-		behaviour: BEHAVIOUR_IDLE,
+		direction: Dir_stop,
+		behaviour: Behaviour_idle,
 		config: config{
 			clearRequestVariation: CV_InDirn,
 			doorOpenDuration:      3.0,
@@ -154,26 +154,3 @@ func MakeUninitializedelevator() Elevator {
 
 
 
-
-// func send_requests(e *Elevator) {
-// 	conn, err := net.Dial("tcp", "10.100.23.33:8080")
-// 	if err != nil {
-// 		fmt.Println("Error connecting to server:", err)
-// 	}
-// 	defer conn.Close()
-
-// 	str := "requests:"
-// 	for i := 0; i < 4; i++ {
-// 		for j := 0; j < 3; j++ {
-// 			str += "_" + fmt.Sprint(e.requests[i][j])
-// 		}
-// 	}
-
-// 	_, err = conn.Write([]byte(str))
-// 	if err != nil {
-// 		fmt.Println("Error sending message:", err)
-// 		return
-// 	}
-// 	time.Sleep(time.Second)
-
-// }

@@ -24,7 +24,7 @@ func main() {
 	fmt.Println("Started!")
 
 
-	elevio.Init("localhost:12345", elevalgo.NUM_FLOORS)
+	elevio.Init("localhost:12345", elevalgo.Num_floors)
 
 	elevalgo.MakeFsm()
 
