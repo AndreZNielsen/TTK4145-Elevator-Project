@@ -3,7 +3,7 @@ package elevator
 import (
     Config "root/config"
     "root/elevio"
-    "root/sharedData"
+
 )
 
 type LocalEvent struct {
@@ -20,7 +20,12 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 }
 
 func GetElevatorData(elevator *Elevator) Config.Elevator_data {
-    return Config.Elevator_data{Behavior: EbToString(elevator.behaviour), Floor: elevator.floor, Direction: ElevioDirToString(elevator.direction), CabRequests: GetCabRequests(elevator.requests)}
+    return Config.Elevator_data{
+        Behavior:    EbToString(elevator.behaviour), 
+        Floor:       elevator.floor, 
+        Direction:   ElevioDirToString(elevator.direction), 
+        CabRequests: GetCabRequests(elevator.requests),
+    }
 }
 
 func FSM_InitBetweenFloors(elevator *Elevator) {
@@ -30,7 +35,6 @@ func FSM_InitBetweenFloors(elevator *Elevator) {
 }
 
 func FSM_RequestButtonPress(elevator *Elevator, btn_floor int, btn_type Button) {
-    var localUpdate [3]int
 
     switch elevator.behaviour {
     case Behaviour_door_open:
@@ -40,20 +44,19 @@ func FSM_RequestButtonPress(elevator *Elevator, btn_floor int, btn_type Button) 
             if btn_type == Btn_hallcab {
                 elevator.requests[btn_floor][btn_type] = true
             }
-            localUpdate = [3]int{btn_floor, int(btn_type), 1}
-            go Transmitt_update_and_update_localHallRequests(elevator, localUpdate)
+            UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1)
         }
-    case Behaviour_moving:
+    case Behaviour_moving:   
         if btn_type == Btn_hallcab {
             elevator.requests[btn_floor][btn_type] = true
         }
-        localUpdate = [3]int{btn_floor, int(btn_type), 1}
-        go Transmitt_update_and_update_localHallRequests(elevator, localUpdate)
+        UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1)
 
     case Behaviour_idle:
         if btn_type == Btn_hallup {
             elevator.requests[btn_floor][btn_type] = true
         }
+        UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1)
 
         if elevator.floor == btn_floor {
             elevio.SetMotorDirection(elevio.MD_Stop)
@@ -63,12 +66,15 @@ func FSM_RequestButtonPress(elevator *Elevator, btn_floor int, btn_type Button) 
             SetAllLights(elevator)
             elevator.behaviour = Behaviour_door_open
         } else {
-            localUpdate = [3]int{btn_floor, int(btn_type), 1}
-            go Transmitt_update_and_update_localHallRequests(elevator, localUpdate)
+            UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1)
         }
     }
 }
 
+func UpdateAndTransmittLocalRequests(elevator *Elevator, btn_floor int, btn_type Button, update int) {
+    localUpdate := [3]int{btn_floor, int(btn_type), update}
+    go Transmitt_update_and_update_localHallRequests(elevator, localUpdate)
+}
 func FSM_FloorArrival(elevator *Elevator, newFloor int) {
     elevator.floor = newFloor
     elevio.SetFloorIndicator(elevator.floor)
@@ -90,7 +96,7 @@ func FSM_FloorArrival(elevator *Elevator, newFloor int) {
 func FSM_DoorTimeout(elevator *Elevator) {
     switch elevator.behaviour {
     case Behaviour_door_open:
-        pair := elevator.RequestsChooseDirection()
+        pair := elevator.SelectNextDirection()
         elevator.direction = pair.dir
         elevator.behaviour = pair.behaviour
 
@@ -133,10 +139,10 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent) {
 }
 
 func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
-    buttonEvents := make(chan elevio.ButtonEvent)
-    floorEvents := make(chan int)
-    obstructionEvents := make(chan bool)
-    timerEvents := make(chan bool)
+    buttonEvents        := make(chan elevio.ButtonEvent)
+    floorEvents         := make(chan int)
+    obstructionEvents   := make(chan bool)
+    timerEvents         := make(chan bool)
 
     go elevio.PollButtons(buttonEvents)
     go elevio.PollFloorSensor(floorEvents)
@@ -153,69 +159,6 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
             localEvents <- LocalEvent{EventType: "obstructed", Obstructed: obstructed}
         case <-timerEvents:
             localEvents <- LocalEvent{EventType: "timer"}
-        }
-    }
-}
-
-var doorObstructed bool
-
-func DoorObstructed(elevator *Elevator) {
-    doorObstructed = true
-    if elevator.behaviour == Behaviour_door_open {
-        StartTimer()
-    }
-}
-
-func DoorUnobstructed(elevator *Elevator) {
-    doorObstructed = false
-    if elevator.behaviour == Behaviour_door_open {
-        StartTimer()
-    }
-}
-
-func IsDoorObstructed() bool {
-    return doorObstructed
-}
-
-func GetCabRequests(matrix [Num_floors][3]bool) []bool {
-    var column []bool
-    for i := 0; i < len(matrix); i++ {
-        column = append(column, matrix[i][2])
-    }
-    return column
-}
-
-func GetHallRequests(matrix [Num_floors][3]bool) [][2]bool {
-    var newMatrix [][2]bool
-
-    // Extract columns 1 and 2 (index 0 and 1)
-    for i := 0; i < len(matrix); i++ {
-        newMatrix = append(newMatrix, [2]bool{matrix[i][0], matrix[i][1]})
-    }
-    return newMatrix
-}
-
-func MakeRequests(HallRequests [][2]bool, GetCabRequests []bool) [Num_floors][3]bool {
-    var result [Num_floors][3]bool
-
-    for i := 0; i < Num_floors; i++ {
-        result[i][0] = HallRequests[i][0]
-        result[i][1] = HallRequests[i][1]
-        result[i][2] = GetCabRequests[i]
-    }
-    return result
-}
-
-func GetElevator(elevator *Elevator) Elevator {
-    return *elevator
-}
-
-func SetAllLights(elevator *Elevator) {
-    //Basically just takes the requests from the button presses and lights up the corresponding button lights
-    requests := MakeRequests(sharedData.GetsharedHallRequests(), GetCabRequests(elevator.requests))
-    for floor := 0; floor < Num_floors; floor++ {
-        for btn := 0; btn < Num_buttons; btn++ {
-            elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])
         }
     }
 }

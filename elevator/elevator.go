@@ -3,6 +3,8 @@ package elevator
 import (
 	"fmt"
 	"time"
+	"root/sharedData"
+	"root/elevio"
 )
 
 type ElevatorBehaviour int
@@ -36,10 +38,10 @@ type config struct {
 
 type DirBehaviourPair struct {
 	dir Dir
-	//direction of the elevator: DIR_UP, DIR_DOWN, DIR_STOP
+	//direction of the elevator: Dir_down, Dir_stop, Dir_up
 
 	behaviour ElevatorBehaviour
-	//states of the elevator: BEHAVIOUR_IDLE, BEHAVIOUR_DOOR_OPEN, BEHAVIOUR_MOVING
+	//states of the elevator: 	Behaviour_idle, Behaviour_door_open, Behaviour_moving
 }
 
 const (
@@ -103,9 +105,7 @@ func EbToString(behaviour ElevatorBehaviour) string {
 	}
 }
 
-//this function just prints the current elevator status in the terminal
-//If the code works properly at some point, any changes in the terminal that the simulator is run in
-//should be visible in the terminal that the go-program is run in as well ;)
+
 
 func (e *Elevator) print() {
 	fmt.Println("  +--------------------+")
@@ -135,9 +135,6 @@ func (e *Elevator) print() {
 
 }
 
-//Defalult elevator that starts in floor: -1, this doesnt make sense, but it does
-//We cant initialize the elevator in a spesific floor, and PollFloorSensor() will update the variable to the correct
-//floor as soon as the elevator starts moving i think
 
 func MakeUninitializedelevator() Elevator {
 	return Elevator{
@@ -153,4 +150,63 @@ func MakeUninitializedelevator() Elevator {
 
 
 
+var doorObstructed bool
 
+func DoorObstructed(elevator *Elevator) {
+    doorObstructed = true
+    if elevator.behaviour == Behaviour_door_open {
+        StartTimer()
+    }
+}
+
+func DoorUnobstructed(elevator *Elevator) {
+    doorObstructed = false
+    if elevator.behaviour == Behaviour_door_open {
+        StartTimer()
+    }
+}
+
+func IsDoorObstructed() bool {
+    return doorObstructed
+}
+
+func GetCabRequests(matrix [Num_floors][3]bool) []bool {
+    var column []bool
+    for i := 0; i < len(matrix); i++ {
+        column = append(column, matrix[i][2])
+    }
+    return column
+}
+
+func GetHallRequests(matrix [Num_floors][3]bool) [][2]bool {
+    var newMatrix [][2]bool
+
+    for i := 0; i < len(matrix); i++ {
+        newMatrix = append(newMatrix, [2]bool{matrix[i][0], matrix[i][1]})
+    }
+    return newMatrix
+}
+
+func MakeRequests(HallRequests [][2]bool, GetCabRequests []bool) [Num_floors][3]bool {
+    var result [Num_floors][3]bool
+
+    for i := 0; i < Num_floors; i++ {
+        result[i][0] = HallRequests[i][0]
+        result[i][1] = HallRequests[i][1]
+        result[i][2] = GetCabRequests[i]
+    }
+    return result
+}
+
+func GetElevator(elevator *Elevator) Elevator {
+    return *elevator
+}
+
+func SetAllLights(elevator *Elevator) {
+    requests := MakeRequests(sharedData.GetsharedHallRequests(), GetCabRequests(elevator.requests))
+    for floor := 0; floor < Num_floors; floor++ {
+        for btn := 0; btn < Num_buttons; btn++ {
+            elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])
+        }
+    }
+}

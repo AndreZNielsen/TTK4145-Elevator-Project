@@ -26,10 +26,17 @@ func Transmitt_update_and_update_localHallRequests(elevator *Elevator, update_va
 }
 
 func ChangeLocalHallRequests(elevator *Elevator) {
-    fmt.Println(GetElevatorData(elevator))
-    fmt.Println(sharedData.GetRemoteElevatorData())
-    if GetElevatorData(elevator).Floor != -1 && !(GetElevatorData(elevator).Floor == 0 && GetElevatorData(elevator).Direction == "down") && !(GetElevatorData(elevator).Floor == 3 && GetElevatorData(elevator).Direction == "up") { // stops the elevator data from crashing the assigner
-        elevator.requests = MakeRequests(assigner.Assigner(GetElevatorData(elevator), sharedData.GetRemoteElevatorData(), sharedData.GetsharedHallRequests()), GetCabRequests(elevator.requests))
+    localData := GetElevatorData(elevator)
+    remoteData := sharedData.GetRemoteElevatorData()
+
+    fmt.Println(localData)
+    fmt.Println(remoteData)
+
+    // Prevents invalid data from crashing the assigner
+    if localData.Floor != -1 && !(localData.Floor == 0 && localData.Direction == "down") && !(localData.Floor == 3 && localData.Direction == "up") {
+        updatedRequests := assigner.Assigner(localData, remoteData, sharedData.GetsharedHallRequests())
+        elevator.requests = MakeRequests(updatedRequests, GetCabRequests(elevator.requests))
+
         Start_if_idle(elevator)
         SetAllLights(elevator)
         elevator.print()
@@ -43,7 +50,7 @@ func Send_Elevator_data(elevatorData Config.Elevator_data) {
 func Start_if_idle(elevator *Elevator) {
     switch elevator.behaviour {
     case Behaviour_idle:
-        pair := elevator.RequestsChooseDirection()
+        pair := elevator.SelectNextDirection()
         elevator.direction = pair.dir
         elevator.behaviour = pair.behaviour
         elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
