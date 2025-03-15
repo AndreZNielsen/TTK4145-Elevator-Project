@@ -31,7 +31,7 @@ func (e *Elevator) RequestsHere() bool {
     return false
 }
 
-func (e *Elevator) RequestsChooseDirection() DirBehaviourPair {
+func (e *Elevator) SelectNextDirection() DirBehaviourPair {
     switch e.direction {
     case Dir_up:
         if e.RequestsAbove() {
@@ -94,13 +94,11 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 }
 
 func (e *Elevator) RequestsClearAtCurrentFloor() {
-    var update [3]int
     switch e.config.clearRequestVariation {
     case CV_All:
         for btn := 0; btn < Num_buttons; btn++ {
             e.requests[e.floor][btn] = false
-            update = [3]int{e.floor, btn, 0}
-            go Transmitt_update_and_update_localHallRequests(e, update)
+            UpdateAndTransmittLocalRequests(e, e.floor, Button(btn), 0)
         }
     case CV_InDirn:
         e.requests[e.floor][Btn_hallcab] = false
@@ -108,28 +106,23 @@ func (e *Elevator) RequestsClearAtCurrentFloor() {
         case Dir_up:
             if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
                 e.requests[e.floor][Btn_halldown] = false
-                update = [3]int{e.floor, int(Btn_halldown), 0}
-                go Transmitt_update_and_update_localHallRequests(e, update)
+                UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0)
             }
             e.requests[e.floor][Btn_hallup] = false
-            update = [3]int{e.floor, int(Btn_hallup), 0}
-            go Transmitt_update_and_update_localHallRequests(e, update)
+            UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0)
         case Dir_down:
             if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
                 e.requests[e.floor][Btn_hallup] = false
-                update = [3]int{e.floor, int(Btn_hallup), 0}
-                go Transmitt_update_and_update_localHallRequests(e, update)
+                UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0)
             }
             e.requests[e.floor][Btn_halldown] = false
-            update = [3]int{e.floor, int(Btn_halldown), 0}
-            go Transmitt_update_and_update_localHallRequests(e, update)
+            UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0)
         default:
             e.requests[e.floor][Btn_hallup] = false
-            update = [3]int{e.floor, int(Btn_hallup), 0}
-            go Transmitt_update_and_update_localHallRequests(e, update)
+            UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0)
+            
             e.requests[e.floor][Btn_halldown] = false
-            update = [3]int{e.floor, int(Btn_halldown), 0}
-            go Transmitt_update_and_update_localHallRequests(e, update)
+            UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0)
         }
     }
     SetAllLights(e)
