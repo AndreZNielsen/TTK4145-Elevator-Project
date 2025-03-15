@@ -2,84 +2,52 @@ package main
 
 import (
 	"fmt"
-	elevalgo "root/elevator"
-	"root/elevio"
-	"root/reciver"
-	"root/transmitter"
+	"root/config"
+	"root/elevator"
 	"root/network"
+	"root/reciver"
+	"root/sharedData"
+	"root/transmitter"
 )
 
-var elevator_1_ip = "localhost"
-
-/*
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
-og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
-på samme maskin
-*/
-
+var elevator_1_ip = "localhost:15657"
 
 func main() {
-	fmt.Println("Started!")
+    fmt.Println("Started!")
 
+    localEventRecived 	:= make(chan elevator.LocalEvent)
+    aliveTimer 			:= make(chan bool)
+    remoteEventRecived 	:= make(chan [3]int)
+    disconnected 		:= make(chan string)
 
-	elevio.Init("localhost:12345", elevalgo.Num_floors)
+	externalData := sharedData.InitExternalData()
 
-	elevalgo.MakeFsm()
+    var elev elevator.Elevator
+    elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
+    elevator.Start_if_idle(&elev)
+    go elevator.FSM_DetectLocalEvents(localEventRecived)
 
-	drv_buttons := make(chan elevio.ButtonEvent)
-	drv_floors := make(chan int)
-	drv_obstr := make(chan bool)
-	poll_timer := make(chan bool)
-	alive_timer := make(chan bool)
-	update_recived := make(chan [3]int)
-	disconnected := make(chan string)
+    network.Start_network(remoteEventRecived, disconnected, externalData)       // We could separate connections from the other shared data? Maybe an idea. OR only pass externalData.RemoteElevatorConnections!
+    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData)
+    go reciver.AliveTimer(aliveTimer)
 
-	network.Start_network(update_recived,disconnected)
-	go elevio.PollButtons(drv_buttons)
-	go elevio.PollFloorSensor(drv_floors)
-	go elevio.PollObstructionSwitch(drv_obstr)
-	go elevalgo.PollTimer(poll_timer)
-	go reciver.AliveTimer(alive_timer)
+    for {
+        select {
+        case localEvent := <-localEventRecived:
+            elevator.FSM_HandleLocalEvent(&elev, localEvent, externalData)
+			elevator.SetAllLights(&elev, externalData)
+			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
+			// assign here? Cause it requires the external data
 
-	elevalgo.Start_if_idle()
-	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
-	for {
-		select {
-		case button := <-drv_buttons:
-			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
-			elevalgo.SetAllLights()
-			
-		case floor := <-drv_floors:
-			if !elevalgo.IsDoorObstructed() {
-				elevalgo.FsmOnFloorArrival(floor)
-			}
-		case obstructed := <-drv_obstr:
-			if obstructed {
-				elevalgo.DoorObstructed()
-			} else {
-				elevalgo.DoorUnobstructed()
-			}
-		case <-poll_timer:
-			if !elevalgo.IsDoorObstructed() {
-				elevalgo.StopTimer()
-				elevalgo.FsmOnDoorTimeout()
-			} else {
-				elevalgo.StartTimer()
-			}
-		case update := <-update_recived:
-			elevalgo.UpdatesharedHallRequests(update)
-			elevalgo.ChangeLocalHallRequests()
+        case remoteEvent := <-remoteEventRecived:
+			elevator.FSM_HandleRemoteEvent(&elev, externalData, remoteEvent)
+            
 
-			elevalgo.SetAllLights()
-		
-		case id := <- disconnected:
-			go network.Network_reconnector(update_recived, disconnected,id)
-		case <-alive_timer:
+        case id := <-disconnected:
+            go network.Network_reconnector(remoteEventRecived, disconnected, id, externalData)
 
-		}
-		
-	}
+        case <-aliveTimer:
+
+        }
+    }
 }
-

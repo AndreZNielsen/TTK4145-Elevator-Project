@@ -18,7 +18,7 @@ func StopTimer() {
     timerActive = false
 }
 
-func PollTimer(receiver chan<- bool) {
+func TimerIsDone(receiver chan<- bool) {
 	prev := false
 	for {
 		time.Sleep(pollRate)
