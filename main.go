@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"root/config"
 	"root/elevator"
-	"root/network"
-	"root/reciver"
+	// "root/network"
+	// "root/reciver"
 	"root/sharedData"
-	"root/transmitter"
+	// "root/transmitter"
 )
 
 var elevator_1_ip = "localhost:15657"
@@ -16,9 +16,9 @@ func main() {
     fmt.Println("Started!")
 
     localEventRecived 	:= make(chan elevator.LocalEvent)
-    aliveTimer 			:= make(chan bool)
+    // aliveTimer 			:= make(chan bool)
     remoteEventRecived 	:= make(chan [3]int)
-    disconnected 		:= make(chan string)
+    // disconnected 		:= make(chan string)
 
 	externalData := sharedData.InitExternalData()
 
@@ -27,9 +27,14 @@ func main() {
     elevator.Start_if_idle(&elev)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
 
-    network.Start_network(remoteEventRecived, disconnected, externalData)       // I think we should only pass externalData.RemoteElevatorConnections, if only that is needed!
-    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData) 
-    go reciver.AliveTimer(aliveTimer)
+    // network.Start_network(remoteEventRecived, disconnected, externalData)       // I think we should only pass externalData.RemoteElevatorConnections, if only that is needed!
+    // transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData) 
+    // go reciver.AliveTimer(aliveTimer)
+
+
+
+    // Buttons only work when door is open, why is this?! This is fixed
+    // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
 
     for {
         select {
@@ -48,12 +53,12 @@ func main() {
 
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, externalData, remoteEvent)
-            
+            fmt.Println("It happend :/")
 
-        case id := <-disconnected:
-            go network.Network_reconnector(remoteEventRecived, disconnected, id, externalData)
+        // case id := <-disconnected:
+        //     go network.Network_reconnector(remoteEventRecived, disconnected, id, externalData)
 
-        case <-aliveTimer:
+        // case <-aliveTimer:
 
         }
     }

@@ -1,6 +1,7 @@
 package elevator
 
 import (
+	"fmt"
 	"root/sharedData"
 )
 
@@ -84,11 +85,17 @@ func (e *Elevator) RequestsShouldStop() bool {
 }
 
 func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Button) bool {
+    // if e.direction != Dir_stop {
+    //     return false
+    // }
+    fmt.Println(e.direction)
+    
     switch e.config.clearRequestVariation {
     case CV_All:
         return e.floor == buttonFloor
     case CV_InDirn:
-        return e.floor == buttonFloor && ((e.direction == Dir_up && buttonType == Btn_hallup) ||
+        return e.floor == buttonFloor && (
+            (e.direction == Dir_up && buttonType == Btn_hallup) ||
             (e.direction == Dir_down && buttonType == Btn_halldown) ||
             e.direction == Dir_stop ||
             buttonType == Btn_hallcab)
@@ -117,7 +124,7 @@ func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.External
         case Dir_down:
             if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
                 e.requests[e.floor][Btn_hallup] = false
-                UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
+                UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
             }
             e.requests[e.floor][Btn_halldown] = false
             UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
@@ -126,7 +133,7 @@ func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.External
             UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
             
             e.requests[e.floor][Btn_halldown] = false
-            UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
+            UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
         }
     }
     SetAllLights(e, externalData)
