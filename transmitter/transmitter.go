@@ -17,6 +17,7 @@ var sendMu sync.Mutex
 var Disconnected chan<- string
 
 func Start_tcp_call(port string, ip string, id string,disconnected chan<- string)net.Conn{
+	for{
 	if existingConn := sharedData.RemoteElevatorConnections[id]; existingConn != nil {// Close the previous listener if it's still open.
         existingConn.Close()
     }
@@ -25,13 +26,12 @@ func Start_tcp_call(port string, ip string, id string,disconnected chan<- string
 	if err != nil {
 		fmt.Println("Error connecting to pc:", ip, err)
 		time.Sleep(5*time.Second)
-		conn_lift = Start_tcp_call(port, ip,id,disconnected)//trys again
-		return conn_lift
+		continue //trys again
 	}
-	sharedData.Connected_conn[id]=true
 	Disconnected = disconnected
 
 	return conn_lift
+	}
 }
 
 

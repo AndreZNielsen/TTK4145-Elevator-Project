@@ -37,8 +37,6 @@ func Start_tcp_listen(port string, id string) net.Conn {
 
     ln.Close()
 
-    // Update shared data with the new connection.
-    sharedData.Connected_conn[id] = true
 
     fmt.Println("Connected")
     return conn
