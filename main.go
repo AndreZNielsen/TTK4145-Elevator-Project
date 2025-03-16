@@ -27,8 +27,8 @@ func main() {
     elevator.Start_if_idle(&elev)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
 
-    network.Start_network(remoteEventRecived, disconnected, externalData)       // We could separate connections from the other shared data? Maybe an idea. OR only pass externalData.RemoteElevatorConnections!
-    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData)
+    network.Start_network(remoteEventRecived, disconnected, externalData)       // I think we should only pass externalData.RemoteElevatorConnections, if only that is needed!
+    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData) 
     go reciver.AliveTimer(aliveTimer)
 
     for {
@@ -37,7 +37,14 @@ func main() {
             elevator.FSM_HandleLocalEvent(&elev, localEvent, externalData)
 			elevator.SetAllLights(&elev, externalData)
 			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
-			// assign here? Cause it requires the external data
+            // This is because not all events should be transmitted. If a request is handled immediately, because
+            // we are at the same floor, we should not transmit that.
+			
+            // I think assign should be called here? Cause it requires the external data
+
+            // Either expand HandleLocalEvent to include assign and setlights and stuff, or call these separately here.
+            // Some control logic too, maybe. We need a more defined function for that.
+            // This should also improve Remoteevent handling, as we can use that function there as well.
 
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, externalData, remoteEvent)

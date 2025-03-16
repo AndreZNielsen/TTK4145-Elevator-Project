@@ -33,7 +33,15 @@ func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
 }
 
 func FSM_RequestButtonPress(elevator *Elevator, btn_floor int, btn_type Button, externalData *sharedData.ExternalData) {
+// Could look something like:
 
+// If clearImmediately : return // Does the light need to turn on, even if the request is cleared immediately?
+
+// Update local requests
+// Transmitt update
+// assign
+// SetLights
+// Start_if_idle // We kind of have two control functions at the moment? This and start_if_idle?
     switch elevator.behaviour {
     case Behaviour_door_open:
         if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
@@ -73,6 +81,10 @@ func UpdateAndTransmittLocalRequests(elevator *Elevator, btn_floor int, btn_type
     localUpdate := [3]int{btn_floor, int(btn_type), update}
     go Transmitt_update_and_update_localHallRequests(elevator, localUpdate, externalData)
 }
+
+
+// ControlMovement-function, start_if_idle is not good enough. We can make one that is also capable of stopping
+
 func FSM_FloorArrival(elevator *Elevator, newFloor int, externalData *sharedData.ExternalData) {
     elevator.floor = newFloor
     elevio.SetFloorIndicator(elevator.floor)
@@ -111,6 +123,12 @@ func FSM_DoorTimeout(elevator *Elevator, externalData *sharedData.ExternalData) 
     go Send_Elevator_data(GetElevatorData(elevator), externalData)
 }
 
+
+// Here I think it would be reasonable to create functions for each case
+// like FSM_HandleButtonEvent, FSM_HandleFloorEvent, FSM_HandleObstructedEvent, FSM_HandleTimerEvent
+// The cases are very different from one another, so I think this makes sense.
+
+// FSM_HandleButtonEvent should do what FSM_RequestButtonPress does now, but in an organized way
 func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, externalData *sharedData.ExternalData) {
     switch event.EventType {
     case "button":
@@ -140,6 +158,9 @@ func FSM_HandleRemoteEvent(elevator *Elevator, externalData *sharedData.External
     UpdatesharedHallRequests(elevator, externalData, event)
     ChangeLocalHallRequests(elevator, externalData)
     SetAllLights(elevator, externalData)
+    //Start_if_idle(elevator) // should be called here instead of in ChangeLocalHallRequests    
+
+    // Once this change is made I am very happy with this function
 }
 
 
