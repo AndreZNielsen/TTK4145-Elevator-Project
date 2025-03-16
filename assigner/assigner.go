@@ -38,13 +38,11 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	}
 
 	// List of all possible elevator IDs.
-	possibleIDs := []string{"A", "B", "C"}
+
 
 	// Loop over possible IDs and add remote data if available.
-	for _, id := range possibleIDs {
-		if id == config.Elevator_id {
-			continue // Local elevator already added.
-		}
+	for _, id := range config.RemoteIDs {
+
 		// Only add the remote elevator if its data exists.
 		if remote, ok := RemoteElevatorData[id]; ok {
 			states[id] = remote
