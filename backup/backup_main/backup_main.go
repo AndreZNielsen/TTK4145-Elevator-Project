@@ -11,17 +11,16 @@ var alive = make(chan bool)
 var dead = make(chan bool)
 
 func main(){
-	fmt.Println("yo")
 
 	go util.Msg_reciver(alive)
 	go util.Start_timer(alive,dead)
 	for {
 	select{
 	case <-alive:	
-	go util.Msg_transmitter()
+	go util.Msg_transmitter()//kan kanje fjernes 
 	case <-dead:
 		time.Sleep(time.Second*5)
-		start_elavator()
+		restart_elavator()
 		return
 	}	
 	}
@@ -29,9 +28,9 @@ func main(){
 
 }
 
-func start_elavator(){
+func restart_elavator(){
 psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd '..';cd '..'; go run -ldflags='-X root/config.Elevator_id=A' main.go\""
-cmd := exec.Command("powershell.exe", "-Command", psCommand)
+cmd := exec.Command("powershell.exe", "-Command", psCommand) 
 err := cmd.Start()
 if err != nil {
 	fmt.Println("Error starting PowerShell:", err)

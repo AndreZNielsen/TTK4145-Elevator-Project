@@ -6,7 +6,7 @@ import(
 )
 
 
-func main(){
+func main(){//skal fjernes
 	Start_backup()
 }
 func start_backup(){

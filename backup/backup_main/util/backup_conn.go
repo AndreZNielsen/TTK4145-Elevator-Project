@@ -12,29 +12,29 @@ type Message struct {
 	Content interface{} `json:"content"`
 }
 
-func Msg_reciver(parentAlive chan bool) {
-    scanner := bufio.NewScanner(os.Stdin) // Change to os.Stdin
+func Msg_reciver(elvatorAlive chan bool) {
+    scanner := bufio.NewScanner(os.Stdin) 
     fmt.Println("Starting message receiver...")
     for scanner.Scan() {
         msg := scanner.Text()
         var receivedMsg Message
         err := json.Unmarshal([]byte(msg), &receivedMsg)
         if err != nil {
-            fmt.Println("Error decoding parent message:", err)
+            fmt.Println("Error decoding  message:", err)
             continue
         }
-        fmt.Printf("Child received: %+v\n", receivedMsg)
-        // Signal that the parent is alive if the message type is "message"
+        fmt.Printf("Received: %+v\n", receivedMsg)
+        // Signal that the elvator is alive if the message type is "message"
         if receivedMsg.Type == "message" {
-            parentAlive <- true
+            elvatorAlive <- true
         }
     }
 }
 
 
-// Send messages to parent via child's standard output
+// Send messages to elvator 
 func Msg_transmitter() {
     message := Message{"message", "message received"}
     jsonData, _ := json.Marshal(message)
-    fmt.Fprintln(os.Stdout, string(jsonData)) // Write to os.Stdout
+    fmt.Fprintln(os.Stdout, string(jsonData))
 }
