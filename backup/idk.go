@@ -13,23 +13,25 @@ type Message struct {
 	Content interface{} `json:"content"`
 }
 func Start_backup(){
-	for {
-	psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd './backup_main'; go run backup_main.go\""
+
+	psCommand := "cd './backup'; cd './backup_main'; go run backup_main.go"
 
 	// Start PowerShell and execute the command
 	cmd := exec.Command("powershell.exe", "-Command", psCommand)
 	// Start the backup program 
+	go send_to_backup(cmd)
+	go read_from_backup(cmd)
+	time.Sleep(2 * time.Second)
 	err := cmd.Start()
 	if err != nil {
 		fmt.Println("Error starting PowerShell:", err)
 		return
 	}
-
 	// Wait for the child to exit		
 	err = cmd.Wait()
-	fmt.Println("Child process exited, restarting in 2 seconds:", err)
-	time.Sleep(2 * time.Second)
-	}
+	fmt.Println("Backup process exited, restarting in 2 seconds:", err)
+	time.Sleep(5 * time.Second)
+	
 }
 
 
@@ -40,11 +42,17 @@ func send_to_backup(cmd *exec.Cmd){
 		return 
 	}
 
+	for {
+
 	message := Message{"message", "message recived"}
 	jsonData, _ := json.Marshal(message)
 	fmt.Fprintln(stdin, string(jsonData))
-	
+	fmt.Println("sendt")
+
+	time.Sleep(5 * time.Second)
+	}
 }
+
 
 
 func read_from_backup(cmd *exec.Cmd){

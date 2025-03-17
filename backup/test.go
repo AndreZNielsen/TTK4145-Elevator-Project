@@ -1,4 +1,4 @@
-package main
+package backup
 
 import(
 	"fmt"
@@ -9,7 +9,7 @@ import(
 func main(){
 	Start_backup()
 }
-func Start_backup(){
+func start_backup(){
 	psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd './backup_main'; go run backup_main.go\""
 
 	// Start PowerShell and execute the command

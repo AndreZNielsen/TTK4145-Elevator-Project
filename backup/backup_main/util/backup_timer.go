@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"time"
@@ -7,13 +7,13 @@ import (
 
 
 func Start_timer(parentAlive chan bool,parentDead chan bool) {
-	timer := time.NewTimer(5 * time.Second)
+	timer := time.NewTimer(10 * time.Second)
 	defer timer.Stop()
 
 	for {
 		select {
 		case <-parentAlive:
-			timer.Reset(5 * time.Second) // Reset the timer when the parent is alive
+			timer.Reset(10 * time.Second) // Reset the timer when the parent is alive
 		case <-timer.C:
 			fmt.Println("Parent process not detected, restarting...")
 			parentDead <- true

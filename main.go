@@ -7,6 +7,8 @@ import (
 	"root/reciver"
 	"root/transmitter"
 	"root/network"
+	"root/backup"
+
 )
 
 
@@ -42,6 +44,7 @@ func main() {
 	go elevio.PollObstructionSwitch(drv_obstr)
 	go elevalgo.PollTimer(poll_timer)
 	go reciver.AliveTimer(alive_timer)
+	go backup.Start_backup()
 
 	elevalgo.Start_if_idle()
 	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())

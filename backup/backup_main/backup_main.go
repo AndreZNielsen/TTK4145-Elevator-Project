@@ -4,6 +4,7 @@ import(
 	"fmt"
 	"time"
 	"os/exec"
+	"root/util"
 )
 
 var alive = make(chan bool)
@@ -11,15 +12,21 @@ var dead = make(chan bool)
 
 func main(){
 	fmt.Println("yo")
-	time.Sleep(time.Second*5)
-	go Msg_reciver(alive)
-	go Start_timer(alive,dead)
+
+	go util.Msg_reciver(alive)
+	go util.Start_timer(alive,dead)
+	for {
 	select{
 	case <-alive:	
-	go Msg_transmitter()
+	go util.Msg_transmitter()
 	case <-dead:
+		time.Sleep(time.Second*5)
 		start_elavator()
+		return
+	}	
 	}
+
+
 }
 
 func start_elavator(){
