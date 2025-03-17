@@ -33,8 +33,8 @@ func Msg_reciver(parentAlive chan bool){
 }	
 
 func Msg_transmitter(){
-		messages := Message{"message", "message recived"}
-		jsonData, _ := json.Marshal(messages)
+		message := Message{"message", "message recived"}
+		jsonData, _ := json.Marshal(message)
 		fmt.Fprintln(os.Stdin, string(jsonData))
 }
 
