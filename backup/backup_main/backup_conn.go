@@ -13,7 +13,7 @@ type Message struct {
 }
 
 func Msg_reciver(parentAlive chan bool){
-	scanner := bufio.NewScanner(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdout)
 	for scanner.Scan() {
 		msg := scanner.Text()
 		var receivedMsg Message
