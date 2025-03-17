@@ -9,7 +9,7 @@ import (
 	"root/network"
 )
 
-var elevator_1_ip = "localhost"
+
 
 /*
 hvordan kjøre:
@@ -36,7 +36,7 @@ func main() {
 	update_recived := make(chan [3]int)
 	disconnected := make(chan string)
 
-	network.Start_network(update_recived,disconnected)
+	network.Start_peer_network(update_recived,disconnected)
 	go elevio.PollButtons(drv_buttons)
 	go elevio.PollFloorSensor(drv_floors)
 	go elevio.PollObstructionSwitch(drv_obstr)
@@ -75,7 +75,7 @@ func main() {
 			elevalgo.SetAllLights()
 		
 		case id := <- disconnected:
-			go network.Network_reconnector(update_recived, disconnected,id)
+			go network.Peer_network_reconnector(update_recived, disconnected,id)
 		case <-alive_timer:
 
 		}

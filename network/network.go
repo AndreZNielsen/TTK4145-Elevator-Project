@@ -11,7 +11,7 @@ import(
 
 )
 
-func Start_network(receiver chan<- [3]int,disconnected chan<- string){
+func Start_peer_network(receiver chan<- [3]int,disconnected chan<- string){
 
 
 	for _, id := range config.PossibleIDs{
@@ -38,7 +38,7 @@ func Start_network(receiver chan<- [3]int,disconnected chan<- string){
 
 }
 
-func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, needReconnecting string){
+func Peer_network_reconnector(receiver chan<- [3]int,disconnected chan<- string, needReconnecting string){
 
 
 	for _, id := range config.PossibleIDs{
