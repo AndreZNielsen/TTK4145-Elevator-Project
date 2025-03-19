@@ -2,87 +2,64 @@ package main
 
 import (
 	"fmt"
-	elevalgo "root/elevator"
-	"root/elevio"
-	"root/reciver"
-	"root/transmitter"
-	"root/network"
-	"root/backup"
-
+	"root/config"
+	"root/elevator"
+	// "root/network"
+	// "root/reciver"
+	"root/sharedData"
+	// "root/transmitter"
 )
 
-
-
-/*
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
-og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
-på samme maskin
-*/
-
+var elevator_1_ip = "localhost:15657"
 
 func main() {
-	fmt.Println("Started!")
+    fmt.Println("Started!")
+
+    localEventRecived 	:= make(chan elevator.LocalEvent)
+    // aliveTimer 			:= make(chan bool)
+    remoteEventRecived 	:= make(chan [3]int)
+    // disconnected 		:= make(chan string)
+
+	externalData := sharedData.InitExternalData()
+
+    var elev elevator.Elevator
+    elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
+    elevator.Start_if_idle(&elev)
+    go elevator.FSM_DetectLocalEvents(localEventRecived)
+
+    // network.Start_network(remoteEventRecived, disconnected, externalData)       // I think we should only pass externalData.RemoteElevatorConnections, if only that is needed!
+    // transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData) 
+    // go reciver.AliveTimer(aliveTimer)
 
 
-	elevio.Init("localhost:12345", elevalgo.Num_floors)
 
-	elevalgo.MakeFsm()
+    // Buttons only work when door is open, why is this?! This is fixed
+    // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
 
-	drv_buttons := make(chan elevio.ButtonEvent)
-	drv_floors := make(chan int)
-	drv_obstr := make(chan bool)
-	poll_timer := make(chan bool)
-	alive_timer := make(chan bool)
-	update_recived := make(chan [3]int)
-	disconnected := make(chan string)
-
-	network.Start_peer_network(update_recived,disconnected)
-	go elevio.PollButtons(drv_buttons)
-	go elevio.PollFloorSensor(drv_floors)
-	go elevio.PollObstructionSwitch(drv_obstr)
-	go elevalgo.PollTimer(poll_timer)
-	go reciver.AliveTimer(alive_timer)
-	go backup.Start_backup()
-
-	elevalgo.Start_if_idle()
-	transmitter.Send_Elevator_data(elevalgo.GetElevatordata())
-	for {
-		select {
-		case button := <-drv_buttons:
-			elevalgo.FsmOnRequestButtonPress(button.Floor, elevalgo.Button(button.Button))
-			elevalgo.SetAllLights()
+    for {
+        select {
+        case localEvent := <-localEventRecived:
+            elevator.FSM_HandleLocalEvent(&elev, localEvent, externalData)
+			elevator.SetAllLights(&elev, externalData)
+			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
+            // This is because not all events should be transmitted. If a request is handled immediately, because
+            // we are at the same floor, we should not transmit that.
 			
-		case floor := <-drv_floors:
-			if !elevalgo.IsDoorObstructed() {
-				elevalgo.FsmOnFloorArrival(floor)
-			}
-		case obstructed := <-drv_obstr:
-			if obstructed {
-				elevalgo.DoorObstructed()
-			} else {
-				elevalgo.DoorUnobstructed()
-			}
-		case <-poll_timer:
-			if !elevalgo.IsDoorObstructed() {
-				elevalgo.StopTimer()
-				elevalgo.FsmOnDoorTimeout()
-			} else {
-				elevalgo.StartTimer()
-			}
-		case update := <-update_recived:
-			elevalgo.UpdatesharedHallRequests(update)
-			elevalgo.ChangeLocalHallRequests()
+            // I think assign should be called here? Cause it requires the external data
 
-			elevalgo.SetAllLights()
-		
-		case id := <- disconnected:
-			go network.Peer_network_reconnector(update_recived, disconnected,id)
-		case <-alive_timer:
+            // Either expand HandleLocalEvent to include assign and setlights and stuff, or call these separately here.
+            // Some control logic too, maybe. We need a more defined function for that.
+            // This should also improve Remoteevent handling, as we can use that function there as well.
 
-		}
-		
-	}
+        case remoteEvent := <-remoteEventRecived:
+			elevator.FSM_HandleRemoteEvent(&elev, externalData, remoteEvent)
+            fmt.Println("It happend :/")
+
+        // case id := <-disconnected:
+        //     go network.Network_reconnector(remoteEventRecived, disconnected, id, externalData)
+
+        // case <-aliveTimer:
+
+        }
+    }
 }
-
