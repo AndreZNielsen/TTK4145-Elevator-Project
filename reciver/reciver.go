@@ -12,13 +12,12 @@ import (
 	
 )
 
-//var lis_lift2 net.Conn
 
 
 
-func Start_tcp_listen(port string, id string, externalData *sharedData.ExternalData) net.Conn {
+func Start_tcp_listen(port string, id string) net.Conn {
     // If there is an existing connection for this id, close it.
-    if existingConn := externalData.RemoteElevatorConnections[id]; existingConn != nil {
+    if existingConn := sharedData.SharedData.RemoteElevatorConnections[id]; existingConn != nil {
         existingConn.Close()
     }
 
@@ -36,30 +35,25 @@ func Start_tcp_listen(port string, id string, externalData *sharedData.ExternalD
         return nil
     }
 
-    // Close the listener if you don't need to accept further connections.
     ln.Close()
 
     // Update shared data with the new connection.
-    externalData.RemoteElevatorConnections[id] = conn
-    externalData.ConnectedConn[id] = true
+    sharedData.SharedData.ConnectedConn[id] = true
 
     fmt.Println("Connected")
     return conn
 }
 
-func SetConn(externalData *sharedData.ExternalData){
-	RemoteElevatorConn = externalData.RemoteElevatorConnections
-}
 
-func Listen_recive(receiver chan<- [3]int,disconnected chan<- string, externalData *sharedData.ExternalData) {
+func Listen_recive(receiver chan<- [3]int,disconnected chan<- string) {
 	for _, id := range config.RemoteIDs{
-		go Recive(receiver,id,disconnected, externalData)
+		go Recive(receiver,id,disconnected)
 	}
 }
-func Recive(receiver chan<- [3]int,id string,disconnected chan<- string, externalData *sharedData.ExternalData){
+func Recive(receiver chan<- [3]int,id string,disconnected chan<- string){
 	for {	
-		if externalData.ConnectedConn[id]{	
-			Decode(receiver,id,disconnected, externalData)
+		if sharedData.SharedData.ConnectedConn[id]{	
+			Decode(receiver,id,disconnected)
 		}else{
 			return}
 
@@ -68,18 +62,17 @@ func Recive(receiver chan<- [3]int,id string,disconnected chan<- string, externa
 
 var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-var RemoteElevatorConn =  make(map[string]net.Conn)
 
-func Decode(receiver chan<- [3]int,id string,disconnected chan<- string, externalData *sharedData.ExternalData) {
-	SetConn(externalData)//Ensure conn is up-to-date
-	decoder := gob.NewDecoder(RemoteElevatorConn[id])
+
+func Decode(receiver chan<- [3]int,id string,disconnected chan<- string) {
+	decoder := gob.NewDecoder(sharedData.SharedData.RemoteElevatorConnections[id])
 
 	var typeID string
 	err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
 	var netErr *net.OpError
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
-		externalData.ConnectedConn[id] = false
+		sharedData.SharedData.ConnectedConn[id] = false
 		disconnected<-id
 		return
 	}
@@ -100,9 +93,9 @@ func Decode(receiver chan<- [3]int,id string,disconnected chan<- string, externa
 	
 			return
 		}
-		if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-			externalData.RemoteElevatorData[id] = data
-		}
+		//if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
+		sharedData.SharedData.RemoteElevatorData[id]=data
+		//}
 			
 		//fmt.Println("Received Elevator_data:", data)
 		
@@ -126,4 +119,3 @@ func Decode(receiver chan<- [3]int,id string,disconnected chan<- string, externa
 		fmt.Println("Unknown type received:", typeID)
 	}
 }
-

@@ -24,17 +24,26 @@ import (
 //og fra TCP-meldings-datastrukturen får en oppdatering. 
 
 
-type ExternalData struct {
+type SharedData struct {
 	HallRequests [][2]bool
 	RemoteElevatorData map[string]config.Elevator_data
+}
+
+type ExternalConn struct {
 	RemoteElevatorConnections map[string]net.Conn
 	ConnectedConn map[string]bool
 }
 
-func InitExternalData() *ExternalData {
-	return &ExternalData{
+func InitExternalData() *SharedData {
+	return &SharedData{
 		HallRequests:               make([][2]bool, config.Num_floors),
 		RemoteElevatorData:         make(map[string]config.Elevator_data),
+	}
+}
+
+
+func InitExternalConn() *ExternalConn {
+	return &ExternalConn{
 		RemoteElevatorConnections:  make(map[string]net.Conn),
 		ConnectedConn:              make(map[string]bool),
 	}
