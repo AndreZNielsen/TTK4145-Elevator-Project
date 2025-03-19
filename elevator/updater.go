@@ -10,18 +10,18 @@ import (
 )
 
 func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.ExternalData, update [3]int) {
-    sharedHallRequests := externalData.HallRequests
+    //sharedHallRequests := externalData.HallRequests
     if update[2] == 1 && update[1] != 2 { // ignores updates to cab requests (update[1] != 2)
-        sharedHallRequests[update[0]][update[1]] = true
+        externalData.HallRequests[update[0]][update[1]] = true
     } else if update[1] != 2 {
-        sharedHallRequests[update[0]][update[1]] = false
+        externalData.HallRequests[update[0]][update[1]] = false
     }
   
-    AssignLocalHallRequests(elevator, externalData)      //This one is called anyway should be called elsewhere
+    
 }
 
 func Transmitt_update_and_update_localHallRequests(elevator *Elevator, update_val [3]int, externalData *sharedData.ExternalData) { // sends the hall requests update to the other elevator and updates the local hall requests
-    UpdatesharedHallRequests(elevator, externalData, update_val)     // call this in main instead, as it requires externalData
+    
     // transmitter.Send_update(update_val, externalData)
 }
 

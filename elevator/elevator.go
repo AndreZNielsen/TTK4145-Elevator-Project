@@ -30,6 +30,7 @@ type Elevator struct {
 	requests  [Num_floors][Num_buttons]bool
 	behaviour ElevatorBehaviour
 	config    config
+	obstructed bool
 }
 
 type config struct {
@@ -142,9 +143,11 @@ func MakeUninitializedelevator() Elevator {
 		floor:     -1,
 		direction: Dir_stop,
 		behaviour: Behaviour_idle,
+		obstructed: false,
 		config: config{
 			clearRequestVariation: CV_InDirn,
 			doorOpenDuration:      3.0,
+
 		},
 	}
 }
@@ -167,8 +170,8 @@ func DoorUnobstructed(elevator *Elevator) {
     }
 }
 
-func IsDoorObstructed() bool {
-    return doorObstructed
+func IsDoorObstructed(elevator *Elevator) bool {
+    return elevator.obstructed
 }
 
 func GetCabRequests(matrix [Num_floors][3]bool) []bool {

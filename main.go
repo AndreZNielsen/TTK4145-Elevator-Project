@@ -41,6 +41,8 @@ func main() {
         case localEvent := <-localEventRecived:
             elevator.FSM_HandleLocalEvent(&elev, localEvent, externalData)
 			elevator.SetAllLights(&elev, externalData)
+            //transmittLocalEvent(localEvent)
+
 			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
             // This is because not all events should be transmitted. If a request is handled immediately, because
             // we are at the same floor, we should not transmit that.
