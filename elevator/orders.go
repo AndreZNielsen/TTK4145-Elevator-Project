@@ -85,9 +85,9 @@ func (e *Elevator) RequestsShouldStop() bool {
 }
 
 func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Button) bool {
-    // if e.direction != Dir_stop {
-    //     return false
-    // }
+    if e.direction != Dir_stop {
+        return false
+    }
     fmt.Println(e.direction)
     
     switch e.config.clearRequestVariation {
