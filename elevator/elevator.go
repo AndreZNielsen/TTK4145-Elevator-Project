@@ -212,8 +212,8 @@ func GetElevatorData(elevator *Elevator) Config.Elevator_data {
     }
 }
 
-func SetAllLights(elevator *Elevator, externalData *sharedData.ExternalData) {
-    requests := MakeRequests(externalData.HallRequests, GetCabRequests(elevator.requests)) // Getfunction necessary?
+func SetAllLights(elevator *Elevator, SharedData *sharedData.SharedData) {
+    requests := MakeRequests(SharedData.HallRequests, GetCabRequests(elevator.requests)) // Getfunction necessary?
     for floor := 0; floor < Num_floors; floor++ {
         for btn := 0; btn < Num_buttons; btn++ {
             elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])

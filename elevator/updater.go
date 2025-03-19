@@ -9,26 +9,26 @@ import (
 	"root/transmitter"
 )
 
-func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.ExternalData, update [3]int) {
-    sharedHallRequests := externalData.HallRequests
+func UpdatesharedHallRequests(elevator *Elevator, sharedData *sharedData.SharedData, update [3]int) {
+    sharedHallRequests := sharedData.HallRequests
     if update[2] == 1 && update[1] != 2 { // ignores updates to cab requests (update[1] != 2)
         sharedHallRequests[update[0]][update[1]] = true
     } else if update[1] != 2 {
         sharedHallRequests[update[0]][update[1]] = false
     }
   
-    AssignLocalHallRequests(elevator, externalData)      //This one is called anyway should be called elsewhere
+    AssignLocalHallRequests(elevator, sharedData)      //This one is called anyway should be called elsewhere
 }
 
-func Transmitt_update_and_update_localHallRequests(elevator *Elevator, update_val [3]int, externalData *sharedData.ExternalData) { // sends the hall requests update to the other elevator and updates the local hall requests
-    UpdatesharedHallRequests(elevator, externalData, update_val)     // call this in main instead, as it requires externalData
+func Transmitt_update_and_update_localHallRequests(elevator *Elevator, update_val [3]int, sharedData *sharedData.SharedData) { // sends the hall requests update to the other elevator and updates the local hall requests
+    UpdatesharedHallRequests(elevator, sharedData, update_val)     // call this in main instead, as it requires externalData
     // transmitter.Send_update(update_val, externalData)
 }
 
-func AssignLocalHallRequests(elevator *Elevator, externalData *sharedData.ExternalData) {
+func AssignLocalHallRequests(elevator *Elevator, sharedData *sharedData.SharedData) {
     localData := GetElevatorData(elevator)
-    remoteData := externalData.RemoteElevatorData
-    sharedHallRequests := externalData.HallRequests
+    remoteData := sharedData.RemoteElevatorData
+    sharedHallRequests := sharedData.HallRequests
 
     fmt.Println(localData)
     fmt.Println(remoteData)
@@ -71,8 +71,8 @@ func AssignLocalHallRequests(elevator *Elevator, externalData *sharedData.Extern
 
 
 
-func Send_Elevator_data(elevatorData Config.Elevator_data, externalData *sharedData.ExternalData) {
-    transmitter.Send_Elevator_data(elevatorData, externalData)
+func Send_Elevator_data(elevatorData Config.Elevator_data, ExternalConn *sharedData.ExternalConn) {
+    transmitter.Send_Elevator_data(elevatorData, ExternalConn)
 }
 
 func Start_if_idle(elevator *Elevator) {
