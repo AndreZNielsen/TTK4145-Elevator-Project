@@ -4,8 +4,8 @@ import (
 	"root/config"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"runtime"
+	"os/exec"
 	
 
 )
@@ -31,6 +31,7 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	default:
 		panic("OS not supported")
 	}
+
 
 
 	states := map[string]config.Elevator_data{

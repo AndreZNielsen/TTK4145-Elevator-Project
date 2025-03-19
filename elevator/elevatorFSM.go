@@ -1,7 +1,6 @@
 package elevator
 
 import (
-	"fmt"
 	"root/elevio"
 	"root/sharedData"
 )
@@ -42,7 +41,7 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, e
 	// SetLights
 
 	if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-		StartTimer() // Just create an openDoor function. It is not clear what this does at the moment
+		DoorOpen(elevator) // Just create an openDoor function. It is not clear what this does at the moment
 		return
 	}
 
@@ -50,67 +49,6 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, e
 		elevator.requests[btn_floor][btn_type] = true
 	}
 	UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-	
-
-	// Replace this function call with what is below. Much easier to tell what is going on. UpdateAndTransmittLocalRequests is not exactly traceable
-
-	// localUpdate := [3]int{btn_floor, int(btn_type), 1}
-
-	// UpdatesharedHallRequests(elevator, externalData, update_val)     // call this in main instead, as it requires externalData
-	// AssignLocalHallRequests(elevator, externalData)
-	// // transmitter.Send_update(update_val, externalData)
-
-	// Start_if_idle // We kind of have two control functions at the moment? This and start_if_idle?
-	// switch elevator.behaviour {
-	// case Behaviour_door_open:
-	//     if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-	//         StartTimer() // Just create an openDoor function. It is not clear what this does at the moment
-	//     } else {
-	//         if btn_type == Btn_hallcab {
-	//             elevator.requests[btn_floor][btn_type] = true
-	//         }
-	//         UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-	//     }
-
-	//     // if btn_type == Btn_hallcab {
-	//     //     elevator.requests[btn_floor][btn_type] = true
-	//     // }
-	//     // UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-
-	// case Behaviour_moving:
-	//     if btn_type == Btn_hallcab {
-	//         elevator.requests[btn_floor][btn_type] = true // Maybe name this something, so its more intuitive what it does. This is required cause assigner only deals with hallCalls and this is a cabCall
-	//     }
-	//     UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-
-	// case Behaviour_idle:
-	//     if btn_type == Btn_hallcab {
-	//         elevator.requests[btn_floor][btn_type] = true // Same situation here
-	//     }
-	//     UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-
-	//     if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-	//         StartTimer() // Just create an openDoor function. It is not clear what this does at the moment
-	//     } else {
-	//         if btn_type == Btn_hallcab {
-	//             elevator.requests[btn_floor][btn_type] = true
-	//         }
-	//         UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-	//     }
-
-	//     // if elevator.floor == btn_floor {
-	//     //     elevio.SetMotorDirection(elevio.MD_Stop)
-	//     //     elevio.SetDoorOpenLamp(true)
-	//     //     elevator.RequestsClearAtCurrentFloor(externalData)
-	//     //     StartTimer()
-	//     //     // SetAllLights(elevator)
-	//     //     elevator.behaviour = Behaviour_door_open
-	//     // } else {
-	//     //     UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
-	//     // }
-
-	// The whole switch is unnecessary, as far as I see
-
 }
 
 func UpdateAndTransmittLocalRequests(elevator *Elevator, btn_floor int, btn_type Button, update int, externalData *sharedData.ExternalData) {
@@ -125,8 +63,7 @@ func FSM_FloorArrival(elevator *Elevator, newFloor int, externalData *sharedData
 	elevator.floor = newFloor
 	elevio.SetFloorIndicator(elevator.floor)
 
-	switch elevator.behaviour {
-	case Behaviour_moving:
+	if elevator.behaviour == Behaviour_moving {
 		if elevator.RequestsShouldStop() {
 			elevio.SetMotorDirection(elevio.MD_Stop)
 			elevator.RequestsClearAtCurrentFloor(externalData)
@@ -138,23 +75,21 @@ func FSM_FloorArrival(elevator *Elevator, newFloor int, externalData *sharedData
 }
 
 func FSM_DoorTimeout(elevator *Elevator, externalData *sharedData.ExternalData) {
-	// switch elevator.behaviour {
-	// case Behaviour_door_open:
-		fmt.Println("Doortimeoutfunction called!")
-		pair := elevator.SelectNextDirection()
-		elevator.direction = pair.dir
-		elevator.behaviour = pair.behaviour
+	nextBehaviourPair := elevator.SelectNextDirection()
+	elevator.direction = nextBehaviourPair.dir
+	elevator.behaviour = nextBehaviourPair.behaviour
 
-		switch elevator.behaviour {
-		case Behaviour_door_open:
-			StartTimer()
-			elevator.RequestsClearAtCurrentFloor(externalData)
-			//SetAllLights(elevator)
-		case Behaviour_moving, Behaviour_idle:
-			elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
-		}
+	switch elevator.behaviour {
+	case Behaviour_door_open: //hvis neste tilstand er "door_open", skal døra åpnes
+		DoorOpen(elevator)
+		elevator.RequestsClearAtCurrentFloor(externalData)
+		//SetAllLights(elevator)
+	case Behaviour_moving, Behaviour_idle:
+		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
 	}
-	// go Send_Elevator_data(GetElevatorData(elevator), externalData)
+}
+
+// go Send_Elevator_data(GetElevatorData(elevator), externalData)
 // }
 
 // Here I think it would be reasonable to create functions for each case
@@ -168,9 +103,9 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, externalData *sh
 		FSM_HandleButtonPress(elevator, event.Button.Floor, Button(event.Button.Button), externalData)
 		//SetAllLights(elevator)
 	case "floor":
-		if !IsDoorObstructed() {
-			FSM_FloorArrival(elevator, event.Floor, externalData)
-		}
+
+		FSM_FloorArrival(elevator, event.Floor, externalData)
+
 	case "obstructed":
 		if event.Obstructed {
 			DoorObstructed(elevator)
