@@ -22,7 +22,7 @@ func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.Exter
 
 func Transmitt_update_and_update_localHallRequests(elevator *Elevator, update_val [3]int, externalData *sharedData.ExternalData) { // sends the hall requests update to the other elevator and updates the local hall requests
     
-    // transmitter.Send_update(update_val, externalData)
+    transmitter.Send_update(update_val, externalData)
 }
 
 func AssignLocalHallRequests(elevator *Elevator, externalData *sharedData.ExternalData) {
@@ -53,8 +53,7 @@ func AssignLocalHallRequests(elevator *Elevator, externalData *sharedData.Extern
     updatedRequests := assigner.Assigner(correctedLocalData, remoteData, sharedHallRequests)
     elevator.requests = MakeRequests(updatedRequests, GetCabRequests(elevator.requests))
 
-    Start_if_idle(elevator) // I have a problem with the way this is called. WIll look into it later
-
+    
 
     // if localData.Floor != -1 && !(localData.Floor == 0 && localData.Direction == "down") && !(localData.Floor == 3 && localData.Direction == "up") {
     //     updatedRequests := assigner.Assigner(localData, remoteData, sharedHallRequests)

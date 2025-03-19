@@ -1,6 +1,7 @@
 package elevator
 
 import (
+	"container/list"
 	"root/elevio"
 	"root/sharedData"
 )
@@ -30,34 +31,31 @@ func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
 	elevator.behaviour = Behaviour_moving
 }
 
-func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, externalData *sharedData.ExternalData) {
-	// Could look something like:
+func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, externalData *sharedData.ExternalData) [3]int {
+	
+	noUpdate := [3]int{0, 0, 0} // Empty array, indicating no update
 
-	// If clearImmediately : return // Does the light need to turn on, even if the request is cleared immediately?
-
-	// Update local requests
-	// Transmitt update
-	// assign
-	// SetLights
 
 	if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-		DoorOpen(elevator) // Just create an openDoor function. It is not clear what this does at the moment
-		return
+		DoorOpen(elevator) 
+		return noUpdate
 	}
 
 	if btn_type == Btn_hallcab {
 		elevator.requests[btn_floor][btn_type] = true
 	}
-	UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
+	
+	return [3]int{btn_floor, int(btn_type), 1}
+	//UpdateAndTransmittLocalRequests(elevator, btn_floor, btn_type, 1, externalData)
 }
 
-func FSM_GetUpdate(elevator *Elevator, btn_floor int, btn_type Button) {
-	if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
-		DoorOpen(elevator) // Just create an openDoor function. It is not clear what this does at the moment
-		return
-	}
-	localUpdate := [3]int{btn_floor, int(btn_type), update}
-}
+// func FSM_GetUpdate(elevator *Elevator, btn_floor int, btn_type Button) {
+// 	if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
+// 		DoorOpen(elevator) // Just create an openDoor function. It is not clear what this does at the moment
+// 		return
+// 	}
+// 	localUpdate := [3]int{btn_floor, int(btn_type), update}
+// }
 
 
 func UpdateAndTransmittLocalRequests(elevator *Elevator, btn_floor int, btn_type Button, update int, externalData *sharedData.ExternalData) {
@@ -68,18 +66,36 @@ func UpdateAndTransmittLocalRequests(elevator *Elevator, btn_floor int, btn_type
 
 // ControlMovement-function, start_if_idle is not good enough. We can make one that is also capable of stopping
 
-func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, externalData *sharedData.ExternalData) {
+func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, externalData *sharedData.ExternalData) [3]int {
+	
+	noUpdate := [3]int{0, 0, 1} // One in last element, indicates no orders should be cleared
+	
 	elevator.floor = newFloor
 	elevio.SetFloorIndicator(elevator.floor)
 
-	if elevator.behaviour == Behaviour_moving {
-		if elevator.RequestsShouldStop() {
-			elevio.SetMotorDirection(elevio.MD_Stop)
-			elevator.RequestsClearAtCurrentFloor(externalData)
-			//SetAllLights(elevator)
-			DoorOpen(elevator)
-		}
+	if elevator.behaviour != Behaviour_moving {
+		return noUpdate
 	}
+
+	if elevator.ShouldStop() {
+		elevio.SetMotorDirection(elevio.MD_Stop)
+		update := elevator.RequestsClearAtCurrentFloor(externalData)
+		//SetAllLights(elevator)
+		DoorOpen(elevator)
+
+		return update
+	}
+	
+	return noUpdate
+
+	// if elevator.behaviour == Behaviour_moving {
+	// 	if elevator.ShouldStop() {
+	// 		elevio.SetMotorDirection(elevio.MD_Stop)
+	// 		elevator.RequestsClearAtCurrentFloor(externalData)
+	// 		//SetAllLights(elevator)
+	// 		DoorOpen(elevator)
+	// 	}
+	// }
 	//go Send_Elevator_data(GetElevatorData(elevator), externalData)
 }
 
@@ -110,16 +126,34 @@ func FSM_startNextRequest(elevator *Elevator, externalData *sharedData.ExternalD
 func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, externalData *sharedData.ExternalData) {
 	switch event.EventType {
 	case "button":
-		FSM_HandleButtonPress(elevator, event.Button.Floor, Button(event.Button.Button), externalData)
-		//SetAllLights(elevator)
-		UpdatesharedHallRequests(elevator, externalData, update_val)     // call this in main instead, as it requires externalData
+		update := FSM_HandleButtonPress(elevator, event.Button.Floor, Button(event.Button.Button), externalData)
+		
+		if update == [3]int{0, 0, 0} {
+			return
+		}
+		
+		UpdatesharedHallRequests(elevator, externalData, update)     // call this in main instead, as it requires externalData
+		//transmitter.Send_update(update_val, connectedConn)
+		
 		AssignLocalHallRequests(elevator, externalData)      //This one is called anyway should be called elsewhere
-		//assign
-		//transmitt
+		Start_if_idle(elevator)
+		// startMotor() // doesnt exist yet, but this function should be created. Or something similar
+		//SetAllLights(elevator)
+
 	case "floor":
-		FSM_HandleFloorArrival(elevator, event.Floor, externalData)
-		//assign
-		//transmitt
+		update := FSM_HandleFloorArrival(elevator, event.Floor, externalData)
+
+		if update == [3]int{0, 0, 0} { // this might not work, because we want to set to zero
+			return
+		}
+		
+		UpdatesharedHallRequests(elevator, externalData, update)     // call this in main instead, as it requires externalData
+		//transmitter.Send_update(update, connectedConn)
+		
+		//StopMotor() these two could be here, but the current solution might be good too
+		//DoorOpen(elevator)
+		AssignLocalHallRequests(elevator, externalData)      //This one is called anyway should be called elsewhere
+		SetAllLights(elevator, externalData)
 
 	case "obstructed":
 		FSM_HandleObstruction(elevator, event.Obstructed)
@@ -138,7 +172,7 @@ func FSM_HandleRemoteEvent(elevator *Elevator, externalData *sharedData.External
 	UpdatesharedHallRequests(elevator, externalData, event)
 	AssignLocalHallRequests(elevator, externalData)
 	SetAllLights(elevator, externalData)
-	// Start_if_idle(elevator) // should be called here instead of in ChangeLocalHallRequests
+	Start_if_idle(elevator) // should be called here instead of in ChangeLocalHallRequests
 
 	// Once this change is made I am very happy with this function
 }

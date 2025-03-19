@@ -40,7 +40,7 @@ func main() {
         select {
         case localEvent := <-localEventRecived:
             elevator.FSM_HandleLocalEvent(&elev, localEvent, externalData)
-			elevator.SetAllLights(&elev, externalData)
+			//elevator.SetAllLights(&elev, externalData)
             //transmittLocalEvent(localEvent)
 
 			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
