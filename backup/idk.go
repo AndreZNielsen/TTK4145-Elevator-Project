@@ -7,6 +7,7 @@ import(
 	"encoding/json"
 	"time"
 	"bufio"
+	"runtime"
 
 )
 type Message struct {
@@ -14,11 +15,16 @@ type Message struct {
 	Content interface{} `json:"content"`
 }
 func Start_backup(){
-	for{
-	psCommand := "cd './backup'; cd './backup_main'; go run backup_main.go"
-
-	// Start PowerShell and execute the command
-	cmd := exec.Command("powershell.exe", "-Command", psCommand)
+for{
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "linux":
+   		cmd = exec.Command("go", "run", "backup_main.go")
+		cmd.Dir = "./backup/backup_main"
+	case "windows":
+	cmd = exec.Command("go", "run", "backup_main.go")
+	cmd.Dir = "./backup/backup_main"
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {

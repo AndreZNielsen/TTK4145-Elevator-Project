@@ -29,8 +29,8 @@ func main(){
 }
 
 func restart_elavator(){
-psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"cd '..';cd '..'; go run -ldflags='-X root/config.Elevator_id=A' main.go\""
-cmd := exec.Command("powershell.exe", "-Command", psCommand) 
+	cmd := exec.Command("go", "run", "-ldflags=-X root/config.Elevator_id=A", "main.go")
+	cmd.Dir = "../.."  
 err := cmd.Start()
 if err != nil {
 	fmt.Println("Error starting PowerShell:", err)
