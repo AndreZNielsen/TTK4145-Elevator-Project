@@ -11,7 +11,7 @@ import(
 
 )
 
-func StartPeerNetwork(remoteEvent chan<- [3]int,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
 
@@ -39,7 +39,7 @@ func StartPeerNetwork(remoteEvent chan<- [3]int,disconnected chan<- string,share
 
 }
 
-func ReconnectPeer(remoteEvent chan<- [3]int,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func ReconnectPeer(remoteEvent chan<- config.Update,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 
 
 

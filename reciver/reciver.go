@@ -45,7 +45,7 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
 }
 
 
-func Listen_recive(receiver chan<- [3]int,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn) {
+func Listen_recive(receiver chan<- config.Update,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn) {
 	for _, id := range config.RemoteIDs{
 		go Recive(receiver,id,disconnected,externalData,externalConn)
 	}
@@ -53,7 +53,7 @@ func Listen_recive(receiver chan<- [3]int,disconnected chan<- string,externalDat
 
 var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-func Recive(receiver chan<- [3]int,id string,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	for {	
 		if externalConn.ConnectedConn[id]{	
 			decoder := gob.NewDecoder(externalConn.RemoteElevatorConnections[id])
@@ -92,14 +92,14 @@ func Recive(receiver chan<- [3]int,id string,disconnected chan<- string,external
 				
 		
 		
-			case "int":
-				var num [3]int
-				err = decoder.Decode(&num)
+			case "Update":
+				var Update config.Update
+				err = decoder.Decode(&Update)
 				if err != nil {
 					fmt.Println("Error decoding int:", err)
 					return
 				}
-				receiver<-num
+				receiver<-Update
 				//fmt.Println("Received int:", num)
 		
 			case "alive":

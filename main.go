@@ -38,7 +38,6 @@ func main() {
     elevator.Start_if_idle(&elev)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     go backup.Start_backup()
-    // network.Start_network(remoteEventRecived, disconnected, externalData)       // I think we should only pass externalData.RemoteElevatorConnections, if only that is needed!
     // transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData) 
     // go reciver.AliveTimer(aliveTimer)
 

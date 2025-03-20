@@ -17,7 +17,7 @@ var sendMu = make(map[string]*sync.Mutex)
 var Disconnected chan<- string
 func InitMutex(){
 	for _,id := range(config.RemoteIDs){
-		// Initialize the mutex for a given id if it doesn't already exist.
+		// Initialize the mutex if it doesn't already exist
 		if _, exists := sendMu[id]; !exists {
 			sendMu[id] = &sync.Mutex{}
 		}
@@ -93,7 +93,7 @@ func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *s
 	}
 }
 
-func Send_update(update [3]int,externalConn *sharedData.ExternalConn){
+func Send_update(update config.Update,externalConn *sharedData.ExternalConn){
 	for _, id := range config.RemoteIDs{
 		if externalConn.ConnectedConn[id]{
 			go transmitt_update(update,id,externalConn)
@@ -102,13 +102,13 @@ func Send_update(update [3]int,externalConn *sharedData.ExternalConn){
 	}
 }
 
-func transmitt_update(update [3]int, id string,externalConn *sharedData.ExternalConn){
+func transmitt_update(update config.Update, id string,externalConn *sharedData.ExternalConn){
 	sendMu[id].Lock() // Locking before sending
 	defer sendMu[id].Unlock() // Ensure to unlock after sending
 
 	time.Sleep(7*time.Millisecond)
 	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
-	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
+	err := encoder.Encode("Update") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
 		return
