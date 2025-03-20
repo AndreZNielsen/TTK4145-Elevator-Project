@@ -11,20 +11,20 @@ import (
 
 
 
-func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.ExternalData, update config.Update) {
+func UpdatesharedHallRequests(elevator *Elevator, sharedData *sharedData.SharedData, update config.Update) {
     if update.Value && update.ButtonType != 2 { // ignores updates to cab requests (update[1] != 2)
-        externalData.HallRequests[update.Floor][update.ButtonType] = true
+        sharedData.HallRequests[update.Floor][update.ButtonType] = true
     } else if update.ButtonType != 2 {
-        externalData.HallRequests[update.Floor][update.ButtonType] = false
+        sharedData.HallRequests[update.Floor][update.ButtonType] = false
     }
   
     
 }
 
-func AssignLocalHallRequests(elevator *Elevator, externalData *sharedData.ExternalData) {
+func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedData) {
     localData := GetElevatorData(elevator)
-    remoteData := externalData.RemoteElevatorData
-    sharedHallRequests := externalData.HallRequests
+    remoteData := SharedData.RemoteElevatorData
+    sharedHallRequests := SharedData.HallRequests
 
     fmt.Println(localData)
     fmt.Println(remoteData)
@@ -50,8 +50,8 @@ func AssignLocalHallRequests(elevator *Elevator, externalData *sharedData.Extern
 
 
 
-func Send_Elevator_data(elevatorData config.Elevator_data, externalData *sharedData.ExternalData) {
-    transmitter.Send_Elevator_data(elevatorData, externalData)
+func Send_Elevator_data(elevatorData config.Elevator_data, externalConn *sharedData.ExternalConn) {
+    transmitter.Send_Elevator_data(elevatorData, externalConn)
 }
 
 func Start_if_idle(elevator *Elevator) {

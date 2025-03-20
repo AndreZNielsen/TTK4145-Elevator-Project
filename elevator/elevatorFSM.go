@@ -27,7 +27,7 @@ func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
 	elevator.behaviour = Behaviour_moving
 }
 
-func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, externalData *sharedData.ExternalData) []config.Update {
+func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, SharedData *sharedData.SharedData) []config.Update {
 	
 	updates := []config.Update{}
 
@@ -48,7 +48,7 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, e
 	return append(updates, update)
 }
 
-func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, externalData *sharedData.ExternalData) []config.Update {
+func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *sharedData.SharedData) []config.Update {
 	
 	updates := []config.Update{}
 
@@ -61,14 +61,14 @@ func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, externalData *shar
 
 	if elevator.ShouldStop() {
 		elevio.SetMotorDirection(elevio.MD_Stop)
-		updates = elevator.RequestsClearAtCurrentFloor(externalData)
+		updates = elevator.RequestsClearAtCurrentFloor(SharedData)
 		DoorOpen(elevator)
 	}
 	
 	return updates
 }
 
-func FSM_startNextRequest(elevator *Elevator, externalData *sharedData.ExternalData) {
+func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData) {
 	DoorClose(elevator)
 	nextBehaviourPair := elevator.SelectNextDirection()
 	elevator.direction = nextBehaviourPair.dir
@@ -77,14 +77,14 @@ func FSM_startNextRequest(elevator *Elevator, externalData *sharedData.ExternalD
 	switch elevator.behaviour {
 	case Behaviour_door_open: //hvis neste tilstand er "door_open", skal døra åpnes
 		DoorOpen(elevator)
-		updates := elevator.RequestsClearAtCurrentFloor(externalData)
+		updates := elevator.RequestsClearAtCurrentFloor(SharedData)
 		if len(updates) == 0 {
 			return
 		}
 
 		fmt.Println("lenght of updates:", len(updates))
 		for i:=0; i<len(updates); i++  {
-			UpdatesharedHallRequests(elevator, externalData, updates[i])
+			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			//transmitter.Send_update(update, connectedConn)
 
 		}
@@ -94,44 +94,44 @@ func FSM_startNextRequest(elevator *Elevator, externalData *sharedData.ExternalD
 	}
 }
 
-// go Send_Elevator_data(GetElevatorData(elevator), externalData)
+// go Send_Elevator_data(GetElevatorData(elevator), SharedData)
 // }
 
-func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, externalData *sharedData.ExternalData) {
+func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *sharedData.SharedData) {
 	switch event.EventType {
 	case "button":
-		updates := FSM_HandleButtonPress(elevator, event.Button.Floor, Button(event.Button.Button), externalData)
+		updates := FSM_HandleButtonPress(elevator, event.Button.Floor, Button(event.Button.Button), SharedData)
 		
 		if len(updates) == 0 {
 			return
 		}
 		for i:=0; i<len(updates); i++  {
-			UpdatesharedHallRequests(elevator, externalData, updates[i])
+			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			//transmitter.Send_update(update, connectedConn)
 		}
 
-		SetAllLights(elevator, externalData)
-		AssignLocalHallRequests(elevator, externalData)
+		SetAllLights(elevator, SharedData)
+		AssignLocalHallRequests(elevator, SharedData)
 		Start_if_idle(elevator)
 		// startMotor() // doesnt exist yet, but this function should be created. Or something similar
 		
 
 	case "floor":
-		updates := FSM_HandleFloorArrival(elevator, event.Floor, externalData)
+		updates := FSM_HandleFloorArrival(elevator, event.Floor, SharedData)
 
 		if len(updates) == 0 {
 			return
 		}
 		
 		for i:=0; i<len(updates); i++  {
-			UpdatesharedHallRequests(elevator, externalData, updates[i])
+			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			//transmitter.Send_update(update, connectedConn)
 		}
 		
 		//StopMotor() these two could be here, but the current solution might be good too
 		//DoorOpen(elevator)
-		AssignLocalHallRequests(elevator, externalData)
-		SetAllLights(elevator, externalData)
+		AssignLocalHallRequests(elevator, SharedData)
+		SetAllLights(elevator, SharedData)
 
 	case "obstructed":
 		FSM_HandleObstruction(elevator, event.Obstructed)
@@ -141,16 +141,16 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, externalData *sh
 			DoorOpen(elevator) // Door is kept open if it is obstructed
 						
 		} else {
-			FSM_startNextRequest(elevator, externalData) 
-			SetAllLights(elevator, externalData)
+			FSM_startNextRequest(elevator, SharedData) 
+			SetAllLights(elevator, SharedData)
 		}
 	}
 }
 
-func FSM_HandleRemoteEvent(elevator *Elevator, externalData *sharedData.ExternalData, event config.Update) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
-	UpdatesharedHallRequests(elevator, externalData, event)
-	AssignLocalHallRequests(elevator, externalData)
-	SetAllLights(elevator, externalData)
+func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event config.Update) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
+	UpdatesharedHallRequests(elevator, SharedData, event)
+	AssignLocalHallRequests(elevator, SharedData)
+	SetAllLights(elevator, SharedData)
 	Start_if_idle(elevator) // should be called here instead of in ChangeLocalHallRequests
 
 	// Once this change is made I am very happy with this function

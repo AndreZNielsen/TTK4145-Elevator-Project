@@ -25,13 +25,14 @@ func main() {
     fmt.Println("Started!")
     localEventRecived 	:= make(chan elevator.LocalEvent)
     // aliveTimer 			:= make(chan bool)
-    remoteEventRecived 	:= make(chan [3]int)
+    remoteEventRecived 	:= make(chan config.Update)
     disconnected 		:= make(chan string)
 
 
 	sharedData := SharedData.InitSharedData()
     sharedConn := SharedData.InitExternalConn()
     go network.StartPeerNetwork(remoteEventRecived,disconnected,sharedData,sharedConn)
+    
     var elev elevator.Elevator
     elevator.FSM_MakeElevator(&elev, "localhost:12345", config.Num_floors)
     elevator.Start_if_idle(&elev)
@@ -63,7 +64,6 @@ func main() {
 
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent)
-            fmt.Println("It happend :/")
 
         case id := <-disconnected:
             go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData,sharedConn)
@@ -73,8 +73,4 @@ func main() {
         }
     }
 }
-        // case <-aliveTimer:
 
-        }
-    }
-}

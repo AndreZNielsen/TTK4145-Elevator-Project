@@ -98,7 +98,7 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 
 
 
-func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.ExternalData) []config.Update {
+func (e *Elevator) RequestsClearAtCurrentFloor(SharedData *sharedData.SharedData) []config.Update {
 
     updates := []config.Update{}
 
