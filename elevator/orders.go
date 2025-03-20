@@ -105,9 +105,11 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 }
 
 
-// If this function can end up needing to send two messages, were kind of screwed.
-// Need to make some big changes then.
-func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.ExternalData) [3]int {
+// This function is designed to send 2 updates in some cases. This is a big issue, when trying to return the update
+func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.ExternalData) [][3]int {
+
+    var updates [][3]int
+
     switch e.config.clearRequestVariation {
     // case CV_All: // Is this even possible?
     //     for btn := 0; btn < Num_buttons; btn++ {
@@ -122,32 +124,39 @@ func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.External
             if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
                 e.requests[e.floor][Btn_halldown] = false
                 //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
-                return [3]int{e.floor, int(Btn_halldown), 0}
+                //return [3]int{e.floor, int(Btn_halldown), 0}
+                updates = append(updates, [3]int{e.floor, int(Btn_halldown), 0})
             }
             e.requests[e.floor][Btn_hallup] = false
             //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
-            return [3]int{e.floor, int(Btn_hallup), 0}
+            //return [3]int{e.floor, int(Btn_hallup), 0}
+            updates = append(updates, [3]int{e.floor, int(Btn_hallup), 0})
+        
         case Dir_down:
             if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
                 e.requests[e.floor][Btn_hallup] = false
                 //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
-                return [3]int{e.floor, int(Btn_hallup), 0}
+                //return [3]int{e.floor, int(Btn_hallup), 0}
+                updates = append(updates, [3]int{e.floor, int(Btn_hallup), 0})
             }
             e.requests[e.floor][Btn_halldown] = false
             //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
-            return [3]int{e.floor, int(Btn_halldown), 0}
-        // default:
-        //     e.requests[e.floor][Btn_hallup] = false
-        //     //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
-        //     return [3]int{e.floor, int(Btn_hallup), 0}
+            //return [3]int{e.floor, int(Btn_halldown), 0}
+            updates = append(updates, [3]int{e.floor, int(Btn_halldown), 0})
+        default:
+             e.requests[e.floor][Btn_hallup] = false
+             //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
+             //return [3]int{e.floor, int(Btn_hallup), 0}
+             updates = append(updates, [3]int{e.floor, int(Btn_hallup), 0})
             
-        //     e.requests[e.floor][Btn_halldown] = false
-        //     //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
-        //     return [3]int{e.floor, int(Btn_halldown), 0}
+             e.requests[e.floor][Btn_halldown] = false
+             //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
+             //return [3]int{e.floor, int(Btn_halldown), 0}
+             updates = append(updates, [3]int{e.floor, int(Btn_halldown), 0})
         }
     }
-    return [3]int{0, 0, 0} // This should never happen!
+    return updates
 
     
-    a // just causing an error to indicate that this function needs fixing
+    //a // just causing an error to indicate that this function needs fixing
 }

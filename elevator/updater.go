@@ -13,7 +13,6 @@ type Update struct { // This type will allow us to improve a few functions that 
     floor int
     buttonType int // Buttontype is already a type in elevio. Should we use that instead?
     value bool
-    isValid bool // This can be used to determine if an update has actually happened
 }
 
 func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.ExternalData, update [3]int) {
@@ -28,7 +27,7 @@ func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.Exter
 }
 
 func Transmitt_update_and_update_localHallRequests(elevator *Elevator, update_val [3]int, externalData *sharedData.ExternalData) { // sends the hall requests update to the other elevator and updates the local hall requests
-    
+    //UpdatesharedHallRequests(elevator, externalData, update_val)
     transmitter.Send_update(update_val, externalData)
 }
 
