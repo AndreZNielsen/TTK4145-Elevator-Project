@@ -1,7 +1,7 @@
 package elevator
 
 import (
-	"fmt"
+	"root/config"
 	"root/sharedData"
 )
 
@@ -88,75 +88,43 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
     if e.direction != Dir_stop {
         return false
     }
-    fmt.Println(e.direction)
     
-    switch e.config.clearRequestVariation {
-    case CV_All:
-        return e.floor == buttonFloor
-    case CV_InDirn:
-        return e.floor == buttonFloor && (
-            (e.direction == Dir_up && buttonType == Btn_hallup) ||
-            (e.direction == Dir_down && buttonType == Btn_halldown) ||
-            e.direction == Dir_stop ||
-            buttonType == Btn_hallcab)
-    default:
-        return false
-    }
+    return e.floor == buttonFloor && (
+        (e.direction == Dir_up && buttonType == Btn_hallup) ||
+        (e.direction == Dir_down && buttonType == Btn_halldown) ||
+        e.direction == Dir_stop ||
+        buttonType == Btn_hallcab)
 }
 
 
-// This function is designed to send 2 updates in some cases. This is a big issue, when trying to return the update
-func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.ExternalData) [][3]int {
 
-    var updates [][3]int
+func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.ExternalData) []config.Update {
 
-    switch e.config.clearRequestVariation {
-    // case CV_All: // Is this even possible?
-    //     for btn := 0; btn < Num_buttons; btn++ {
-    //         e.requests[e.floor][btn] = false
-    //         //UpdateAndTransmittLocalRequests(e, e.floor, Button(btn), 0, externalData)
-    //         return [3]int{e.floor, btn, 0}
-    //     }
-    case CV_InDirn:
-        e.requests[e.floor][Btn_hallcab] = false
-        switch e.direction {
-        case Dir_up:
-            if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
-                e.requests[e.floor][Btn_halldown] = false
-                //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
-                //return [3]int{e.floor, int(Btn_halldown), 0}
-                updates = append(updates, [3]int{e.floor, int(Btn_halldown), 0})
-            }
-            e.requests[e.floor][Btn_hallup] = false
-            //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
-            //return [3]int{e.floor, int(Btn_hallup), 0}
-            updates = append(updates, [3]int{e.floor, int(Btn_hallup), 0})
-        
-        case Dir_down:
-            if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
-                e.requests[e.floor][Btn_hallup] = false
-                //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
-                //return [3]int{e.floor, int(Btn_hallup), 0}
-                updates = append(updates, [3]int{e.floor, int(Btn_hallup), 0})
-            }
+    updates := []config.Update{}
+
+    e.requests[e.floor][Btn_hallcab] = false
+    switch e.direction {
+    case Dir_up:
+        if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
             e.requests[e.floor][Btn_halldown] = false
-            //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
-            //return [3]int{e.floor, int(Btn_halldown), 0}
-            updates = append(updates, [3]int{e.floor, int(Btn_halldown), 0})
-        default:
-             e.requests[e.floor][Btn_hallup] = false
-             //UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, externalData)
-             //return [3]int{e.floor, int(Btn_hallup), 0}
-             updates = append(updates, [3]int{e.floor, int(Btn_hallup), 0})
-            
-             e.requests[e.floor][Btn_halldown] = false
-             //UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, externalData)
-             //return [3]int{e.floor, int(Btn_halldown), 0}
-             updates = append(updates, [3]int{e.floor, int(Btn_halldown), 0})
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
         }
+        e.requests[e.floor][Btn_hallup] = false
+        updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+    
+    case Dir_down:
+        if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
+            e.requests[e.floor][Btn_hallup] = false
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+        }
+        e.requests[e.floor][Btn_halldown] = false
+        updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
+    default:
+            e.requests[e.floor][Btn_hallup] = false
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+        
+            e.requests[e.floor][Btn_halldown] = false
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
     }
     return updates
-
-    
-    //a // just causing an error to indicate that this function needs fixing
 }

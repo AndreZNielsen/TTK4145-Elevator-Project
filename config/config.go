@@ -14,6 +14,11 @@ var Elevatoip = map[string]string{
 	"B": "localhost",
 }
 
+type Update struct { // This type will allow us to improve a few functions that use updates
+    Floor       int
+    ButtonType  int
+    Value       bool
+}
 
 type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
 	Behavior    string `json:"behaviour"`
