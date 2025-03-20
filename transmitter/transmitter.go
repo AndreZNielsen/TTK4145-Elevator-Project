@@ -12,8 +12,10 @@ import (
 )
 
 
+
 //var sendMu sync.Mutex 
 var sendMu = make(map[string]*sync.Mutex)
+
 var Disconnected chan<- string
 func InitMutex(){
 	for _,id := range(config.RemoteIDs){
@@ -44,16 +46,23 @@ func Start_tcp_call(port string, ip string, id string,externalConn *sharedData.E
 			continue //trys again
 		}	
 		externalConn.ConnectedConn[id]=true
+
 		return conn_lift
-		}
+	}
+	externalData.ConnectedConn[id]=true
+	Disconnected = disconnected
+	return conn_lift
+}
+
+func SetConn(externalData *sharedData.ExternalData){
+	RemoteElevatorConn = externalData.RemoteElevatorConnections
 }
 
 
-
-func Send_Elevator_data(data config.Elevator_data,externalConn *sharedData.ExternalConn) {
+func Send_Elevator_data(data config.Elevator_data, externalData *sharedData.ExternalData) {
 	for _, id := range config.RemoteIDs{
-		if externalConn.ConnectedConn[id] {
-			go transmitt_Elevator_data(data,id,externalConn)
+		if externalData.ConnectedConn[id] {
+			go transmitt_Elevator_data(data,id, externalData)
 			
 		}
 	}
@@ -61,21 +70,23 @@ func Send_Elevator_data(data config.Elevator_data,externalConn *sharedData.Exter
 
 }
 
-func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *sharedData.ExternalConn){
+func transmitt_Elevator_data(data config.Elevator_data,id string, externalData *sharedData.ExternalData){
 
 	var netErr *net.OpError
 
+
 	sendMu[id].Lock() // Locking before sending
 	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
 	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+	encoder := gob.NewEncoder(RemoteElevatorConn[id])
 	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
 		fmt.Println("Trying to reconnect")
-		externalConn.ConnectedConn[id]=false
+		externalData.ConnectedConn[id]=false
 		Disconnected<-id
-		Send_Elevator_data(data,externalConn)
+		Send_Elevator_data(data, externalData)
 		fmt.Println("reconnect reconekted")
 
 		time.Sleep(1*time.Second)
@@ -93,21 +104,23 @@ func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *s
 	}
 }
 
-func Send_update(update [3]int,externalConn *sharedData.ExternalConn){
+func Send_update(update [3]int, externalData *sharedData.ExternalData){
 	for _, id := range config.RemoteIDs{
-		if externalConn.ConnectedConn[id]{
-			go transmitt_update(update,id,externalConn)
+		if externalData.ConnectedConn[id]{
+			go transmitt_update(update,id, externalData)
 			
 		}
 	}
 }
 
+
 func transmitt_update(update [3]int, id string,externalConn *sharedData.ExternalConn){
 	sendMu[id].Lock() // Locking before sending
 	defer sendMu[id].Unlock() // Ensure to unlock after sending
 
+
 	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+	encoder := gob.NewEncoder(RemoteElevatorConn[id])
 	err := encoder.Encode("int") // Type ID so the receiver kows what type of data to decode the next packat as 
 	if err != nil {
 		fmt.Println("Encoding error:", err)
@@ -122,32 +135,37 @@ func transmitt_update(update [3]int, id string,externalConn *sharedData.External
 
 }
 
-func Send_alive(externalConn *sharedData.ExternalConn){
+func Send_alive(externalData *sharedData.ExternalData){
 	for _, id := range config.RemoteIDs{
-		go transmitt_alive(id,externalConn)
+		go transmitt_alive(id, externalData)
 	}
 
 }
-func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
-
+func transmitt_alive(id string, externalData *sharedData.ExternalData){
+	SetConn(externalData)//Ensure conn is up-to-date
 	var netErr *net.OpError
 
 
+	
 	for {
-		encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
-		
+		SetConn(externalData)//Ensure conn is up-to-date
+		encoder := gob.NewEncoder(RemoteElevatorConn[id])
+
 		sendMu[id].Lock() // Locking before sending
 		if externalConn.ConnectedConn[id]{
+
 			err := encoder.Encode("alive")
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
 				fmt.Println("Trying to reconnect")
 				Disconnected<-id
-				externalConn.ConnectedConn[id] = false
+				externalData.ConnectedConn[id] = false
 				fmt.Println("reconnect reconekted")
 				time.Sleep(1*time.Second)
+
 				go Send_alive(externalConn)
 				sendMu[id].Unlock() // Ensure to unlock after sending
+
 				return
 			}
 
@@ -160,4 +178,5 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 
 	}
 }
+
 
