@@ -5,73 +5,93 @@ import(
 	"root/transmitter"
 	"root/sharedData"
 	"root/config"
-	
+	"net"
+	"sort"
 	"fmt"
 	
 
 )
 
-func Start_network(receiver chan<- [3]int,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
-
+func Start_network(receiver chan<- [3]int,disconnected chan<- string, externalData *sharedData.ExternalData){
+	var counter int
+	var RemoteElevatorConnections =  make(map[string]net.Conn)
 
 	for _, id := range config.PossibleIDs{
 		if id == config.Elevator_id {
+			counter +=1 
 			continue // Local elevator not needed 
 		}
 
 
-		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
+		if counter%2 == 0 {
 
-		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected,externalConn)	
+		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected, externalData)	
 		}else{
 
-		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
+		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id, externalData)
 		}
-
+		counter +=1 
 		
 	}
-
-	go reciver.Listen_recive(receiver,disconnected,externalData,externalConn)
-	go transmitter.Send_alive(externalConn)
+	externalData.RemoteElevatorConnections = RemoteElevatorConnections
+	reciver.SetConn(externalData)
+	transmitter.SetConn(externalData)
+	go reciver.Listen_recive(receiver,disconnected, externalData)
+	go transmitter.Send_alive(externalData)
 
 	
 
 }
 
-func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, reConnID string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, needReconnecting string, externalData *sharedData.ExternalData){
+	var counter int
+	var RemoteElevatorConnections =  make(map[string]net.Conn)
+		counter = 0
+
+	for _, id := range config.PossibleIDs{
+		if id == config.Elevator_id {
+			counter +=1 
+			continue // Local elevator not needed 
+		}
 
 
 
-		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {
+		if counter%2 == 0 && needReconnecting == id{
 
-		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevatoip[reConnID],reConnID,disconnected,externalConn)	
-		go reciver.Recive(receiver,reConnID,disconnected,externalData,externalConn)
+		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected, externalData)	
+		reciver.SetConn(externalData)
+		transmitter.SetConn(externalData)
+		go reciver.Recive(receiver,id,disconnected, externalData)
 
-		}else{
+		}else if needReconnecting == id{
 
-		externalConn.RemoteElevatorConnections[reConnID] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,reConnID),reConnID,externalConn)
-		go reciver.Recive(receiver,reConnID,disconnected,externalData,externalConn)
+		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id, externalData)
+		reciver.SetConn(externalData)
+		transmitter.SetConn(externalData)
+		go reciver.Recive(receiver,id,disconnected, externalData)
 
 		}
+		counter +=1 
 		
+	}
+	reciver.SetConn(externalData)
+	transmitter.SetConn(externalData)
 	}
 
 
 func portGenerateor(localID, targetID string) string {
-	localIndex := indexOfElevatorID(localID)
-	targetIndex := indexOfElevatorID(targetID)
-	port := 8000 + localIndex + targetIndex 
+	// Combine the two IDs in a deterministic order
+	ids := []string{localID, targetID}
+	sort.Strings(ids) // ensures the order is consistent regardless of input order
+	combined := ids[0] + ids[1]
 
+	// makes a hash
+	var hash int
+	for _, ch := range combined {
+		hash += int(ch)
+	}
 
+	//we choose 8000 as the base to make it in typical port range
+	port := 8000 + (hash % 1000)
 	return fmt.Sprintf("%d", port)
-}
-
-func indexOfElevatorID(target string) int {
-    
-	for i, v := range config.PossibleIDs {
-        if v == target {
-            return i
-        }
-    }
- 	return -1 // if not in array 
 }

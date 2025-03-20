@@ -1,7 +1,7 @@
 package elevator
 
 import (
-	"fmt"
+	//"fmt"
 	"time"
 	"root/sharedData"
 	"root/elevio"
@@ -29,10 +29,11 @@ type Elevator struct {
 	direction Dir
 	requests  [Num_floors][Num_buttons]bool
 	behaviour ElevatorBehaviour
-	config    config
+	config    elevatorConfig
+	obstructed bool
 }
 
-type config struct {
+type elevatorConfig struct {
 	clearRequestVariation ClearRequestVariant
 	doorOpenDuration      time.Duration
 }
@@ -107,7 +108,7 @@ func EbToString(behaviour ElevatorBehaviour) string {
 }
 
 
-
+/* 
 func (e *Elevator) print() {
 	fmt.Println("  +--------------------+")
 	fmt.Printf("  |floor = %-2d          |\n", e.floor)
@@ -134,7 +135,7 @@ func (e *Elevator) print() {
 	fmt.Println("  +--------------------+")
 
 
-}
+} */
 
 
 func MakeUninitializedelevator() Elevator {
@@ -142,33 +143,17 @@ func MakeUninitializedelevator() Elevator {
 		floor:     -1,
 		direction: Dir_stop,
 		behaviour: Behaviour_idle,
-		config: config{
+		obstructed: false,
+		config: elevatorConfig{
 			clearRequestVariation: CV_InDirn,
 			doorOpenDuration:      3.0,
+
 		},
 	}
 }
 
-
-
-var doorObstructed bool
-
-func DoorObstructed(elevator *Elevator) {
-    doorObstructed = true
-    if elevator.behaviour == Behaviour_door_open {
-        StartTimer()
-    }
-}
-
-func DoorUnobstructed(elevator *Elevator) {
-    doorObstructed = false
-    if elevator.behaviour == Behaviour_door_open {
-        StartTimer()
-    }
-}
-
-func IsDoorObstructed() bool {
-    return doorObstructed
+func IsDoorObstructed(elevator *Elevator) bool {
+    return elevator.obstructed
 }
 
 func GetCabRequests(matrix [Num_floors][3]bool) []bool {
@@ -212,8 +197,8 @@ func GetElevatorData(elevator *Elevator) Config.Elevator_data {
     }
 }
 
-func SetAllLights(elevator *Elevator, SharedData *sharedData.SharedData) {
-    requests := MakeRequests(SharedData.HallRequests, GetCabRequests(elevator.requests)) // Getfunction necessary?
+func SetAllLights(elevator *Elevator, externalData *sharedData.ExternalData) {
+    requests := MakeRequests(externalData.HallRequests, GetCabRequests(elevator.requests))
     for floor := 0; floor < Num_floors; floor++ {
         for btn := 0; btn < Num_buttons; btn++ {
             elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])

@@ -1,7 +1,7 @@
 package elevator
 
 import (
-	"fmt"
+	"root/config"
 	"root/sharedData"
 )
 
@@ -73,7 +73,7 @@ func (e *Elevator) SelectNextDirection() DirBehaviourPair {
     }
 }
 
-func (e *Elevator) RequestsShouldStop() bool {
+func (e *Elevator) ShouldStop() bool {
     switch e.direction {
     case Dir_down:
         return e.requests[e.floor][Btn_halldown] || e.requests[e.floor][Btn_hallcab] || !e.RequestsBelow()
@@ -88,53 +88,43 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
     if e.direction != Dir_stop {
         return false
     }
-    fmt.Println(e.direction)
     
-    switch e.config.clearRequestVariation {
-    case CV_All:
-        return e.floor == buttonFloor
-    case CV_InDirn:
-        return e.floor == buttonFloor && (
-            (e.direction == Dir_up && buttonType == Btn_hallup) ||
-            (e.direction == Dir_down && buttonType == Btn_halldown) ||
-            e.direction == Dir_stop ||
-            buttonType == Btn_hallcab)
-    default:
-        return false
-    }
+    return e.floor == buttonFloor && (
+        (e.direction == Dir_up && buttonType == Btn_hallup) ||
+        (e.direction == Dir_down && buttonType == Btn_halldown) ||
+        e.direction == Dir_stop ||
+        buttonType == Btn_hallcab)
 }
 
-func (e *Elevator) RequestsClearAtCurrentFloor(sharedData *sharedData.SharedData) {
-    switch e.config.clearRequestVariation {
-    case CV_All:
-        for btn := 0; btn < Num_buttons; btn++ {
-            e.requests[e.floor][btn] = false
-            UpdateAndTransmittLocalRequests(e, e.floor, Button(btn), 0, sharedData)
-        }
-    case CV_InDirn:
-        e.requests[e.floor][Btn_hallcab] = false
-        switch e.direction {
-        case Dir_up:
-            if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
-                e.requests[e.floor][Btn_halldown] = false
-                UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, sharedData)
-            }
-            e.requests[e.floor][Btn_hallup] = false
-            UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, sharedData)
-        case Dir_down:
-            if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
-                e.requests[e.floor][Btn_hallup] = false
-                UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, sharedData)
-            }
+
+
+func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.ExternalData) []config.Update {
+
+    updates := []config.Update{}
+
+    e.requests[e.floor][Btn_hallcab] = false
+    switch e.direction {
+    case Dir_up:
+        if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
             e.requests[e.floor][Btn_halldown] = false
-            UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, sharedData)
-        default:
-            e.requests[e.floor][Btn_hallup] = false
-            UpdateAndTransmittLocalRequests(e, e.floor, Btn_hallup, 0, sharedData)
-            
-            e.requests[e.floor][Btn_halldown] = false
-            UpdateAndTransmittLocalRequests(e, e.floor, Btn_halldown, 0, sharedData)
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
         }
+        e.requests[e.floor][Btn_hallup] = false
+        updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+    
+    case Dir_down:
+        if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
+            e.requests[e.floor][Btn_hallup] = false
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+        }
+        e.requests[e.floor][Btn_halldown] = false
+        updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
+    default:
+            e.requests[e.floor][Btn_hallup] = false
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+        
+            e.requests[e.floor][Btn_halldown] = false
+            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
     }
-    SetAllLights(e, sharedData)
+    return updates
 }
