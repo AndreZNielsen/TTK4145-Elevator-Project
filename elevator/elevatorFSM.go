@@ -128,7 +128,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, externalData *sh
 	case "button":
 		update := FSM_HandleButtonPress(elevator, event.Button.Floor, Button(event.Button.Button), externalData)
 		
-		if update == [3]int{0, 0, 0} {
+		if update == [3]int{0, 0, 0} { // replace this with if !update.isValid 
 			return
 		}
 		

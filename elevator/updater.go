@@ -9,6 +9,13 @@ import (
 	"root/transmitter"
 )
 
+type Update struct { // This type will allow us to improve a few functions that use updates
+    floor int
+    buttonType int // Buttontype is already a type in elevio. Should we use that instead?
+    value bool
+    isValid bool // This can be used to determine if an update has actually happened
+}
+
 func UpdatesharedHallRequests(elevator *Elevator, externalData *sharedData.ExternalData, update [3]int) {
     //sharedHallRequests := externalData.HallRequests
     if update[2] == 1 && update[1] != 2 { // ignores updates to cab requests (update[1] != 2)

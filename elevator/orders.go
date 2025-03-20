@@ -149,5 +149,5 @@ func (e *Elevator) RequestsClearAtCurrentFloor(externalData *sharedData.External
     return [3]int{0, 0, 0} // This should never happen!
 
     
-    a // just indicating that this function needs fixing
+    a // just causing an error to indicate that this function needs fixing
 }
