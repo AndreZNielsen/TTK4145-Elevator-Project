@@ -4,19 +4,16 @@ import (
 	"time"
 	"fmt"
 )
+var timer *time.Timer
 
+func Start_timer(elvatorDead chan bool) {
+	timer = time.NewTimer(10 * time.Second)
+	<-timer.C
+	fmt.Println("elvator process not detected, restarting...")
+	elvatorDead <- true
+}
+	
 
-func Start_timer(elvatorAlive chan bool,elvatorDead chan bool) {
-	timer := time.NewTimer(10 * time.Second)
-	defer timer.Stop()
-
-	for {
-		select {
-		case <-elvatorAlive:
-			timer.Reset(10 * time.Second) // Reset the timer when the elvator is alive
-		case <-timer.C:
-			fmt.Println("elvator process not detected, restarting...")
-			elvatorDead <- true
-		}
-	}
+func Reset_timer(){
+	timer.Reset(10 * time.Second) // Reset the timer when the elvator is alive
 }

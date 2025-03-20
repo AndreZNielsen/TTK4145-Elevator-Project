@@ -1,80 +1,68 @@
 package backup
 
-import(
-	"fmt"
-	"os/exec"
-	"io"
+import (
 	"encoding/json"
-	"time"
-	"bufio"
+	"fmt"
+	"net"
+	"os/exec"
 	"runtime"
-
+	"time"
 )
+
 type Message struct {
 	Type    string      `json:"type"`
 	Content interface{} `json:"content"`
 }
-func Start_backup(){
-for{
+
+func Start_backup() {
+	fmt.Println("Starting backup in 10 sec...")
+	time.Sleep(5 * time.Second)
+
+	
+		startBackupProcess()
+		time.Sleep(4 * time.Second)
+
+		conn, err := net.Dial("tcp", "localhost:5000")
+		if err != nil {
+			fmt.Println("Failed to connect to backup server:", err)
+			time.Sleep(5 * time.Second)
+			
+		}
+		defer conn.Close()
+
+		encoder := json.NewEncoder(conn)
+
+		// Send heartbeats
+		for {
+			msg := Message{"message", "backup running"}
+			err := encoder.Encode(msg)
+			if err != nil {
+				fmt.Println("Error sending message:", err)
+				break
+			}
+			fmt.Println("Sent backup heartbeat")
+			time.Sleep(5 * time.Second)
+		}
+	
+}
+
+func startBackupProcess() {
 	var cmd *exec.Cmd
+
 	switch runtime.GOOS {
 	case "linux":
-   		cmd = exec.Command("go", "run", "backup_main.go")
-		cmd.Dir = "./backup/backup_main"
+		cmd = exec.Command("xterm", "-e", "bash -c 'cd ./backup/backup_main && go run backup_main.go; exec bash'")
 	case "windows":
-	cmd = exec.Command("go", "run", "backup_main.go")
+	psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run backup_main.go\""
+ 
+	// Start PowerShell and execute the command
+	cmd = exec.Command("powershell.exe", "-Command", psCommand)
 	cmd.Dir = "./backup/backup_main"
+
 	}
 
-	stdout, err := cmd.StdoutPipe()
+	err := cmd.Run()
 	if err != nil {
-		fmt.Println("Error creating stdout pipe:", err)
-		return 
+		fmt.Println("Error starting backup process:", err)
 	}
-	go read_from_backup(stdout)
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		fmt.Println("Error creating stdin pipe:", err)
-		return 
-	}
-	go send_to_backup(stdin)
-
-	// Start the backup program 
-	err = cmd.Start()
-	if err != nil {
-		fmt.Println("Error starting PowerShell:", err)
-		return
-	}
-	// Wait for the backup to exit		
-	err = cmd.Wait()
-	fmt.Println("Backup process exited, restarting in 5 seconds:", err)
-	time.Sleep(5 * time.Second)
-}
-}
-
-
-func send_to_backup(stdin io.WriteCloser){//sends the data to be backupt 
-	for {
-	message := Message{"message", "message recived"}
-	jsonData, _ := json.Marshal(message)
-	fmt.Fprintln(stdin, string(jsonData))
-	fmt.Println("sendt")
-	time.Sleep(5 * time.Second)
-	}
-}
-
-
-
-func read_from_backup(stdout io.ReadCloser){ // kan nok fjernes 
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		var msg Message
-		err := json.Unmarshal(scanner.Bytes(), &msg)
-		if err != nil {
-			fmt.Println("Error decoding message:", err)
-			continue
-		}
-		fmt.Printf("Received: %+v\n", msg)
-}
 }

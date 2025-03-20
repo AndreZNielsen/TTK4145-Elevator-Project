@@ -12,21 +12,41 @@ import (
 )
 
 
-var sendMu sync.Mutex 
 
-var RemoteElevatorConn =  make(map[string]net.Conn)
+//var sendMu sync.Mutex 
+var sendMu = make(map[string]*sync.Mutex)
+
 var Disconnected chan<- string
+func InitMutex(){
+	for _,id := range(config.RemoteIDs){
+		// Initialize the mutex for a given id if it doesn't already exist.
+		if _, exists := sendMu[id]; !exists {
+			sendMu[id] = &sync.Mutex{}
+		}
+	}
+}
 
-func Start_tcp_call(port string, ip string, id string,disconnected chan<- string, externalData *sharedData.ExternalData)net.Conn{
-	if existingConn := externalData.RemoteElevatorConnections[id]; existingConn != nil {// Close the previous listener if it's still open.
-        existingConn.Close()
-    }
-	conn_lift, err := net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
-	
-	if err != nil {
-		fmt.Println("Error connecting to pc:", ip, err)
-		time.Sleep(5*time.Second)
-		conn_lift = Start_tcp_call(port, ip,id,disconnected, externalData)//trys again
+func InitDiscEventChan(disconnected chan<- string){
+	Disconnected = disconnected
+}
+
+
+func Start_tcp_call(port string, ip string, id string,externalConn *sharedData.ExternalConn)net.Conn{
+	for{
+		if existingConn := externalConn.RemoteElevatorConnections[id]; existingConn != nil {// Close the previous listener if it's still open.
+			existingConn.Close()
+		}
+		
+
+		conn_lift, err := net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
+		
+		if err != nil {
+			fmt.Println("Error connecting to pc:", ip, err)
+			time.Sleep(5*time.Second)
+			continue //trys again
+		}	
+		externalConn.ConnectedConn[id]=true
+
 		return conn_lift
 	}
 	externalData.ConnectedConn[id]=true
@@ -54,9 +74,10 @@ func transmitt_Elevator_data(data config.Elevator_data,id string, externalData *
 
 	var netErr *net.OpError
 
-	sendMu.Lock() // Locking before sending
-	defer sendMu.Unlock() // Ensure to unlock after sending
-	SetConn(externalData)//Ensure conn is up-to-date
+
+	sendMu[id].Lock() // Locking before sending
+	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
 	time.Sleep(7*time.Millisecond)
 	encoder := gob.NewEncoder(RemoteElevatorConn[id])
 	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
@@ -92,10 +113,11 @@ func Send_update(update [3]int, externalData *sharedData.ExternalData){
 	}
 }
 
-func transmitt_update(update [3]int, id string, externalData *sharedData.ExternalData){
-	sendMu.Lock() // Locking before sending
-	defer sendMu.Unlock() // Ensure to unlock after sending
-	SetConn(externalData)//Ensure conn is up-to-date
+
+func transmitt_update(update [3]int, id string,externalConn *sharedData.ExternalConn){
+	sendMu[id].Lock() // Locking before sending
+	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
 
 	time.Sleep(7*time.Millisecond)
 	encoder := gob.NewEncoder(RemoteElevatorConn[id])
@@ -128,9 +150,10 @@ func transmitt_alive(id string, externalData *sharedData.ExternalData){
 	for {
 		SetConn(externalData)//Ensure conn is up-to-date
 		encoder := gob.NewEncoder(RemoteElevatorConn[id])
-		
-		sendMu.Lock() // Locking before sending
-		if externalData.ConnectedConn[id]{
+
+		sendMu[id].Lock() // Locking before sending
+		if externalConn.ConnectedConn[id]{
+
 			err := encoder.Encode("alive")
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
@@ -139,8 +162,10 @@ func transmitt_alive(id string, externalData *sharedData.ExternalData){
 				externalData.ConnectedConn[id] = false
 				fmt.Println("reconnect reconekted")
 				time.Sleep(1*time.Second)
-				go Send_alive(externalData)
-				sendMu.Unlock() // Ensure to unlock after sending
+
+				go Send_alive(externalConn)
+				sendMu[id].Unlock() // Ensure to unlock after sending
+
 				return
 			}
 
@@ -148,7 +173,7 @@ func transmitt_alive(id string, externalData *sharedData.ExternalData){
 			fmt.Println("sent alive")
 		}
 		
-		sendMu.Unlock() // Ensure to unlock after sending
+		sendMu[id].Unlock() // Ensure to unlock after sending
 		time.Sleep(time.Second*2)
 
 	}
