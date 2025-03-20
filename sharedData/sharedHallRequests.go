@@ -34,7 +34,7 @@ type ExternalConn struct {
 	ConnectedConn map[string]bool
 }
 
-func InitExternalData() *SharedData {
+func InitSharedData() *SharedData {
 	return &SharedData{
 		HallRequests:               make([][2]bool, config.Num_floors),
 		RemoteElevatorData:         make(map[string]config.Elevator_data),

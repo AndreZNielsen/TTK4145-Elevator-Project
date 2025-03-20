@@ -11,7 +11,9 @@ import(
 
 )
 
-func Start_network(receiver chan<- [3]int,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func StartPeerNetwork(remoteEvent chan<- [3]int,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+	transmitter.InitDiscEventChan(disconnected)
+	transmitter.InitMutex()
 
 
 	for _, id := range config.PossibleIDs{
@@ -22,7 +24,7 @@ func Start_network(receiver chan<- [3]int,disconnected chan<- string,externalDat
 
 		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
 
-		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected,externalConn)	
+		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,externalConn)	
 		}else{
 
 		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
@@ -31,26 +33,25 @@ func Start_network(receiver chan<- [3]int,disconnected chan<- string,externalDat
 		
 	}
 
-	go reciver.Listen_recive(receiver,disconnected,externalData,externalConn)
+	go reciver.Listen_recive(remoteEvent,disconnected,sharedData,externalConn)
 	go transmitter.Send_alive(externalConn)
-
 	
 
 }
 
-func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, reConnID string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func ReconnectPeer(remoteEvent chan<- [3]int,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 
 
 
 		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {
 
-		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevatoip[reConnID],reConnID,disconnected,externalConn)	
-		go reciver.Recive(receiver,reConnID,disconnected,externalData,externalConn)
+		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevatoip[reConnID],reConnID,externalConn)	
+		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn)
 
 		}else{
 
 		externalConn.RemoteElevatorConnections[reConnID] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,reConnID),reConnID,externalConn)
-		go reciver.Recive(receiver,reConnID,disconnected,externalData,externalConn)
+		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn)
 
 		}
 		
