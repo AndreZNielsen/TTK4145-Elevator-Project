@@ -38,7 +38,7 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
     correctedLocalData := localData
     
     if localData.Floor == 0 && localData.Direction == "down" || localData.Floor == 3 && localData.Direction == "up" {
-        fmt.Println("Invalid data sent to assigner executealbe, hard coded fix triggered!")
+        //fmt.Println("Invalid data sent to assigner executealbe, hard coded fix triggered!")
         correctedLocalData.Direction = "stop"
 
     } 
@@ -51,7 +51,7 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
 
 
 func Send_Elevator_data(elevatorData config.Elevator_data, externalConn *sharedData.ExternalConn) {
-    transmitter.Send_Elevator_data(elevatorData, externalConn)
+    //transmitter.Send_Elevator_data(elevatorData, externalConn)
 }
 
 func Start_if_idle(elevator *Elevator) {

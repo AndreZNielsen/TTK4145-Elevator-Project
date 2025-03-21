@@ -5,9 +5,9 @@ import (
 	"root/config"
 	"root/elevator"
 	"root/network"
-	// "root/reciver"
+	//"root/reciver"
 	SharedData "root/sharedData"
-	// "root/transmitter"
+	"root/transmitter"
     "root/backup"
 )
 
@@ -23,6 +23,8 @@ på samme maskin
 
 func main() {
     fmt.Println("Started!")
+    var elev elevator.Elevator
+
     localEventRecived 	:= make(chan elevator.LocalEvent)
     // aliveTimer 			:= make(chan bool)
     remoteEventRecived 	:= make(chan config.Update)
@@ -30,16 +32,16 @@ func main() {
 
 
 	sharedData := SharedData.InitSharedData()
-    sharedConn := SharedData.InitExternalConn()
-    go network.StartPeerNetwork(remoteEventRecived,disconnected,sharedData,sharedConn)
+    externalConn := SharedData.InitExternalConn()
+    go network.StartPeerNetwork(remoteEventRecived,disconnected,sharedData, externalConn)
     
-    var elev elevator.Elevator
+    
     elevator.FSM_MakeElevator(&elev, "localhost:12345", config.Num_floors)
     elevator.Start_if_idle(&elev)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     go backup.Start_backup()
-    // transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalData) 
-    // go reciver.AliveTimer(aliveTimer)
+    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
+   // go reciver.AliveTimer(aliveTimer)
 
 
 
@@ -49,7 +51,7 @@ func main() {
     for {
         select {
         case localEvent := <-localEventRecived:
-            elevator.FSM_HandleLocalEvent(&elev, localEvent, sharedData)
+            elevator.FSM_HandleLocalEvent(&elev, localEvent, sharedData, externalConn)
 			elevator.SetAllLights(&elev, sharedData)
 			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
             // This is because not all events should be transmitted. If a request is handled immediately, because
@@ -65,7 +67,7 @@ func main() {
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent)
 
         case id := <-disconnected:
-            go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData,sharedConn)
+            go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn)
 
         // case <-aliveTimer:
 

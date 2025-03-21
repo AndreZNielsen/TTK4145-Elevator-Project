@@ -57,8 +57,6 @@ func Send_Elevator_data(data config.Elevator_data,externalConn *sharedData.Exter
 			
 		}
 	}
-
-
 }
 
 func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *sharedData.ExternalConn){
