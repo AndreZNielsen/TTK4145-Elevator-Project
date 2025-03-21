@@ -86,7 +86,7 @@ func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData,
 		fmt.Println("lenght of updates:", len(updates))
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
-			//transmitter.Send_update(updates[i], externalConn)
+			transmitter.Send_update(updates[i], externalConn)
 
 		}
 
@@ -96,7 +96,7 @@ func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData,
 	//Send_Elevator_data(GetElevatorData(elevator), externalConn)
 }
 
-// }
+
 
 func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *sharedData.SharedData, externalConn *sharedData.ExternalConn) {
 	switch event.EventType {
@@ -108,7 +108,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		}
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
-			//transmitter.Send_update(updates[i], externalConn)
+			transmitter.Send_update(updates[i], externalConn)
 		}
 
 		SetAllLights(elevator, SharedData)
@@ -126,7 +126,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
-			//transmitter.Send_update(updates[i], externalConn)
+			transmitter.Send_update(updates[i], externalConn)
 		}
 		
 		//StopMotor() these two could be here, but the current solution might be good too

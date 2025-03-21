@@ -5,13 +5,13 @@ import (
 	"root/config"
 	"root/elevator"
 	"root/network"
-	//"root/reciver"
+	"root/reciver"
 	SharedData "root/sharedData"
 	"root/transmitter"
     "root/backup"
 )
 
-var elevator_1_ip = "localhost:12345"
+var elevator_1_ip = "localhost:15657"
 
 /*
 hvordan kjøre:
@@ -36,16 +36,13 @@ func main() {
     go network.StartPeerNetwork(remoteEventRecived,disconnected,sharedData, externalConn)
     
     
-    elevator.FSM_MakeElevator(&elev, "localhost:12345", config.Num_floors)
-    elevator.Start_if_idle(&elev)
+    elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     go backup.Start_backup()
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
-   // go reciver.AliveTimer(aliveTimer)
+    //go reciver.AliveTimer(aliveTimer)
 
 
-
-    // Buttons only work when door is open, why is this?! This is fixed
     // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
 
     for {
