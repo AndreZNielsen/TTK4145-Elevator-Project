@@ -2,7 +2,7 @@ package config
 
 var Num_floors = 4
 
-var Elevator_id = "B"
+var Elevator_id = "A"
 
 var PossibleIDs = []string{"A", "B"}
 //var PossibleIDs = []string{"A"}
@@ -10,8 +10,8 @@ var PossibleIDs = []string{"A", "B"}
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
-	"A": "10.100.23.22",
-	"B": "localhost",
+	"A": "localhost",
+	"B": "10.100.23.21",
 }
 
 type Update struct { // This type will allow us to improve a few functions that use updates

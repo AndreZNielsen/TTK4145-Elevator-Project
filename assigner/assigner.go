@@ -45,7 +45,7 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	for _, id := range config.RemoteIDs {
 
 		// Only add the remote elevator if its data exists.
-		if remote, ok := RemoteElevatorData[id]; ok {
+		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed {
 			states[id] = remote
 		}
 	}
