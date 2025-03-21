@@ -1,13 +1,12 @@
 package assigner
 
 import (
-	"root/config"
 	"encoding/json"
 	"fmt"
-	"runtime"
 	"os/exec"
-	
-
+	"root/config"
+	"root/sharedData"
+	"runtime"
 )
 
 // Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
@@ -20,7 +19,7 @@ type HRAInput struct {
 
 
 
-func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]config.Elevator_data, hallRequests [][2]bool) [][2]bool{
+func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]config.Elevator_data, hallRequests [][2]bool, externalConn sharedData.ExternalConn) [][2]bool{
 	var input HRAInput
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -45,7 +44,7 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	for _, id := range config.RemoteIDs {
 
 		// Only add the remote elevator if its data exists.
-		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed {
+		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] {
 			states[id] = remote
 		}
 	}

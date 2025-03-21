@@ -16,7 +16,7 @@ func UpdatesharedHallRequests(elevator *Elevator, sharedData *sharedData.SharedD
     }
 }
 
-func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedData) {
+func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedData, externalConn sharedData.ExternalConn) {
     localData := GetElevatorData(elevator)
     remoteData := SharedData.RemoteElevatorData
     sharedHallRequests := SharedData.HallRequests
@@ -36,7 +36,7 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
 
     } 
     
-    updatedRequests := assigner.Assigner(correctedLocalData, remoteData, sharedHallRequests)
+    updatedRequests := assigner.Assigner(correctedLocalData, remoteData, sharedHallRequests, externalConn)
     elevator.requests = MakeRequests(updatedRequests, GetCabRequests(elevator.requests))
 }
 

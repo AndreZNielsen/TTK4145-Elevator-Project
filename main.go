@@ -60,7 +60,7 @@ func main() {
             // This should also improve Remoteevent handling, as we can use that function there as well.
 
         case remoteEvent := <-remoteEventRecived:
-			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent)
+			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
             
         case id := <-disconnected:
             go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn)

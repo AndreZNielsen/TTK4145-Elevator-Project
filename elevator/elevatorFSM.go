@@ -113,7 +113,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		}
 
 		SetAllLights(elevator, SharedData)
-		AssignLocalHallRequests(elevator, SharedData)
+		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		Start_if_idle(elevator)
 		// startMotor() // doesnt exist yet, but this function should be created. Or something similar
 		
@@ -132,7 +132,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		
 		//StopMotor() these two could be here, but the current solution might be good too
 		//DoorOpen(elevator)
-		AssignLocalHallRequests(elevator, SharedData)
+		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		SetAllLights(elevator, SharedData)
 
 	case "obstructed":
@@ -150,9 +150,9 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 	}
 }
 
-func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event config.Update) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
+func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event config.Update, externalConn sharedData.ExternalConn) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
 	UpdatesharedHallRequests(elevator, SharedData, event)
-	AssignLocalHallRequests(elevator, SharedData)
+	AssignLocalHallRequests(elevator, SharedData, externalConn)
 	SetAllLights(elevator, SharedData)
 	Start_if_idle(elevator) // should be called here instead of in ChangeLocalHallRequests
 
