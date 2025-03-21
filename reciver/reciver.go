@@ -104,7 +104,7 @@ func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,e
 		
 			case "alive":
 				StartTimer()
-				fmt.Println("StartTimer")
+				//fmt.Println("StartTimer")
 			
 			default:
 				fmt.Println("Unknown type received:", typeID)

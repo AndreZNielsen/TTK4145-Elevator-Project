@@ -47,9 +47,11 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 			continue // Local elevator already added.
 		}
 		// Only add the remote elevator if its data exists.
-		if remote, ok := RemoteElevatorData[id]; ok {
+		if remote, ok := RemoteElevatorData[id]; ok && RemoteElevatorData[id].Obstructed{
 			states[id] = remote
 		}
+	
+		
 	}
 
 	input = HRAInput{

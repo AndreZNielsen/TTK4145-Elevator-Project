@@ -74,7 +74,7 @@ func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *s
 		externalConn.ConnectedConn[id]=false
 		Disconnected<-id
 		Send_Elevator_data(data,externalConn)
-		fmt.Println("reconnect reconekted")
+		fmt.Println("reconnect reconected")
 
 		time.Sleep(1*time.Second)
 		return
@@ -142,7 +142,7 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 				fmt.Println("Trying to reconnect")
 				Disconnected<-id
 				externalConn.ConnectedConn[id] = false
-				fmt.Println("reconnect reconekted")
+				fmt.Println("reconnect reconnected")
 				time.Sleep(1*time.Second)
 				go Send_alive(externalConn)
 				sendMu[id].Unlock() // Ensure to unlock after sending
@@ -150,7 +150,7 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 			}
 
 
-			fmt.Println("sent alive")
+			//fmt.Println("sent alive")
 		}
 		
 		sendMu[id].Unlock() // Ensure to unlock after sending

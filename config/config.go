@@ -2,7 +2,7 @@ package config
 
 var Num_floors = 4
 
-var Elevator_id = "A"
+var Elevator_id = "B"
 
 var PossibleIDs = []string{"A", "B"}
 //var PossibleIDs = []string{"A"}
@@ -10,7 +10,7 @@ var PossibleIDs = []string{"A", "B"}
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
-	"A": "localhost",
+	"A": "10.100.23.22",
 	"B": "localhost",
 }
 
@@ -24,7 +24,8 @@ type Elevator_data struct {//data struct that contains all the data that the ass
 	Behavior    string `json:"behaviour"`
 	Floor       int    `json:"floor"`
 	Direction   string `json:"direction"`
-	CabRequests []bool `json:"cabRequests"`    
+	CabRequests []bool `json:"cabRequests"` 
+    Obstructed bool  
 }
 
 

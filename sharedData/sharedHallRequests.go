@@ -27,17 +27,20 @@ import (
 type SharedData struct {
 	HallRequests [][2]bool
 	RemoteElevatorData map[string]config.Elevator_data
+	ObstrutedElevators map[string]bool
 }
 
 type ExternalConn struct {
 	RemoteElevatorConnections map[string]net.Conn
 	ConnectedConn map[string]bool
+	 
 }
 
 func InitSharedData() *SharedData {
 	return &SharedData{
 		HallRequests:               make([][2]bool, config.Num_floors),
 		RemoteElevatorData:         make(map[string]config.Elevator_data),
+		//ObstrutedElevators:   		make(map[string]bool) ,	
 	}
 }
 

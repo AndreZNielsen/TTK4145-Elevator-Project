@@ -1,7 +1,6 @@
 package elevator
 
 import (
-	"fmt"
 	"root/assigner"
 	"root/config"
 	"root/elevio"
@@ -22,14 +21,12 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
     remoteData := SharedData.RemoteElevatorData
     sharedHallRequests := SharedData.HallRequests
 
-    fmt.Println(localData)
-    fmt.Println(remoteData)
 
     // Prevents invalid data from crashing the assigner
     // We might be able to find a better solution here.
     // The same problem can happen with data from remoteElevators. That will require a separate fix. Probably similar, but not implemented yet
-    fmt.Println("Direction: ",localData.Direction)
-    fmt.Println("Behaviour: ", localData.Behavior)
+    //fmt.Println("Direction: ",localData.Direction)
+    //fmt.Println("Behaviour: ", localData.Behavior)
 
     correctedLocalData := localData
     

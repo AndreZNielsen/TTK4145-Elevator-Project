@@ -7,6 +7,7 @@ import (
 	"root/sharedData"
 	"root/config"
 	"root/transmitter"
+
 )
 
 type LocalEvent struct {
@@ -136,6 +137,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 
 	case "obstructed":
 		FSM_HandleObstruction(elevator, event.Obstructed)
+		//send_elevator_data for å sende obstruction
 
 	case "timer":
 		if IsDoorObstructed(elevator) {

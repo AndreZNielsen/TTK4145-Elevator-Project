@@ -5,10 +5,10 @@ import (
 	"root/config"
 	"root/elevator"
 	"root/network"
-	"root/reciver"
+	//"root/reciver"
 	SharedData "root/sharedData"
 	"root/transmitter"
-    "root/backup"
+    //"root/backup"
 )
 
 var elevator_1_ip = "localhost:15657"
@@ -38,11 +38,8 @@ func main() {
     
     elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
-    go backup.Start_backup()
+    //go backup.Start_backup()
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
-    //go reciver.AliveTimer(aliveTimer)
-
-
     // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
 
     for {
@@ -50,6 +47,8 @@ func main() {
         case localEvent := <-localEventRecived:
             elevator.FSM_HandleLocalEvent(&elev, localEvent, sharedData, externalConn)
 			elevator.SetAllLights(&elev, sharedData)
+            elevator.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn)
+
 			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
             // This is because not all events should be transmitted. If a request is handled immediately, because
             // we are at the same floor, we should not transmit that.
@@ -62,7 +61,7 @@ func main() {
 
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent)
-
+            
         case id := <-disconnected:
             go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn)
 
