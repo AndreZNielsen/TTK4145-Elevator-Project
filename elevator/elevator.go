@@ -194,6 +194,7 @@ func GetElevatorData(elevator *Elevator) Config.Elevator_data {
         Floor:       elevator.floor, 
         Direction:   ElevioDirToString(elevator.direction), 
         CabRequests: GetCabRequests(elevator.requests),
+		Obstructed:  elevator.obstructed,
     }
 }
 
