@@ -34,7 +34,7 @@ func main() {
 	
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
-    go network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
+	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
     elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
