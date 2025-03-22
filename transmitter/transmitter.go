@@ -71,7 +71,7 @@ func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *s
 	if errors.As(err, &netErr) { // check if it is a network-related error
 		fmt.Println("Network error:", netErr)
 		fmt.Println("Trying to reconnect")
-		externalConn.ConnectedConn[id]=false
+		
 		Disconnected<-id
 		Send_Elevator_data(data,externalConn)
 		fmt.Println("reconnect reconected")
@@ -141,7 +141,6 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 				fmt.Println("Network error:", netErr)
 				fmt.Println("Trying to reconnect")
 				Disconnected<-id
-				externalConn.ConnectedConn[id] = false
 				fmt.Println("reconnect reconnected")
 				time.Sleep(1*time.Second)
 				go Send_alive(externalConn)
@@ -159,3 +158,35 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 	}
 }
 
+func RequestHallRequests(externalConn *sharedData.ExternalConn, id string){
+	sendMu[id].Lock() // Locking before sending
+	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
+	time.Sleep(7*time.Millisecond)
+	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+	err := encoder.Encode("RequestHallRequests") // Type ID so the receiver kows what type of data to decode the next packat as 
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+}
+
+func Send_Hall_Requests(id string,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
+	sendMu[id].Lock() // Locking before sending
+	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
+	time.Sleep(7*time.Millisecond)
+	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+	err := encoder.Encode("HallRequests") // Type ID so the receiver kows what type of data to decode the next packat as 
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+	time.Sleep(7*time.Millisecond)
+	err = encoder.Encode(sharedData.HallRequests) //sendes the update
+	if err != nil {
+		fmt.Println("Error encoding data:", err)
+		return
+	}
+
+}

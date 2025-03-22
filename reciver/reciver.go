@@ -45,15 +45,25 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
 }
 
 
-func Listen_recive(receiver chan<- config.Update,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn) {
+func Listen_recive(receiver chan<- config.Update,
+	disconnected chan<- string,
+	externalData *sharedData.SharedData,
+	externalConn *sharedData.ExternalConn,
+	aliveRecievd chan<- string,
+	requestHallRequests chan<- string) {
 	for _, id := range config.RemoteIDs{
-		go Recive(receiver,id,disconnected,externalData,externalConn)
+		go Recive(receiver,id,disconnected,externalData,externalConn,aliveRecievd,requestHallRequests)
 	}
 }
 
-var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
+//var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func Recive(receiver chan<- config.Update,
+	id string,disconnected chan<- string,
+	externalData *sharedData.SharedData,
+	externalConn *sharedData.ExternalConn,
+	aliveRecievd chan<- string,
+	requestHallRequests chan<- string	){
 	for {	
 		if externalConn.ConnectedConn[id]{	
 			decoder := gob.NewDecoder(externalConn.RemoteElevatorConnections[id])
@@ -100,12 +110,24 @@ func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,e
 					return
 				}
 				receiver<-Update
-				//fmt.Println("Received int:", num)
 		
 			case "alive":
-				StartTimer()
-				//fmt.Println("StartTimer")
+				aliveRecievd<-id
 			
+			case "RequestHallRequests":
+				requestHallRequests<-id
+
+			case "HallRequests":
+				var hallRequests [][2]bool
+		
+				err = decoder.Decode(&hallRequests)
+				if err != nil {
+					fmt.Println("Error decoding Elevator_data:", err)
+			
+					return
+				}
+				externalData.HallRequests=hallRequests
+				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
 			default:
 				fmt.Println("Unknown type received:", typeID)
 			}
