@@ -56,7 +56,7 @@ func Listen_recive(receiver chan<- config.Update,
 	}
 }
 
-//var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
+var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
 func Recive(receiver chan<- config.Update,
 	id string,disconnected chan<- string,
@@ -94,9 +94,9 @@ func Recive(receiver chan<- config.Update,
 			
 					return
 				}
-				//if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
+				if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
 				externalData.RemoteElevatorData[id]=data
-				//}
+				}
 					
 				//fmt.Println("Received Elevator_data:", data)
 				

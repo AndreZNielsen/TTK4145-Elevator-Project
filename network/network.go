@@ -21,7 +21,6 @@ func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- strin
 	for _, id := range config.RemoteIDs{
 
 
-
 		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
 
 		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,externalConn)	
@@ -29,7 +28,7 @@ func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- strin
 
 		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
 		}
-
+		go StartAliveTimer(aliveTimeOut,id)
 		
 	}
 	go handleAliveTimer(aliveRecievd,aliveTimeOut,externalConn,disconnected)
