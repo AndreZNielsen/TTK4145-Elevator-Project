@@ -5,23 +5,26 @@ import (
 	"time"
 	"root/util"
 	"os/exec"
+	"strings"
+	//"strconv"
+	
 )
 
-var alive = make(chan bool)
+var alive = make(chan []bool)
 var dead = make(chan bool)
 
 type Message struct {
 	Type    string      `json:"type"`
-	Content interface{} `json:"content"`
+	Content []bool `json:"content"`
 }
-
+var CabBackup []bool
 func main() {
 	go util.Start_timer(dead)
 	util.StartTCPLis()
 	go util.HandleConnection(alive)
 	for{
 		select {
-		case <-alive:
+		case CabBackup = <-alive:
 			util.Reset_timer()
 		case <-dead:
 			time.Sleep(5 * time.Second)
@@ -35,7 +38,15 @@ func main() {
 
 
 func restart_elavator(){
-	psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run main.go\""
+	strCabBackup := strings.Trim(fmt.Sprint(CabBackup), "[]")
+
+	fmt.Println(strCabBackup)
+	psCommand := fmt.Sprintf(
+		"Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run main.go -isRestart=true -cabBackup='%s'\"",
+		strCabBackup,
+	)
+	fmt.Println(psCommand)
+
  
 	// Start PowerShell and execute the command
 	cmd := exec.Command("powershell.exe", "-Command", psCommand)
@@ -46,4 +57,4 @@ func restart_elavator(){
 		return
 	}
 }
-
+//psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run backup_main.go\""

@@ -2,18 +2,17 @@ package main
 
 import (
 	"fmt"
-	"root/config"
+    "root/config"
 	"root/elevator"
 	"root/network"
-
-
 	//"root/reciver"
 	SharedData "root/sharedData"
 	"root/transmitter"
-	//"root/backup"
+	"root/backup"
+    "flag"
 )
 
-var elevator_1_ip = "localhost:15657"
+var elevator_1_ip = "localhost:12345"
 
 /*
 hvordan kjøre:
@@ -25,6 +24,15 @@ på samme maskin
 
 func main() {
     fmt.Println("Started!")
+    // Define flags
+	var isRestart bool
+	var cabBackup string
+
+	// Parse the flags
+	flag.BoolVar(&isRestart, "isRestart", false, "Indicates if restart is required")
+	flag.StringVar(&cabBackup, "cabBackup", "", "Space-separated list for CabBackup")
+	flag.Parse()
+
     var elev elevator.Elevator
 
     localEventRecived 	:= make(chan elevator.LocalEvent)
@@ -34,12 +42,18 @@ func main() {
 	
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
-	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
+	//network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
     elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
-    //go backup.Start_backup()
+    fmt.Println(cabBackup)
+    if isRestart{
+        elevator.RestorCabRequests(&elev,cabBackup)
+    }
+    
+    go backup.Start_backup(&elev)
+
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
 
@@ -65,7 +79,7 @@ func main() {
             
         case id := <-disconnected:
             externalConn.ConnectedConn[id]=false
-			go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn)
+			go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
 
         }
     }

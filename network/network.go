@@ -5,6 +5,7 @@ import(
 	"root/transmitter"
 	"root/sharedData"
 	"root/config"
+	"root/elevator"
 	"fmt"
 	
 
@@ -39,7 +40,7 @@ func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- strin
 
 }
 
-func ReconnectPeer(remoteEvent chan<- config.Update,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func ReconnectPeer(remoteEvent chan<- config.Update,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 
 	totalDicvonnect := allFalse(externalConn.ConnectedConn)
 
@@ -55,9 +56,11 @@ func ReconnectPeer(remoteEvent chan<- config.Update,disconnected chan<- string, 
 
 	}
 
+
 	if(totalDicvonnect){
 		transmitter.RequestHallRequests(externalConn,reConnID)
 	}
+	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 }
 
 func portGenerateor(localID, targetID string) string {

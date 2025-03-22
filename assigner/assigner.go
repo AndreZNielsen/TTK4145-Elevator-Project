@@ -40,7 +40,9 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 		return nil
 	}
 	*/
-
+	if localelvator.Floor == -1 {
+		return make([][2]bool,config.Num_floors)
+	}
 
 	states := map[string]config.Elevator_data{
 		config.Elevator_id: localelvator,

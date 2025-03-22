@@ -9,7 +9,7 @@ import (
 
 type Message struct {
 	Type    string      `json:"type"`
-	Content interface{} `json:"content"`
+	Content []bool `json:"content"`
 }
 var Conn net.Conn
 func Msg_transmitter() {
@@ -23,7 +23,7 @@ func Msg_transmitter() {
 	encoder := json.NewEncoder(Conn)
 
 	for {
-		msg := Message{"message", "message received"}
+		msg := Message{"message", make([]bool, 2)}
 		err := encoder.Encode(msg)
 		if err != nil {
 			fmt.Println("Error sending message:", err)
@@ -52,7 +52,7 @@ func StartTCPLis() {
     }
 }
 
-func HandleConnection(alive chan bool) {
+func HandleConnection(alive chan []bool) {
 	decoder := json.NewDecoder(Conn)
 
 	for {
@@ -63,10 +63,10 @@ func HandleConnection(alive chan bool) {
 			return
 		}
 
-		fmt.Printf("Received: %+v\n", msg)
+		fmt.Printf("Received: %+v\n", msg.Content)
 
 		if msg.Type == "message" {
-			alive <- true
+			alive <- msg.Content
 		}
 	}
 }

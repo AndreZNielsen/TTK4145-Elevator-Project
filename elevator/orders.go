@@ -8,7 +8,7 @@ import (
 func (e *Elevator) RequestsAbove() bool {
     for f := e.floor + 1; f < Num_floors; f++ {
         for btn := 0; btn < Num_buttons; btn++ {
-            if e.requests[f][btn] {
+            if e.Requests[f][btn] {
                 return true
             }
         }
@@ -19,7 +19,7 @@ func (e *Elevator) RequestsAbove() bool {
 func (e *Elevator) RequestsBelow() bool {
     for f := 0; f < e.floor; f++ {
         for btn := 0; btn < Num_buttons; btn++ {
-            if e.requests[f][btn] {
+            if e.Requests[f][btn] {
                 return true
             }
         }
@@ -29,7 +29,7 @@ func (e *Elevator) RequestsBelow() bool {
 
 func (e *Elevator) RequestsHere() bool {
     for btn := 0; btn < Num_buttons; btn++ {
-        if e.requests[e.floor][btn] {
+        if e.Requests[e.floor][btn] {
             return true
         }
     }
@@ -76,9 +76,9 @@ func (e *Elevator) SelectNextDirection() DirBehaviourPair {
 func (e *Elevator) ShouldStop() bool {
     switch e.direction {
     case Dir_down:
-        return e.requests[e.floor][Btn_halldown] || e.requests[e.floor][Btn_hallcab] || !e.RequestsBelow()
+        return e.Requests[e.floor][Btn_halldown] || e.Requests[e.floor][Btn_hallcab] || !e.RequestsBelow()
     case Dir_up:
-        return e.requests[e.floor][Btn_hallup] || e.requests[e.floor][Btn_hallcab] || !e.RequestsAbove()
+        return e.Requests[e.floor][Btn_hallup] || e.Requests[e.floor][Btn_hallcab] || !e.RequestsAbove()
     default:
         return true
     }
@@ -102,28 +102,28 @@ func (e *Elevator) RequestsClearAtCurrentFloor(SharedData *sharedData.SharedData
 
     updates := []config.Update{}
 
-    e.requests[e.floor][Btn_hallcab] = false
+    e.Requests[e.floor][Btn_hallcab] = false
     switch e.direction {
     case Dir_up:
-        if !e.RequestsAbove() && !e.requests[e.floor][Btn_hallup] {
-            e.requests[e.floor][Btn_halldown] = false
+        if !e.RequestsAbove() && !e.Requests[e.floor][Btn_hallup] {
+            e.Requests[e.floor][Btn_halldown] = false
             updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
         }
-        e.requests[e.floor][Btn_hallup] = false
+        e.Requests[e.floor][Btn_hallup] = false
         updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
     
     case Dir_down:
-        if !e.RequestsBelow() && !e.requests[e.floor][Btn_halldown] {
-            e.requests[e.floor][Btn_hallup] = false
+        if !e.RequestsBelow() && !e.Requests[e.floor][Btn_halldown] {
+            e.Requests[e.floor][Btn_hallup] = false
             updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
         }
-        e.requests[e.floor][Btn_halldown] = false
+        e.Requests[e.floor][Btn_halldown] = false
         updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
     default:
-            e.requests[e.floor][Btn_hallup] = false
+            e.Requests[e.floor][Btn_hallup] = false
             updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
         
-            e.requests[e.floor][Btn_halldown] = false
+            e.Requests[e.floor][Btn_halldown] = false
             updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
     }
     return updates

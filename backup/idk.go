@@ -7,15 +7,16 @@ import (
 	"os/exec"
 	"runtime"
 	"time"
+	"root/elevator"
 )
 
 type Message struct {
 	Type    string      `json:"type"`
-	Content interface{} `json:"content"`
+	Content []bool `json:"content"`
 }
 
-func Start_backup() {
-	fmt.Println("Starting backup in 10 sec...")
+func Start_backup(elev *elevator.Elevator) {
+	fmt.Println("Starting backup in 5 sec...")
 	time.Sleep(5 * time.Second)
 
 	
@@ -34,7 +35,7 @@ func Start_backup() {
 
 		// Send heartbeats
 		for {
-			msg := Message{"message", "backup running"}
+			msg := Message{"message", elevator.GetCabRequests(elev.Requests)}
 			err := encoder.Encode(msg)
 			if err != nil {
 				fmt.Println("Error sending message:", err)
