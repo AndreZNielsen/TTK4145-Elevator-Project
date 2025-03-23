@@ -6,6 +6,7 @@ import (
 	"root/util"
 	"os/exec"
 	"strings"
+	"runtime"
 	//"strconv"
 	
 )
@@ -21,6 +22,7 @@ var CabBackup []bool
 func main() {
 	go util.Start_timer(dead)
 	util.StartTCPLis()
+	go util.Msg_transmitter()
 	go util.HandleConnection(alive)
 	for{
 		select {
@@ -38,23 +40,29 @@ func main() {
 
 
 func restart_elavator(){
+	var cmd *exec.Cmd
+
 	strCabBackup := strings.Trim(fmt.Sprint(CabBackup), "[]")
 
-	fmt.Println(strCabBackup)
-	psCommand := fmt.Sprintf(
-		"Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run main.go -isRestart=true -cabBackup='%s'\"",
-		strCabBackup,
-	)
-	fmt.Println(psCommand)
-
- 
-	// Start PowerShell and execute the command
-	cmd := exec.Command("powershell.exe", "-Command", psCommand)
-	cmd.Dir = "../.."  
+	switch runtime.GOOS {
+		case "linux":
+			gCommand := fmt.Sprintf("go run backup_main.go -isRestart=true -cabBackup='%s'", strCabBackup)
+			cmd = exec.Command("gnome-terminal", "--", "bash", "-c", gCommand)
+		
+		case "windows":
+		
+			psCommand := fmt.Sprintf(
+			"Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run main.go -isRestart=true -cabBackup='%s'\"",
+			strCabBackup)
+			cmd = exec.Command("powershell.exe", "-Command", psCommand)
+			 
+	}
+	cmd.Dir = "../.." 
 	err := cmd.Start()
 	if err != nil {
 		fmt.Println("Error starting PowerShell:", err)
 		return
 	}
 }
-//psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run backup_main.go\""
+
+

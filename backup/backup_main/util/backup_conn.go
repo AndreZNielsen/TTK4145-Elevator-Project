@@ -13,13 +13,6 @@ type Message struct {
 }
 var Conn net.Conn
 func Msg_transmitter() {
-	var err error
-    Conn, err = net.Dial("tcp", "localhost:5000")
-	if err != nil {
-		fmt.Println("Connection error:", err)
-		return
-	}
-
 	encoder := json.NewEncoder(Conn)
 
 	for {

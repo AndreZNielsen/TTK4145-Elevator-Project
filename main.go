@@ -12,7 +12,7 @@ import (
     "flag"
 )
 
-var elevator_1_ip = "localhost:15657"
+var elevator_1_ip = "localhost:12345"
 
 /*
 hvordan kjøre:

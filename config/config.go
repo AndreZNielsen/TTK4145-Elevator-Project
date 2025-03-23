@@ -1,17 +1,17 @@
 package config
 
-const Num_floors = 4
+const Num_floors = 9
 
-var Elevator_id = "B"
+var Elevator_id = "A"
 
 
-var PossibleIDs = []string{"A", "B"}
+var PossibleIDs = []string{"A"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
-	"A": "10.100.23.33",
+	"A": "localhost",
 	"B": "localhost",
     //"C": "localhost",
 }
