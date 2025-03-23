@@ -5,93 +5,110 @@ import(
 	"root/transmitter"
 	"root/sharedData"
 	"root/config"
-	"net"
-	"sort"
+	"root/elevator"
 	"fmt"
 	
 
 )
+var aliveRecievd = make(chan string)
+var aliveTimeOut = make(chan string)
+var requestHallRequests = make(chan string)
 
-func Start_network(receiver chan<- [3]int,disconnected chan<- string){
-	var counter int
-	var RemoteElevatorConnections =  make(map[string]net.Conn)
+func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+	transmitter.InitDiscEventChan(disconnected)
+	transmitter.InitMutex()
+	InitAlive()
 
-	for _, id := range config.PossibleIDs{
-		if id == config.Elevator_id {
-			counter +=1 
-			continue // Local elevator not needed 
-		}
+	for _, id := range config.RemoteIDs{
 
 
-		if counter%2 == 0 {
+		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
 
-		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
+		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,externalConn)	
 		}else{
 
-		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
+		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
 		}
-		counter +=1 
+		go StartAliveTimer(aliveTimeOut,id)
 		
 	}
-	sharedData.RemoteElevatorConnections = RemoteElevatorConnections
-	reciver.SetConn()
-	transmitter.SetConn()
-	go reciver.Listen_recive(receiver,disconnected)
-	go transmitter.Send_alive()
-
+	go handleAliveTimer(aliveRecievd,aliveTimeOut,externalConn,disconnected)
+	go reciver.Listen_recive(remoteEvent,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
+	go transmitter.Send_alive(externalConn)
+	go handleRequestHallRequests(requestHallRequests,externalConn,sharedData)
 	
 
 }
 
-func Network_reconnector(receiver chan<- [3]int,disconnected chan<- string, needReconnecting string){
-	var counter int
-	var RemoteElevatorConnections =  make(map[string]net.Conn)
-		counter = 0
+func ReconnectPeer(remoteEvent chan<- config.Update,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 
-	for _, id := range config.PossibleIDs{
-		if id == config.Elevator_id {
-			counter +=1 
-			continue // Local elevator not needed 
-		}
+	totalDicvonnect := allFalse(externalConn.ConnectedConn)
 
+	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {
 
+		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevatoip[reConnID],reConnID,externalConn)	
+		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 
-		if counter%2 == 0 && needReconnecting == id{
+	}else{
 
-		RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,disconnected)	
-		reciver.SetConn()
-		transmitter.SetConn()
-		go reciver.Recive(receiver,id,disconnected)
+		externalConn.RemoteElevatorConnections[reConnID] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,reConnID),reConnID,externalConn)
+		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 
-		}else if needReconnecting == id{
-
-		RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id)
-		reciver.SetConn()
-		transmitter.SetConn()
-		go reciver.Recive(receiver,id,disconnected)
-
-		}
-		counter +=1 
-		
-	}
-	reciver.SetConn()
-	transmitter.SetConn()
 	}
 
+
+	if(totalDicvonnect){
+		transmitter.RequestHallRequests(externalConn,reConnID)
+	}
+	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
+}
 
 func portGenerateor(localID, targetID string) string {
-	// Combine the two IDs in a deterministic order
-	ids := []string{localID, targetID}
-	sort.Strings(ids) // ensures the order is consistent regardless of input order
-	combined := ids[0] + ids[1]
+	localIndex := indexOfElevatorID(localID)
+	targetIndex := indexOfElevatorID(targetID)
+	port := 8000 + localIndex + targetIndex 
 
-	// makes a hash
-	var hash int
-	for _, ch := range combined {
-		hash += int(ch)
-	}
 
-	//we choose 8000 as the base to make it in typical port range
-	port := 8000 + (hash % 1000)
 	return fmt.Sprintf("%d", port)
+}
+
+func indexOfElevatorID(target string) int {
+    
+	for i, v := range config.PossibleIDs {
+        if v == target {
+            return i
+        }
+    }
+ 	return -1 // if not in array 
+}
+
+func allFalse(m map[string]bool) bool {
+	for _, v := range m {
+		if v {
+			return false
+		}
+	}
+	return true
+}
+
+func handleAliveTimer(aliveRecievd chan string,aliveTimeOut chan string,externalConn *sharedData.ExternalConn,disconnected chan<- string){
+	for{
+		select{
+		case id := <-aliveRecievd:
+			ResetAliveTimer(id)
+
+		case id := <-aliveTimeOut:
+			if externalConn.ConnectedConn[id]{
+				fmt.Println("handleAliveTimer triggered disconnect")
+				disconnected <- id
+			}
+		}
+
+	}
+}
+func handleRequestHallRequests(requestHallRequests chan string,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
+	for{
+		id := <-requestHallRequests
+		transmitter.Send_Hall_Requests(id,externalConn,sharedData)
+	}
 }

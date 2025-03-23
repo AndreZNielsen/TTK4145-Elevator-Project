@@ -1,24 +1,33 @@
 package config
 
-var Num_floors = 4
+const Num_floors = 4
 
-var Elevator_id = "A"
+var Elevator_id = "B"
+
 
 var PossibleIDs = []string{"A", "B"}
+
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
-	"A": "localhost",
+	"A": "10.100.23.33",
 	"B": "localhost",
+    //"C": "localhost",
 }
 
+type Update struct { // This type will allow us to improve a few functions that use updates
+    Floor       int
+    ButtonType  int
+    Value       bool
+}
 
 type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
 	Behavior    string `json:"behaviour"`
 	Floor       int    `json:"floor"`
 	Direction   string `json:"direction"`
-	CabRequests []bool `json:"cabRequests"`    
+	CabRequests []bool `json:"cabRequests"` 
+    Obstructed bool  
 }
 
 

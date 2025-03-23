@@ -1,13 +1,13 @@
 package assigner
 
 import (
-	"root/config"
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"root/config"
+	"root/sharedData"
 	"runtime"
-	
-
+	//"os"
 )
 
 // Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
@@ -20,7 +20,7 @@ type HRAInput struct {
 
 
 
-func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]config.Elevator_data, hallRequests [][2]bool) [][2]bool{
+func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]config.Elevator_data, hallRequests [][2]bool, externalConn sharedData.ExternalConn) [][2]bool{
 	var input HRAInput
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -32,21 +32,30 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 		panic("OS not supported")
 	}
 
+	// added this so that you dont have to run chmod +x on the executable
+	/*
+	err := os.Chmod(hraExecutable, 0755)
+	if err != nil {
+		fmt.Println("os.Chmod error: ", err)
+		return nil
+	}
+	*/
+	if localelvator.Floor == -1 {
+		return make([][2]bool,config.Num_floors)
+	}
 
 	states := map[string]config.Elevator_data{
 		config.Elevator_id: localelvator,
 	}
 
 	// List of all possible elevator IDs.
-	possibleIDs := []string{"A", "B", "C"}
+
 
 	// Loop over possible IDs and add remote data if available.
-	for _, id := range possibleIDs {
-		if id == config.Elevator_id {
-			continue // Local elevator already added.
-		}
+	for _, id := range config.RemoteIDs {
+
 		// Only add the remote elevator if its data exists.
-		if remote, ok := RemoteElevatorData[id]; ok {
+		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] {
 			states[id] = remote
 		}
 	}
