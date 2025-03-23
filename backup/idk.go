@@ -16,6 +16,7 @@ type Message struct {
 }
 var Conn net.Conn
 var BackupDead = make(chan bool)
+
 func Start_backup(elev *elevator.Elevator) {
 	var err error
 
@@ -36,21 +37,9 @@ func Start_backup(elev *elevator.Elevator) {
 			time.Sleep(5 * time.Second)
 			
 		}
-		defer Conn.Close()
-		go HandleConnection()
-		encoder := json.NewEncoder(Conn)
-
-		// Send heartbeats
-		for {
-			msg := Message{"message", elevator.GetCabRequests(elev.Requests)}
-			err := encoder.Encode(msg)
-			if err != nil {
-				fmt.Println("Error sending message:", err)
-				break
-			}
-			fmt.Println("Sent backup heartbeat")
-			time.Sleep(5 * time.Second)
-		}
+		go sendCabHartBeat(elev)
+		go handleConnection()
+		
 		<-BackupDead
 	}
 }
@@ -77,7 +66,7 @@ func startBackupProcess() {
 }
 
 
-func HandleConnection() {
+func handleConnection() {
 	decoder := json.NewDecoder(Conn)
 
 	for {
@@ -96,6 +85,21 @@ func HandleConnection() {
 	}
 }
 
+func sendCabHartBeat(elev *elevator.Elevator){
+	encoder := json.NewEncoder(Conn)
+
+	// Send heartbeats
+	for {
+		msg := Message{"message", elevator.GetCabRequests(elev.Requests)}
+		err := encoder.Encode(msg)
+		if err != nil {
+			fmt.Println("Error sending message:", err)
+			break
+		}
+		fmt.Println("Sent backup heartbeat")
+		time.Sleep(5 * time.Second)
+	}
+	}
 
 
 var timer *time.Timer
