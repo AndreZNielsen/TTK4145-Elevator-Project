@@ -12,7 +12,7 @@ import (
     "flag"
 )
 
-var elevator_1_ip = "localhost:12345"
+var elevator_1_ip = "localhost:15657"
 
 /*
 hvordan kjøre:
@@ -42,7 +42,7 @@ func main() {
 	
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
-	//network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
+	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
     elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
@@ -78,7 +78,9 @@ func main() {
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
             
         case id := <-disconnected:
+            fmt.Println("disconnect triggered")
             externalConn.ConnectedConn[id]=false
+            externalConn.RemoteElevatorConnections[id].Close()
 			go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
 
         }

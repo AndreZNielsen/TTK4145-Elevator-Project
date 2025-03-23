@@ -2,16 +2,26 @@ package network
 
 import(
 	"time"
+	"root/config"
 )
 var (
 	timer = make(map[string]*time.Timer)
+	ini = make(map[string]bool)
 )
 
+func InitAlive(){
+	for _, id := range config.RemoteIDs{
+		ini[id]=false
+	}
+}
 
 func StartAliveTimer(elvatorDead chan string , id string) {
+	for{
 	timer[id] = time.NewTimer(10 * time.Second)
+	ini[id] = true
 	<-timer[id].C
 	elvatorDead <- id
+	}
 }
 	
 

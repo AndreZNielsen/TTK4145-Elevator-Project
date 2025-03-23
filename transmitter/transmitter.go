@@ -94,6 +94,7 @@ func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *s
 				sendMu[id].Unlock() 
 				return
 			}
+			sendMu[id].Unlock()
 			return
 		}
 		sendMu[id].Unlock()
@@ -150,8 +151,9 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
 				Disconnected<-id
-				time.Sleep(1*time.Second)
 				sendMu[id].Unlock() 
+				time.Sleep(1*time.Second)
+				
 				continue
 			}
 

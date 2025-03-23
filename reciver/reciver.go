@@ -27,6 +27,7 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
         fmt.Println("Error starting listener:", err)
         return nil
     }
+    defer ln.Close()
     // Accept a new connection.
     conn, err := ln.Accept()
     if err != nil {
@@ -35,7 +36,6 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
         return nil
     }
 
-    ln.Close()
 
     // Update shared data with the new connection.
     externalConn.ConnectedConn[id] = true
@@ -73,14 +73,16 @@ func Recive(receiver chan<- config.Update,
 			var netErr *net.OpError
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
-				externalConn.ConnectedConn[id] = false
-				disconnected<-id
+				if externalConn.ConnectedConn[id]{ 
+				
+					disconnected<-id
+				}
 				return
 			}
 			if err != nil {
 				fmt.Println("Error decoding type:", err)
 				time.Sleep(1*time.Second)
-				return
+				continue
 			}
 		
 		
@@ -95,9 +97,10 @@ func Recive(receiver chan<- config.Update,
 					return
 				}
 				if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-				externalData.RemoteElevatorData[id]=data
+					externalData.RemoteElevatorData[id]=data
 				}
-					
+				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
+				
 				//fmt.Println("Received Elevator_data:", data)
 				
 		

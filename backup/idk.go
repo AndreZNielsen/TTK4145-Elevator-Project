@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
+	"root/elevator"
 	"runtime"
 	"time"
-	"root/elevator"
 )
 
 type Message struct {
@@ -52,13 +52,13 @@ func startBackupProcess() {
 
 	switch runtime.GOOS {
 	case "linux":
-		cmd = exec.Command("xterm", "-e", "bash -c 'cd ./backup/backup_main && go run backup_main.go; exec bash'")
+		cmd = exec.Command("gnome-terminal", "--", "bash", "-c", "cd ./backup/backup_main && go run backup_main.go")				
 	case "windows":
-	psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run backup_main.go\""
- 
-	// Start PowerShell and execute the command
-	cmd = exec.Command("powershell.exe", "-Command", psCommand)
-	cmd.Dir = "./backup/backup_main"
+		psCommand := "Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run backup_main.go\""
+	
+		// Start PowerShell and execute the command
+		cmd = exec.Command("powershell.exe", "-Command", psCommand)
+		cmd.Dir = "./backup/backup_main"
 
 	}
 

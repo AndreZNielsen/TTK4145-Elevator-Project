@@ -7,7 +7,7 @@ import (
 	"root/config"
 	"root/sharedData"
 	"runtime"
-	//"os"
+	"os"
 )
 
 // Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
@@ -33,13 +33,12 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	}
 
 	// added this so that you dont have to run chmod +x on the executable
-	/*
-	err := os.Chmod(hraExecutable, 0755)
+	err := os.Chmod("assignerExecutables/" + hraExecutable, 0755)
 	if err != nil {
 		fmt.Println("os.Chmod error: ", err)
 		return nil
 	}
-	*/
+	
 	if localelvator.Floor == -1 {
 		return make([][2]bool,config.Num_floors)
 	}

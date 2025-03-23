@@ -17,7 +17,7 @@ var requestHallRequests = make(chan string)
 func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
-
+	InitAlive()
 
 	for _, id := range config.RemoteIDs{
 
@@ -98,8 +98,10 @@ func handleAliveTimer(aliveRecievd chan string,aliveTimeOut chan string,external
 			ResetAliveTimer(id)
 
 		case id := <-aliveTimeOut:
-			externalConn.ConnectedConn[id] = false
-			disconnected <- id
+			if externalConn.ConnectedConn[id]{
+				fmt.Println("handleAliveTimer triggered disconnect")
+				disconnected <- id
+			}
 		}
 
 	}
