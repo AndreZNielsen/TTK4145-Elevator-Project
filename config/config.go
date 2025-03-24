@@ -2,18 +2,18 @@ package config
 
 const Num_floors = 4
 
-var Elevator_id = "B"
+var Elevator_id = "A"
 
 
-var PossibleIDs = []string{"A", "B"}
+var PossibleIDs = []string{"A","B","C"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
-	"A": "10.100.23.33",
-	"B": "localhost",
-    //"C": "localhost",
+	"A": "localhost",
+	"B": "10.100.23.28",
+    "C": "10.100.23.32",
 }
 
 type Update struct { // This type will allow us to improve a few functions that use updates
@@ -30,6 +30,15 @@ type Elevator_data struct {//data struct that contains all the data that the ass
     Obstructed bool  
 }
 
+type HallRequests [][2]bool
+
+type RemoteEvent struct {
+	EventType     string
+	Update        Update
+	ElevatorData  Elevator_data
+	HallRequests  HallRequests
+	Id            string
+}
 
 
 func RemoveElement(slice []string, element string) []string {

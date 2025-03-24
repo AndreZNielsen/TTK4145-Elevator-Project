@@ -1,15 +1,12 @@
 package reciver
 
 import (
-	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"net"
 	"time"
 	"root/sharedData"
 	"root/config"
-	"errors"
-
-	
 )
 
 
@@ -45,7 +42,7 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
 }
 
 
-func Listen_recive(receiver chan<- config.Update,
+func Listen_recive(receiver chan<- config.RemoteEvent,
 	disconnected chan<- string,
 	externalData *sharedData.SharedData,
 	externalConn *sharedData.ExternalConn,
@@ -56,89 +53,92 @@ func Listen_recive(receiver chan<- config.Update,
 	}
 }
 
-var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-func Recive(receiver chan<- config.Update,
-	id string,disconnected chan<- string,
-	externalData *sharedData.SharedData,
-	externalConn *sharedData.ExternalConn,
-	aliveRecievd chan<- string,
-	requestHallRequests chan<- string	){
-	for {	
-		if externalConn.ConnectedConn[id]{	
-			decoder := gob.NewDecoder(externalConn.RemoteElevatorConnections[id])
+func Recive(receiver chan<- config.RemoteEvent,
+    id string,
+    disconnected chan<- string,
+    externalData *sharedData.SharedData,
+    externalConn *sharedData.ExternalConn,
+    aliveRecievd chan<- string,
+    requestHallRequests chan<- string) {
+    
+    for {
+        if externalConn.ConnectedConn[id] {
+            decoder := json.NewDecoder(externalConn.RemoteElevatorConnections[id])
 
-			var typeID string
-			err := decoder.Decode(&typeID) // Read type identifier to kono what type of data to decode next
-			var netErr *net.OpError
-			if errors.As(err, &netErr) { // check if it is a network-related error
-				fmt.Println("Network error:", netErr)
-				if externalConn.ConnectedConn[id]{ 
-				
-					disconnected<-id
-				}
-				return
-			}
-			if err != nil {
-				fmt.Println("Error decoding type:", err)
-				time.Sleep(1*time.Second)
-				continue
-			}
-		
-		
-			switch typeID {//chooses what decoder to use based on what type that needs to be decoded 
-			case "elevator_data":
-				var data config.Elevator_data
-		
-				err = decoder.Decode(&data)
-				if err != nil {
-					fmt.Println("Error decoding Elevator_data:", err)
-			
-					return
-				}
-				if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-				externalData.RemoteElevatorData[id]=data
-				}
-				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
-				
-				//fmt.Println("Received Elevator_data:", data)
-				
-		
-		
-			case "Update":
-				var Update config.Update
-				err = decoder.Decode(&Update)
-				if err != nil {
-					fmt.Println("Error decoding int:", err)
-					return
-				}
-				receiver<-Update
-		
-			case "alive":
-				aliveRecievd<-id
-			
-			case "RequestHallRequests":
-				requestHallRequests<-id
+            var message struct {
+                TypeID string          `json:"typeID"` // For å identifisere hvilken type data som kommer
+                Data   json.RawMessage `json:"data"`   // Inneholder selve dataene, som kan være forskjellige typer
+            }
 
-			case "HallRequests":
-				var hallRequests [][2]bool
-		
-				err = decoder.Decode(&hallRequests)
-				if err != nil {
-					fmt.Println("Error decoding Elevator_data:", err)
-			
-					return
-				}
-				externalData.HallRequests=hallRequests
-				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
-			default:
-				fmt.Println("Unknown type received:", typeID)
-			}
-		}else{
-			return}
+            // Dekodere hele meldingen (TypeID + Data)
+            err := decoder.Decode(&message)
+            if err != nil {
+                fmt.Println("Error decoding message:", err)
+                time.Sleep(1 * time.Second)
+                continue
+            }
 
-	}
+            // Handle forskjellige TypeID-er og dekode data basert på TypeID
+            switch message.TypeID {
+            case "elevator_data":
+                var data config.Elevator_data
+                err := json.Unmarshal(message.Data, &data) // Dekoder elevator_data
+                if err != nil {
+                    fmt.Println("Error decoding Elevator_data:", err)
+                    return
+                }
+
+                event := config.RemoteEvent{
+                    EventType:    "elevatorData",
+                    Id:           id,
+                    ElevatorData: data,
+                }
+                receiver <- event
+
+            case "Update":
+                var update config.Update
+                err := json.Unmarshal(message.Data, &update) // Dekoder Update
+                if err != nil {
+                    fmt.Println("Error decoding Update:", err)
+                    return
+                }
+
+                event := config.RemoteEvent{
+                    EventType: "update",
+                    Update:    update,
+                }
+                receiver <- event
+
+            case "alive":
+                aliveRecievd <- id
+
+            case "RequestHallRequests":
+                requestHallRequests <- id
+
+            case "HallRequests":
+                var hallRequests [][2]bool
+                err := json.Unmarshal(message.Data, &hallRequests) // Dekoder HallRequests
+                if err != nil {
+                    fmt.Println("Error decoding HallRequests:", err)
+                    return
+                }
+
+                event := config.RemoteEvent{
+                    EventType:  "hallRequests",
+                    HallRequests: hallRequests,
+                }
+                receiver <- event
+
+            default:
+                fmt.Println("Unknown type received:", message.TypeID)
+            }
+        } else {
+            return
+        }
+    }
 }
+
 
 
 

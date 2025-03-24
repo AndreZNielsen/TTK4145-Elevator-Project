@@ -8,7 +8,7 @@ import (
 	//"root/reciver"
 	SharedData "root/sharedData"
 	"root/transmitter"
-	//"root/backup"
+	"root/backup"
     "flag"
 )
 
@@ -36,7 +36,8 @@ func main() {
     var elev elevator.Elevator
 
     localEventRecived 	:= make(chan elevator.LocalEvent)
-    remoteEventRecived 	:= make(chan config.Update)
+    // remoteEventRecived 	:= make(chan config.Update)
+    remoteEventRecived 	:= make(chan config.RemoteEvent)
     disconnected 		:= make(chan string)
 
 	
@@ -50,9 +51,10 @@ func main() {
     fmt.Println(cabBackup)
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
+        transmitter.RequestHallRequests(externalConn,config.RemoteIDs[0])
     }
     
-    //go backup.Start_backup(&elev)
+    go backup.Start_backup(&elev)
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
