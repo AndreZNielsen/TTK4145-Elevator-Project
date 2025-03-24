@@ -30,6 +30,15 @@ type Elevator_data struct {//data struct that contains all the data that the ass
     Obstructed bool  
 }
 
+type HallRequests [][2]bool
+
+type RemoteEvent struct {
+	EventType     string
+	Update        Update
+	ElevatorData  Elevator_data
+	HallRequests  HallRequests
+	Id            string
+}
 
 
 func RemoveElement(slice []string, element string) []string {

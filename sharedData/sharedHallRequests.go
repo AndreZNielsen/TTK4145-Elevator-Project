@@ -25,7 +25,7 @@ import (
 
 
 type SharedData struct {
-	HallRequests [][2]bool
+	HallRequests config.HallRequests
 	RemoteElevatorData map[string]config.Elevator_data
 	ObstrutedElevators map[string]bool
 }

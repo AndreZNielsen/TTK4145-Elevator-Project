@@ -36,7 +36,8 @@ func main() {
     var elev elevator.Elevator
 
     localEventRecived 	:= make(chan elevator.LocalEvent)
-    remoteEventRecived 	:= make(chan config.Update)
+    // remoteEventRecived 	:= make(chan config.Update)
+    remoteEventRecived 	:= make(chan config.RemoteEvent)
     disconnected 		:= make(chan string)
 
 	

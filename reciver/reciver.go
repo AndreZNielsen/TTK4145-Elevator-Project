@@ -45,7 +45,7 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
 }
 
 
-func Listen_recive(receiver chan<- config.Update,
+func Listen_recive(receiver chan<- config.RemoteEvent,
 	disconnected chan<- string,
 	externalData *sharedData.SharedData,
 	externalConn *sharedData.ExternalConn,
@@ -58,7 +58,7 @@ func Listen_recive(receiver chan<- config.Update,
 
 var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-func Recive(receiver chan<- config.Update,
+func Recive(receiver chan<- config.RemoteEvent,
 	id string,disconnected chan<- string,
 	externalData *sharedData.SharedData,
 	externalConn *sharedData.ExternalConn,
@@ -96,11 +96,19 @@ func Recive(receiver chan<- config.Update,
 			
 					return
 				}
-				if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-					externalData.RemoteElevatorData[id]=data
-				}
-				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
+				// if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
+				// 	externalData.RemoteElevatorData[id]=data
+				// }
+				// receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
 				
+				event := config.RemoteEvent{
+					EventType: "elevatorData",
+					Id: id,
+					ElevatorData: data,
+				}
+
+				receiver <- event
+
 				//fmt.Println("Received Elevator_data:", data)
 				
 		
@@ -112,7 +120,12 @@ func Recive(receiver chan<- config.Update,
 					fmt.Println("Error decoding int:", err)
 					return
 				}
-				receiver<-Update
+
+				//receiver<-Update
+
+				event := config.RemoteEvent{EventType: "update"}
+
+				receiver<-event
 		
 			case "alive":
 				aliveRecievd<-id
@@ -129,8 +142,15 @@ func Recive(receiver chan<- config.Update,
 			
 					return
 				}
-				externalData.HallRequests=hallRequests
-				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
+				//externalData.HallRequests=hallRequests
+				//receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
+			
+				event := config.RemoteEvent{
+					EventType: "hallRequests",
+					HallRequests: hallRequests}
+			
+				receiver <- event
+
 			default:
 				fmt.Println("Unknown type received:", typeID)
 			}

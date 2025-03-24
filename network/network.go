@@ -14,7 +14,7 @@ var aliveRecievd = make(chan string)
 var aliveTimeOut = make(chan string)
 var requestHallRequests = make(chan string)
 
-func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
 	InitAlive()
@@ -40,7 +40,7 @@ func StartPeerNetwork(remoteEvent chan<- config.Update,disconnected chan<- strin
 
 }
 
-func ReconnectPeer(remoteEvent chan<- config.Update,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
+func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 
 	totalDicvonnect := allFalse(externalConn.ConnectedConn)
 
