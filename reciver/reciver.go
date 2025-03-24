@@ -96,10 +96,6 @@ func Recive(receiver chan<- config.RemoteEvent,
 			
 					return
 				}
-				// if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-				// 	externalData.RemoteElevatorData[id]=data
-				// }
-				// receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
 				
 				event := config.RemoteEvent{
 					EventType: "elevatorData",
@@ -108,9 +104,6 @@ func Recive(receiver chan<- config.RemoteEvent,
 				}
 
 				receiver <- event
-
-				//fmt.Println("Received Elevator_data:", data)
-				
 		
 		
 			case "Update":
@@ -121,9 +114,7 @@ func Recive(receiver chan<- config.RemoteEvent,
 					return
 				}
 
-				//receiver<-Update
-
-				event := config.RemoteEvent{EventType: "update"}
+				event := config.RemoteEvent{EventType: "update", Update: Update}
 
 				receiver<-event
 		
@@ -142,9 +133,7 @@ func Recive(receiver chan<- config.RemoteEvent,
 			
 					return
 				}
-				//externalData.HallRequests=hallRequests
-				//receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
-			
+				
 				event := config.RemoteEvent{
 					EventType: "hallRequests",
 					HallRequests: hallRequests}
