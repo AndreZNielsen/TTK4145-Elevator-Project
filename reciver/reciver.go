@@ -67,11 +67,11 @@ func Recive(receiver chan<- config.RemoteEvent,
             decoder := json.NewDecoder(externalConn.RemoteElevatorConnections[id])
 
             var message struct {
-                TypeID string          `json:"typeID"` // For å identifisere hvilken type data som kommer
-                Data   json.RawMessage `json:"data"`   // Inneholder selve dataene, som kan være forskjellige typer
+                TypeID string          `json:"typeID"` 
+                Data   json.RawMessage `json:"data"`   
             }
 
-            // Dekodere hele meldingen (TypeID + Data)
+            
             err := decoder.Decode(&message)
             if err != nil {
                 fmt.Println("Error decoding message:", err)
@@ -79,11 +79,11 @@ func Recive(receiver chan<- config.RemoteEvent,
                 continue
             }
 
-            // Handle forskjellige TypeID-er og dekode data basert på TypeID
+          
             switch message.TypeID {
             case "elevator_data":
                 var data config.Elevator_data
-                err := json.Unmarshal(message.Data, &data) // Dekoder elevator_data
+                err := json.Unmarshal(message.Data, &data) 
                 if err != nil {
                     fmt.Println("Error decoding Elevator_data:", err)
                     return
@@ -98,7 +98,7 @@ func Recive(receiver chan<- config.RemoteEvent,
 
             case "Update":
                 var update config.Update
-                err := json.Unmarshal(message.Data, &update) // Dekoder Update
+                err := json.Unmarshal(message.Data, &update) 
                 if err != nil {
                     fmt.Println("Error decoding Update:", err)
                     return
@@ -118,7 +118,7 @@ func Recive(receiver chan<- config.RemoteEvent,
 
             case "HallRequests":
                 var hallRequests [][2]bool
-                err := json.Unmarshal(message.Data, &hallRequests) // Dekoder HallRequests
+                err := json.Unmarshal(message.Data, &hallRequests) 
                 if err != nil {
                     fmt.Println("Error decoding HallRequests:", err)
                     return

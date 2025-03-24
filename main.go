@@ -36,7 +36,6 @@ func main() {
     var elev elevator.Elevator
 
     localEventRecived 	:= make(chan elevator.LocalEvent)
-    // remoteEventRecived 	:= make(chan config.Update)
     remoteEventRecived 	:= make(chan config.RemoteEvent)
     disconnected 		:= make(chan string)
 
@@ -57,7 +56,6 @@ func main() {
     go backup.Start_backup(&elev)
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
-    // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
 
     for {
         select {
@@ -65,16 +63,6 @@ func main() {
             elevator.FSM_HandleLocalEvent(&elev, localEvent, sharedData, externalConn)
 			elevator.SetAllLights(&elev, sharedData)
             elevator.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn)
-
-			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
-            // This is because not all events should be transmitted. If a request is handled immediately, because
-            // we are at the same floor, we should not transmit that.
-			
-            // I think assign should be called here? Cause it requires the external data
-
-            // Either expand HandleLocalEvent to include assign and setlights and stuff, or call these separately here.
-            // Some control logic too, maybe. We need a more defined function for that.
-            // This should also improve Remoteevent handling, as we can use that function there as well.
 
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
