@@ -24,9 +24,14 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 }
 
 func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
+	if elevio.GetFloor() == -1 {
 	elevio.SetMotorDirection(elevio.MD_Down)
 	elevator.direction = Dir_down
 	elevator.behaviour = Behaviour_moving
+	} else {
+		elevator.floor = elevio.GetFloor()
+	}
+
 }
 
 func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, SharedData *sharedData.SharedData) []config.Update {
@@ -39,7 +44,7 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, S
 	}
 
 	if btn_type == Btn_hallcab {
-		elevator.requests[btn_floor][btn_type] = true
+		elevator.Requests[btn_floor][btn_type] = true
 	}
 	
 	update := config.Update{

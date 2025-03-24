@@ -59,35 +59,46 @@ func Send_Elevator_data(data config.Elevator_data,externalConn *sharedData.Exter
 	}
 }
 
+var prevData = config.Elevator_data{Behavior: "doorOpen",Floor: 1,Direction: "down",CabRequests: make([]bool, config.Num_floors)}
+
 func transmitt_Elevator_data(data config.Elevator_data,id string,externalConn *sharedData.ExternalConn){
 
 	var netErr *net.OpError
 
-	sendMu[id].Lock() // Locking before sending
-	defer sendMu[id].Unlock() // Ensure to unlock after sending
-	time.Sleep(7*time.Millisecond)
-	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
-	err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
-	if errors.As(err, &netErr) { // check if it is a network-related error
-		fmt.Println("Network error:", netErr)
-		fmt.Println("Trying to reconnect")
-		externalConn.ConnectedConn[id]=false
-		Disconnected<-id
-		Send_Elevator_data(data,externalConn)
-		fmt.Println("reconnect reconected")
-
+	if data.Floor == -1{
+		data = prevData
+	}else{
+		prevData = data
+	}
+	for {
+		sendMu[id].Lock() 	// Locking before sending
+		if externalConn.ConnectedConn[id]{
+			time.Sleep(7*time.Millisecond)
+			encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+			err := encoder.Encode("elevator_data") // Type ID so the receiver kows what type of data to decode the next packat as 
+			if errors.As(err, &netErr) { // check if it is a network-related error
+				fmt.Println("Network error:", netErr)
+				Disconnected<-id
+				sendMu[id].Unlock() 
+				continue
+			}
+			if err != nil {
+				fmt.Println("Encoding error:", err)
+				sendMu[id].Unlock() 
+				return
+			}
+			time.Sleep(7*time.Millisecond)
+			err = encoder.Encode(data) //sendes the Elevator_data
+			if err != nil {	
+				fmt.Println("Error encoding data:", err)
+				sendMu[id].Unlock() 
+				return
+			}
+			sendMu[id].Unlock()
+			return
+		}
+		sendMu[id].Unlock()
 		time.Sleep(1*time.Second)
-		return
-	}
-	if err != nil {
-		fmt.Println("Encoding error:", err)
-		return
-	}
-	time.Sleep(7*time.Millisecond)
-	err = encoder.Encode(data) //sendes the Elevator_data
-	if err != nil {	
-		fmt.Println("Error encoding data:", err)
-		return
 	}
 }
 
@@ -139,14 +150,11 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 			err := encoder.Encode("alive")
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
-				fmt.Println("Trying to reconnect")
 				Disconnected<-id
-				externalConn.ConnectedConn[id] = false
-				fmt.Println("reconnect reconnected")
+				sendMu[id].Unlock() 
 				time.Sleep(1*time.Second)
-				go Send_alive(externalConn)
-				sendMu[id].Unlock() // Ensure to unlock after sending
-				return
+				
+				continue
 			}
 
 
@@ -159,3 +167,35 @@ func transmitt_alive(id string,externalConn *sharedData.ExternalConn){
 	}
 }
 
+func RequestHallRequests(externalConn *sharedData.ExternalConn, id string){
+	sendMu[id].Lock() // Locking before sending
+	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
+	time.Sleep(7*time.Millisecond)
+	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+	err := encoder.Encode("RequestHallRequests") // Type ID so the receiver kows what type of data to decode the next packat as 
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+}
+
+func Send_Hall_Requests(id string,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
+	sendMu[id].Lock() // Locking before sending
+	defer sendMu[id].Unlock() // Ensure to unlock after sending
+
+	time.Sleep(7*time.Millisecond)
+	encoder := gob.NewEncoder(externalConn.RemoteElevatorConnections[id])
+	err := encoder.Encode("HallRequests") // Type ID so the receiver kows what type of data to decode the next packat as 
+	if err != nil {
+		fmt.Println("Encoding error:", err)
+		return
+	}
+	time.Sleep(7*time.Millisecond)
+	err = encoder.Encode(sharedData.HallRequests) //sendes the update
+	if err != nil {
+		fmt.Println("Error encoding data:", err)
+		return
+	}
+
+}

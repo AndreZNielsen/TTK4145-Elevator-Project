@@ -27,6 +27,7 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
         fmt.Println("Error starting listener:", err)
         return nil
     }
+    defer ln.Close()
     // Accept a new connection.
     conn, err := ln.Accept()
     if err != nil {
@@ -35,7 +36,6 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
         return nil
     }
 
-    ln.Close()
 
     // Update shared data with the new connection.
     externalConn.ConnectedConn[id] = true
@@ -45,15 +45,25 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
 }
 
 
-func Listen_recive(receiver chan<- config.Update,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn) {
+func Listen_recive(receiver chan<- config.Update,
+	disconnected chan<- string,
+	externalData *sharedData.SharedData,
+	externalConn *sharedData.ExternalConn,
+	aliveRecievd chan<- string,
+	requestHallRequests chan<- string) {
 	for _, id := range config.RemoteIDs{
-		go Recive(receiver,id,disconnected,externalData,externalConn)
+		go Recive(receiver,id,disconnected,externalData,externalConn,aliveRecievd,requestHallRequests)
 	}
 }
 
 var data = config.Elevator_data{Behavior: "doorOpen",Floor: 0,Direction: "down",CabRequests: []bool{true, false, false, false}}
 
-func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,externalData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func Recive(receiver chan<- config.Update,
+	id string,disconnected chan<- string,
+	externalData *sharedData.SharedData,
+	externalConn *sharedData.ExternalConn,
+	aliveRecievd chan<- string,
+	requestHallRequests chan<- string	){
 	for {	
 		if externalConn.ConnectedConn[id]{	
 			decoder := gob.NewDecoder(externalConn.RemoteElevatorConnections[id])
@@ -63,14 +73,16 @@ func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,e
 			var netErr *net.OpError
 			if errors.As(err, &netErr) { // check if it is a network-related error
 				fmt.Println("Network error:", netErr)
-				externalConn.ConnectedConn[id] = false
-				disconnected<-id
+				if externalConn.ConnectedConn[id]{ 
+				
+					disconnected<-id
+				}
 				return
 			}
 			if err != nil {
 				fmt.Println("Error decoding type:", err)
 				time.Sleep(1*time.Second)
-				return
+				continue
 			}
 		
 		
@@ -84,10 +96,11 @@ func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,e
 			
 					return
 				}
-				//if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
-				externalData.RemoteElevatorData[id]=data
-				//}
-					
+				if data.Floor != -1 && !(data.Floor == 0 && data.Direction == "down") && !(data.Floor == 3 && data.Direction == "up") {//stops the elavator data form crashing the assigner 
+					externalData.RemoteElevatorData[id]=data
+				}
+				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
+				
 				//fmt.Println("Received Elevator_data:", data)
 				
 		
@@ -100,12 +113,24 @@ func Recive(receiver chan<- config.Update,id string,disconnected chan<- string,e
 					return
 				}
 				receiver<-Update
-				//fmt.Println("Received int:", num)
 		
 			case "alive":
-				StartTimer()
-				//fmt.Println("StartTimer")
+				aliveRecievd<-id
 			
+			case "RequestHallRequests":
+				requestHallRequests<-id
+
+			case "HallRequests":
+				var hallRequests [][2]bool
+		
+				err = decoder.Decode(&hallRequests)
+				if err != nil {
+					fmt.Println("Error decoding Elevator_data:", err)
+			
+					return
+				}
+				externalData.HallRequests=hallRequests
+				receiver<-config.Update{Floor: 0,ButtonType: 2,Value: false}//dummy update to trigger remote event
 			default:
 				fmt.Println("Unknown type received:", typeID)
 			}

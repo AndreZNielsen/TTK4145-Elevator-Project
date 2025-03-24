@@ -6,6 +6,7 @@ import (
 	"root/sharedData"
 	"root/elevio"
 	Config "root/config"
+	"strings"
 )
 
 type ElevatorBehaviour int
@@ -27,7 +28,7 @@ const (
 type Elevator struct {
 	floor     int
 	direction Dir
-	requests  [Num_floors][Num_buttons]bool
+	Requests  [Num_floors][Num_buttons]bool
 	behaviour ElevatorBehaviour
 	config    elevatorConfig
 	obstructed bool
@@ -47,7 +48,7 @@ type DirBehaviourPair struct {
 }
 
 const (
-	Num_floors  = 4
+	Num_floors  = Config.Num_floors
 	Num_buttons = 3
 )
 
@@ -173,13 +174,13 @@ func GetHallRequests(matrix [Num_floors][3]bool) [][2]bool {
     return newMatrix
 }
 
-func MakeRequests(HallRequests [][2]bool, GetCabRequests []bool) [Num_floors][3]bool {
+func MakeRequests(HallRequests [][2]bool, CabRequests []bool) [Num_floors][3]bool {
     var result [Num_floors][3]bool
 
     for i := 0; i < Num_floors; i++ {
         result[i][0] = HallRequests[i][0]
         result[i][1] = HallRequests[i][1]
-        result[i][2] = GetCabRequests[i]
+        result[i][2] = CabRequests[i]
     }
     return result
 }
@@ -193,16 +194,33 @@ func GetElevatorData(elevator *Elevator) Config.Elevator_data {
         Behavior:    EbToString(elevator.behaviour), 
         Floor:       elevator.floor, 
         Direction:   ElevioDirToString(elevator.direction), 
-        CabRequests: GetCabRequests(elevator.requests),
+        CabRequests: GetCabRequests(elevator.Requests),
 		Obstructed:  elevator.obstructed,
     }
 }
 
 func SetAllLights(elevator *Elevator, SharedData *sharedData.SharedData) {
-    requests := MakeRequests(SharedData.HallRequests, GetCabRequests(elevator.requests))
+    requests := MakeRequests(SharedData.HallRequests, GetCabRequests(elevator.Requests))
     for floor := 0; floor < Num_floors; floor++ {
         for btn := 0; btn < Num_buttons; btn++ {
             elevio.SetButtonLamp(elevio.ButtonType(btn), floor, requests[floor][btn])
         }
     }
+}
+
+func RestorCabRequests(elevator *Elevator, cabBackup string){
+	var cabBackupBool []bool
+
+	// Split the string by space
+	values := strings.Split(cabBackup, " ")
+	// Convert each string into bool and append to the slice
+	for _, v := range values {
+		if v == "true" {
+			cabBackupBool = append(cabBackupBool, true)
+		} else if v == "false" {
+			cabBackupBool = append(cabBackupBool, false)
+		}
+	}
+	elevator.Requests = MakeRequests(GetHallRequests(elevator.Requests),cabBackupBool)
+	Start_if_idle(elevator)
 }
