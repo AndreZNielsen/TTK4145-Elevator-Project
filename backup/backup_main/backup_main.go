@@ -33,6 +33,7 @@ func main() {
 			fmt.Println("Elevator is dead, restarting...")
 			util.Conn.Close()
 			restart_elavator()
+			time.Sleep(10*time.Second)
 			return
 		}
 	}
@@ -46,19 +47,21 @@ func restart_elavator(){
 
 	switch runtime.GOOS {
 		case "linux":
-			gCommand := fmt.Sprintf("go run backup_main.go -isRestart=true -cabBackup='%s'", strCabBackup)
+			gCommand := fmt.Sprintf("cd ../.. && go run main.go -isRestart=true -cabBackup='%s'", strCabBackup)
 			cmd = exec.Command("gnome-terminal", "--", "bash", "-c", gCommand)
-		
+
+			fmt.Println(gCommand)
 		case "windows":
 		
 			psCommand := fmt.Sprintf(
 			"Start-Process powershell -ArgumentList \"-NoExit\", \"-Command\", \"go run main.go -isRestart=true -cabBackup='%s'\"",
 			strCabBackup)
 			cmd = exec.Command("powershell.exe", "-Command", psCommand)
+			cmd.Dir = "../.." 
+
 			 
 	}
-	cmd.Dir = "../.." 
-	err := cmd.Start()
+	err := cmd.Run()
 	if err != nil {
 		fmt.Println("Error starting PowerShell:", err)
 		return
