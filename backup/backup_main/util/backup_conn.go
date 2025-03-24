@@ -12,7 +12,7 @@ type Message struct {
 	Content []bool `json:"content"`
 }
 var Conn net.Conn
-func Msg_transmitter() {
+func SendHartBeat() {
 	encoder := json.NewEncoder(Conn)
 
 	for {
