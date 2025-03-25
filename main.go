@@ -68,10 +68,11 @@ func main() {
             
         case id := <-disconnected:
             fmt.Println("disconnect triggered")
-            externalConn.ConnectedConn[id]=false
-            externalConn.RemoteElevatorConnections[id].Close()
-			go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
-
+            if externalConn.ConnectedConn[id]{
+                externalConn.ConnectedConn[id]=false
+                network.StopAliveTimer(id)
+                go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
+            }
         }
     }
 }
