@@ -80,10 +80,10 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
         if externalConn.ConnectedConn[id] {
             time.Sleep(7 * time.Millisecond)
 
-            // Lag en Message-struktur som inneholder både typeID og data
+            
             message := Message{
-                TypeID: "elevator_data", // typeID som en del av meldingen
-                Data:   data,             // selve dataen som skal sendes
+                TypeID: "elevator_data", 
+                Data:   data,             
             }
 
             encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
@@ -151,20 +151,20 @@ func Send_alive(externalConn *sharedData.ExternalConn){
 func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
     var netErr *net.OpError
 
-    // Start en uendelig loop for å sende "alive"-meldinger
+    
     for {
-        sendMu[id].Lock() // Locking before sending
+        sendMu[id].Lock() 
         if externalConn.ConnectedConn[id] {
-            // Lag en melding som inneholder både typeID og data
+            
             message := Message{
-                TypeID: "alive", // Type ID for å indikere at dette er en "alive"-melding
-                Data:   "alive", // Data som representerer en "alive"-status
+                TypeID: "alive", 
+                Data:   "alive", 
             }
 
             encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
-            err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+            err := encoder.Encode(message) 
             if err != nil {
-                if errors.As(err, &netErr) { // Sjekk etter nettverksfeil
+                if errors.As(err, &netErr) { 
                     fmt.Println("Network error while encoding alive:", netErr)
                     externalConn.ConnectedConn[id] = false
                     Disconnected <- id
@@ -176,18 +176,18 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
                 continue
             }
 
-            // Hvis meldingen er sendt uten feil
-            fmt.Println("Sent alive message to", id)
+            
+            //fmt.Println("Sent alive message to", id)
         }
-        sendMu[id].Unlock() // Sørg for at mutexen blir låst opp etter sending
-        time.Sleep(2 * time.Second) // Vent i 2 sekunder før neste "alive"-melding
+        sendMu[id].Unlock() 
+        time.Sleep(2 * time.Second) //this can be adjusted to lower risk of case: disconnect because of packetloss
     }
 }
 
 
 func RequestHallRequests(externalConn *sharedData.ExternalConn, id string) {
-    sendMu[id].Lock() // Locking before sending
-    defer sendMu[id].Unlock() // Ensure to unlock after sending
+    sendMu[id].Lock() 
+    defer sendMu[id].Unlock() 
 
     time.Sleep(7 * time.Millisecond)
 
@@ -198,7 +198,7 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, id string) {
     }
 
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
-    err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+    err := encoder.Encode(message) 
     if err != nil {
         fmt.Println("Error encoding RequestHallRequests:", err)
         return
@@ -206,19 +206,19 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, id string) {
 }
 
 func Send_Hall_Requests(id string, externalConn *sharedData.ExternalConn, sharedData *sharedData.SharedData) {
-    sendMu[id].Lock() // Locking before sending
-    defer sendMu[id].Unlock() // Ensure to unlock after sending
+    sendMu[id].Lock() 
+    defer sendMu[id].Unlock() 
 
     time.Sleep(7 * time.Millisecond)
 
-    // Lag en melding som inneholder typeID og data
+    
     message := Message{
         TypeID: "HallRequests",
         Data:   sharedData.HallRequests,  
     }
 
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
-    err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+    err := encoder.Encode(message) 
     if err != nil {
         fmt.Println("Error encoding HallRequests:", err)
         return
