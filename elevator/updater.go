@@ -57,5 +57,6 @@ func Start_if_idle(elevator *Elevator) {
             DoorOpen(elevator)
         }
         elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
+        StartStuckTimer() 
     }
 }

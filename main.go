@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-    "root/config"
+	"root/config"
 	"root/elevator"
 	"root/network"
 	//"root/reciver"
+	"flag"
+	"root/backup"
 	SharedData "root/sharedData"
 	"root/transmitter"
-	"root/backup"
-    "flag"
 )
 
 var elevator_1_ip = "localhost:15657"
@@ -42,7 +42,7 @@ func main() {
 	
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
-	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
+	go network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
     elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
@@ -56,7 +56,6 @@ func main() {
     go backup.Start_backup(&elev)
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
-
     for {
         select {
         case localEvent := <-localEventRecived:
@@ -69,10 +68,11 @@ func main() {
             
         case id := <-disconnected:
             fmt.Println("disconnect triggered")
-            externalConn.ConnectedConn[id]=false
-            externalConn.RemoteElevatorConnections[id].Close()
-			go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
-
+            if externalConn.ConnectedConn[id]{
+                externalConn.ConnectedConn[id]=false
+                network.StopAliveTimer(id)
+                go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
+            }
         }
     }
 }

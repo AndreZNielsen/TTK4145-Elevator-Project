@@ -26,12 +26,13 @@ const (
 )
 
 type Elevator struct {
-	floor     int
-	direction Dir
-	Requests  [Num_floors][Num_buttons]bool
-	behaviour ElevatorBehaviour
-	config    elevatorConfig
-	obstructed bool
+	floor     	int
+	direction 	Dir
+	Requests  	[Num_floors][Num_buttons]bool
+	behaviour 	ElevatorBehaviour
+	config   	elevatorConfig
+	obstructed 	bool
+	stuck	   	bool
 }
 
 type elevatorConfig struct {
@@ -145,6 +146,7 @@ func MakeUninitializedelevator() Elevator {
 		direction: Dir_stop,
 		behaviour: Behaviour_idle,
 		obstructed: false,
+		stuck: false,
 		config: elevatorConfig{
 			clearRequestVariation: CV_InDirn,
 			doorOpenDuration:      3.0,

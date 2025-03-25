@@ -2,18 +2,19 @@ package config
 
 const Num_floors = 4
 
-var Elevator_id = "A"
+var Elevator_id = "B"
 
 
-var PossibleIDs = []string{"A","B","C"}
+var PossibleIDs = []string{"A","B"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
-	"A": "localhost",
-	"B": "10.100.23.28",
-    "C": "10.100.23.32",
+	"A": "10.100.23.23",
+	"B": "localhost",
+    //"C": "10.100.23.32",
+
 }
 
 type Update struct { // This type will allow us to improve a few functions that use updates
@@ -27,7 +28,8 @@ type Elevator_data struct {//data struct that contains all the data that the ass
 	Floor       int    `json:"floor"`
 	Direction   string `json:"direction"`
 	CabRequests []bool `json:"cabRequests"` 
-    Obstructed bool  
+    Obstructed  bool  
+    Stuck       bool
 }
 
 type HallRequests [][2]bool
@@ -42,7 +44,6 @@ type RemoteEvent struct {
 
 
 func RemoveElement(slice []string, element string) []string {
-    // Create a copy of the slice to avoid modifying the original underlying array.
     copiedSlice := make([]string, len(slice))
     copy(copiedSlice, slice)
 

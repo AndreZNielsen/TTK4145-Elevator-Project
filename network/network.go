@@ -17,7 +17,7 @@ var requestHallRequests = make(chan string)
 func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
-	InitAlive()
+	//InitAlive()
 
 	for _, id := range config.RemoteIDs{
 
@@ -56,6 +56,7 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	}
 
+	StartAliveTimer(aliveTimeOut,reConnID)
 
 	if(totalDicvonnect){
 		transmitter.RequestHallRequests(externalConn,reConnID)
@@ -112,3 +113,4 @@ func handleRequestHallRequests(requestHallRequests chan string,externalConn *sha
 		transmitter.Send_Hall_Requests(id,externalConn,sharedData)
 	}
 }
+

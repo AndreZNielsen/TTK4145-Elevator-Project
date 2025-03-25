@@ -7,6 +7,9 @@ var (
 	timeOut   = 3 * time.Second
 	timeOfStart time.Time
 	timerActive    bool
+	stuckTimeOfStart time.Time
+	stuckTimerActive bool
+	stuckTimeOut = 20 * time.Second
 )
 
 func StartTimer() {
@@ -33,3 +36,29 @@ func TimerIsDone(receiver chan<- bool) {
 func TimedOut() bool {
 	return timerActive && time.Since(timeOfStart) > timeOut
 }
+
+func StartStuckTimer(){
+	stuckTimeOfStart = time.Now()
+	stuckTimerActive = true
+}
+
+func StopStuckTimer() {
+    stuckTimerActive = false
+}
+
+func StuckTimedOut() bool {
+	return stuckTimerActive && time.Since(stuckTimeOfStart) > stuckTimeOut
+}
+
+func StuckTimerIsDone(stuckEvents chan<- bool) {
+	prev := false
+	for {
+		time.Sleep(pollRate)
+		timedOut := timerActive && time.Since(timeOfStart) > timeOut
+		if timedOut && timedOut != prev {
+			stuckEvents <- true
+		}
+		prev = timedOut
+	}
+}
+

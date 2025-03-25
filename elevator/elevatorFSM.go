@@ -15,6 +15,7 @@ type LocalEvent struct {
 	Button     elevio.ButtonEvent
 	Floor      int
 	Obstructed bool
+	Stuck 	   bool
 }
 
 func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
@@ -142,6 +143,9 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		FSM_HandleObstruction(elevator, event.Obstructed)
 		//send_elevator_data for å sende obstruction
 
+	case "stuck":
+		elevator.stuck = event.Stuck
+
 	case "timer":
 		if IsDoorObstructed(elevator) {
 			DoorOpen(elevator) // Door is kept open if it is obstructed
@@ -176,11 +180,13 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 	floorEvents 		:= make(chan int)
 	obstructionEvents 	:= make(chan bool)
 	timerEvents 		:= make(chan bool)
+	stuckEvents 		:= make(chan bool)
 
 	go elevio.PollButtons(buttonEvents)
 	go elevio.PollFloorSensor(floorEvents)
 	go elevio.PollObstructionSwitch(obstructionEvents)
 	go TimerIsDone(timerEvents)
+	go StuckTimerIsDone(stuckEvents)
 
 	for {
 		select {
@@ -190,6 +196,8 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 			localEvents <- LocalEvent{EventType: "floor", Floor: floor}
 		case obstructed := <-obstructionEvents:
 			localEvents <- LocalEvent{EventType: "obstructed", Obstructed: obstructed}
+		case stuck := <-stuckEvents:
+			localEvents <- LocalEvent{EventType: "stuck", Stuck: stuck}
 		case <-timerEvents:
 			localEvents <- LocalEvent{EventType: "timer"}
 		}
@@ -203,3 +211,9 @@ func FSM_HandleObstruction(elevator *Elevator, obstructed bool){
 		elevator.obstructed = false
 	}
 }
+
+
+
+
+
+
