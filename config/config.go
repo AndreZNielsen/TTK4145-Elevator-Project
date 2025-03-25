@@ -5,14 +5,16 @@ const Num_floors = 4
 var Elevator_id = "A"
 
 
-var PossibleIDs = []string{"A","B"}
+var PossibleIDs = []string{"A","B","C"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
 	"A": "localhost",
+
 	"B": "10.100.23.23",
+
     //"C": "10.100.23.32",
 
 }

@@ -7,7 +7,9 @@ import (
 	"time"
 	"root/sharedData"
 	"root/config"
+
 	"errors"
+
     "bufio"
 )
 
@@ -63,7 +65,9 @@ func Recive(receiver chan<- config.RemoteEvent,
     externalData *sharedData.SharedData,
     externalConn *sharedData.ExternalConn,
     aliveRecievd chan<- string,
+
     requestHallRequests chan<- [][2]bool) {
+
     scann := bufio.NewScanner(externalConn.RemoteElevatorConnections[id])
     for scann.Scan(){
         if externalConn.ConnectedConn[id] {
@@ -78,6 +82,7 @@ func Recive(receiver chan<- config.RemoteEvent,
             //err := decoder.Decode(&message)
             err := json.Unmarshal(scann.Bytes(),&message)
 
+
             if err != nil {
                 if errors.As(err, &netErr) { 
                     fmt.Println("Network error while encoding alive:", netErr)
@@ -85,6 +90,7 @@ func Recive(receiver chan<- config.RemoteEvent,
                 } else {
                     fmt.Println("Error decoding message:", err)
                 }
+
                 time.Sleep(1 * time.Second)
                 continue
             }
@@ -124,6 +130,7 @@ func Recive(receiver chan<- config.RemoteEvent,
                 aliveRecievd <- id
 
             case "RequestHallRequests":
+
                  var hallRequests [][2]bool
                 err := json.Unmarshal(message.Data, &hallRequests) 
                 if err != nil {
@@ -131,6 +138,7 @@ func Recive(receiver chan<- config.RemoteEvent,
                     return
                 }
                 requestHallRequests <- hallRequests
+
 
             case "HallRequests":
                 var hallRequests [][2]bool

@@ -70,12 +70,15 @@ var prevData = config.Elevator_data{Behavior: "doorOpen",Floor: 1,Direction: "do
 
 func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn *sharedData.ExternalConn) {
 
+
     /*
+
     if data.Floor == -1 {
         data = prevData
     } else {
         prevData = data
     }
+
     */
     for {
         sendMu[id].Lock()  // Locking before sending
@@ -91,6 +94,7 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
             for i := 0; i < 10; i++ { 
                 err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
                 if err != nil {
+
                     if errors.As(err, &netErr) {
                         fmt.Println("Network error while encoding update:", netErr)
                         Disconnected <- id
@@ -98,6 +102,7 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
                     } else {
                         fmt.Println("Error encoding data:", err)                       
                     }
+
                     sendMu[id].Unlock()
                     return
                 }
@@ -124,6 +129,7 @@ func Send_update(update config.Update,externalConn *sharedData.ExternalConn){
 
 func transmitt_update(update config.Update, id string, externalConn *sharedData.ExternalConn) {
 
+
     // Lock for this specific id to ensure only one thread sends at a time
     sendMu[id].Lock() 
     defer sendMu[id].Unlock() // Ensure the mutex is unlocked after sending
@@ -138,6 +144,7 @@ func transmitt_update(update config.Update, id string, externalConn *sharedData.
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
 
     for i := 0; i < 10; i++{
+
        
         err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
         if  err != nil {
@@ -151,6 +158,7 @@ func transmitt_update(update config.Update, id string, externalConn *sharedData.
             return
         } 
         
+
     }
 }
 
@@ -179,6 +187,7 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
             if err != nil {
                 if errors.As(err, &netErr) { 
                     fmt.Println("Network error while encoding alive:", netErr)
+
                     Disconnected <- id
                 } else {
                     fmt.Println("Error encoding alive message:", err)
@@ -195,6 +204,7 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
         time.Sleep(1 * time.Second) //this can be adjusted to lower risk of case: disconnect because of packetloss
     }
 }
+
 
 
 func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests [][2]bool, id string) {
@@ -246,4 +256,5 @@ func Send_Hall_Requests(externalConn *sharedData.ExternalConn, hallRequests [][2
 		}
         sendMu[id].Unlock() 
 	}    
+
 }

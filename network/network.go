@@ -58,6 +58,7 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	go StartAliveTimer(aliveTimeOut,reConnID)
 
+
 	if(totalDicvonnect){
 		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
 	}
@@ -122,6 +123,7 @@ func mergeHallRequests(a, b [][2]bool) [][2]bool {
 		maxLen = len(b)
 	}
 
+
 	// Create result slice
 	result := make([][2]bool, maxLen)
 
@@ -140,3 +142,4 @@ func mergeHallRequests(a, b [][2]bool) [][2]bool {
 
 	return result
 }
+
