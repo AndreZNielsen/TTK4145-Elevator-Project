@@ -7,9 +7,11 @@ import (
 	"time"
 	"root/sharedData"
 	"root/config"
+	"errors"
     "bufio"
 )
 
+var netErr *net.OpError
 
 
 
@@ -75,9 +77,14 @@ func Recive(receiver chan<- config.RemoteEvent,
             
             //err := decoder.Decode(&message)
             err := json.Unmarshal(scann.Bytes(),&message)
-            
+
             if err != nil {
-                fmt.Println("Error decoding message:", err)
+                if errors.As(err, &netErr) { 
+                    fmt.Println("Network error while encoding alive:", netErr)
+                    disconnected <- id
+                } else {
+                    fmt.Println("Error decoding message:", err)
+                }
                 time.Sleep(1 * time.Second)
                 continue
             }

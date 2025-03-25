@@ -20,6 +20,8 @@ type Message struct {
 //var sendMu sync.Mutex 
 var sendMu = make(map[string]*sync.Mutex)
 var Disconnected chan<- string
+var netErr *net.OpError
+
 func InitMutex(){
 	for _,id := range(config.RemoteIDs){
 		// Initialize the mutex if it doesn't already exist
@@ -68,19 +70,17 @@ var prevData = config.Elevator_data{Behavior: "doorOpen",Floor: 1,Direction: "do
 
 func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn *sharedData.ExternalConn) {
 
-
+    /*
     if data.Floor == -1 {
         data = prevData
     } else {
         prevData = data
     }
-
+    */
     for {
         sendMu[id].Lock()  // Locking before sending
         if externalConn.ConnectedConn[id] {
-            time.Sleep(7 * time.Millisecond)
 
-            
             message := Message{
                 TypeID: "elevator_data", 
                 Data:   data,             
@@ -91,7 +91,13 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
             for i := 0; i < 10; i++ { 
                 err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
                 if err != nil {
-                    fmt.Println("Error encoding data:", err)
+                    if errors.As(err, &netErr) {
+                        fmt.Println("Network error while encoding update:", netErr)
+                        Disconnected <- id
+
+                    } else {
+                        fmt.Println("Error encoding data:", err)                       
+                    }
                     sendMu[id].Unlock()
                     return
                 }
@@ -117,7 +123,6 @@ func Send_update(update config.Update,externalConn *sharedData.ExternalConn){
 }
 
 func transmitt_update(update config.Update, id string, externalConn *sharedData.ExternalConn) {
-    var netErr *net.OpError
 
     // Lock for this specific id to ensure only one thread sends at a time
     sendMu[id].Lock() 
@@ -133,16 +138,19 @@ func transmitt_update(update config.Update, id string, externalConn *sharedData.
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
 
     for i := 0; i < 10; i++{
+       
         err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
-        if err != nil {
+        if  err != nil {
             if errors.As(err, &netErr) {
                 fmt.Println("Network error while encoding update:", netErr)
                 Disconnected <- id
             } else {
                 fmt.Println("Error encoding update:", err)
+                
             }
             return
-        }
+        } 
+        
     }
 }
 
@@ -154,7 +162,7 @@ func Send_alive(externalConn *sharedData.ExternalConn){
 }
 
 func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
-    var netErr *net.OpError
+
 
     
     for {
@@ -202,8 +210,14 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests [][
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
     err := encoder.Encode(message) 
     if err != nil {
-        fmt.Println("Error encoding RequestHallRequests:", err)
+        if errors.As(err, &netErr) {
+            fmt.Println("Network error while encoding update:", netErr)
+            Disconnected <- id
+        } else {
+            fmt.Println("Error encoding RequestHallRequests:", err)
+        }
         return
+
     }
 }
 
@@ -220,7 +234,12 @@ func Send_Hall_Requests(externalConn *sharedData.ExternalConn, hallRequests [][2
 			encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
             err := encoder.Encode(message) 
             if err != nil {
-                fmt.Println("Error encoding HallRequests:", err)
+                if errors.As(err, &netErr) {
+                    fmt.Println("Network error while encoding update:", netErr)
+                    Disconnected <- id
+                } else {
+                    fmt.Println("Error encoding HallRequests:", err)
+                }
                 sendMu[id].Unlock() 
                 continue
             }
