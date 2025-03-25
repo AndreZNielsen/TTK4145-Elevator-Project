@@ -56,7 +56,7 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	}
 
-	StartAliveTimer(aliveTimeOut,reConnID)
+	go StartAliveTimer(aliveTimeOut,reConnID)
 
 	if(totalDicvonnect){
 		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
