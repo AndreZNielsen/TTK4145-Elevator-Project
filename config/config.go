@@ -12,8 +12,9 @@ var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
 	"A": "localhost",
-	"B": "10.100.23.28",
-    //"C": "localhost",
+	"B": "10.100.23.23",
+    //"C": "10.100.23.32",
+
 }
 
 type Update struct { // This type will allow us to improve a few functions that use updates
@@ -42,7 +43,6 @@ type RemoteEvent struct {
 
 
 func RemoveElement(slice []string, element string) []string {
-    // Create a copy of the slice to avoid modifying the original underlying array.
     copiedSlice := make([]string, len(slice))
     copy(copiedSlice, slice)
 

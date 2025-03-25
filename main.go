@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-    "root/config"
+	"root/config"
 	"root/elevator"
 	"root/network"
 	//"root/reciver"
+	"flag"
+	"root/backup"
 	SharedData "root/sharedData"
 	"root/transmitter"
-	"root/backup"
-    "flag"
 )
 
 var elevator_1_ip = "localhost:12345"
@@ -36,7 +36,6 @@ func main() {
     var elev elevator.Elevator
 
     localEventRecived 	:= make(chan elevator.LocalEvent)
-    // remoteEventRecived 	:= make(chan config.Update)
     remoteEventRecived 	:= make(chan config.RemoteEvent)
     disconnected 		:= make(chan string)
 
@@ -51,13 +50,12 @@ func main() {
     fmt.Println(cabBackup)
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
+        transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
     }
     
     go backup.Start_backup(&elev)
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
-    // RequestsShouldClearImmediately is bugged. Doesnt allow you to call the elevator from the floor it just left
-
     for {
         select {
         case localEvent := <-localEventRecived:
@@ -65,25 +63,16 @@ func main() {
 			elevator.SetAllLights(&elev, sharedData)
             elevator.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn)
 
-			// Transmitt ? No, because we only transmitt changes. It would not be possible to put it here. 
-            // This is because not all events should be transmitted. If a request is handled immediately, because
-            // we are at the same floor, we should not transmit that.
-			
-            // I think assign should be called here? Cause it requires the external data
-
-            // Either expand HandleLocalEvent to include assign and setlights and stuff, or call these separately here.
-            // Some control logic too, maybe. We need a more defined function for that.
-            // This should also improve Remoteevent handling, as we can use that function there as well.
-
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
             
-        case id := <-disconnected:
-            fmt.Println("disconnect triggered")
-            externalConn.ConnectedConn[id]=false
-            externalConn.RemoteElevatorConnections[id].Close()
-			go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
-
+        case id := <-disconnected:     
+            if externalConn.ConnectedConn[id]{
+                externalConn.ConnectedConn[id]=false
+                network.StopAliveTimer(id)
+                fmt.Println("disconnect triggered")
+                go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
+            }
         }
     }
 }

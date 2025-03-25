@@ -12,12 +12,12 @@ import(
 )
 var aliveRecievd = make(chan string)
 var aliveTimeOut = make(chan string)
-var requestHallRequests = make(chan string)
+var requestHallRequests = make(chan [][2]bool)
 
 func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
-	InitAlive()
+	//InitAlive()
 
 	for _, id := range config.RemoteIDs{
 
@@ -56,9 +56,10 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	}
 
+	StartAliveTimer(aliveTimeOut,reConnID)
 
 	if(totalDicvonnect){
-		transmitter.RequestHallRequests(externalConn,reConnID)
+		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
 	}
 	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 }
@@ -106,9 +107,12 @@ func handleAliveTimer(aliveRecievd chan string,aliveTimeOut chan string,external
 
 	}
 }
-func handleRequestHallRequests(requestHallRequests chan string,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
+func handleRequestHallRequests(requestHallRequests chan [][2]bool,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
 	for{
-		id := <-requestHallRequests
-		transmitter.Send_Hall_Requests(id,externalConn,sharedData)
+
+		remoteHallRequests := <-requestHallRequests
+		sharedData.hallRequests = remoteHallRequests + sharedData.HallRequests
+		transmitter.Send_Hall_Requests(id,externalConn,sharedData.hallRequests)
 	}
 }
+
