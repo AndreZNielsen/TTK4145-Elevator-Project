@@ -198,6 +198,7 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 			localEvents <- LocalEvent{EventType: "obstructed", Obstructed: obstructed}
 		case stuck := <-stuckEvents:
 			localEvents <- LocalEvent{EventType: "stuck", Stuck: stuck}
+			fmt.Println("stuck event happend")
 		case <-timerEvents:
 			localEvents <- LocalEvent{EventType: "timer"}
 		}

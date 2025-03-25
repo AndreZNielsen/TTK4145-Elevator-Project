@@ -1,6 +1,10 @@
 package elevator
 
-import "time"
+import (
+	"fmt"
+	"time"
+
+)
 
 var (
 	pollRate  = 20 * time.Millisecond
@@ -9,7 +13,7 @@ var (
 	timerActive    bool
 	stuckTimeOfStart time.Time
 	stuckTimerActive bool
-	stuckTimeOut = 20 * time.Second
+	stuckTimeOut = 10 * time.Second
 )
 
 func StartTimer() {
@@ -38,11 +42,13 @@ func TimedOut() bool {
 }
 
 func StartStuckTimer(){
+	fmt.Println("stucktimer started")
 	stuckTimeOfStart = time.Now()
 	stuckTimerActive = true
 }
 
 func StopStuckTimer() {
+	fmt.Println("stucktimer stopped")
     stuckTimerActive = false
 }
 
@@ -54,7 +60,7 @@ func StuckTimerIsDone(stuckEvents chan<- bool) {
 	prev := false
 	for {
 		time.Sleep(pollRate)
-		timedOut := timerActive && time.Since(timeOfStart) > timeOut
+		timedOut := stuckTimerActive && time.Since(timeOfStart) > timeOut
 		if timedOut && timedOut != prev {
 			stuckEvents <- true
 		}
