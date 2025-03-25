@@ -12,8 +12,10 @@ var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevatoip = map[string]string{
 	"A": "localhost",
-	"B": "localhost",
-    "C": "localhost",
+
+	"B": "10.100.23.26",
+    //"C": "10.100.23.32",
+
 }
 
 type Update struct { // This type will allow us to improve a few functions that use updates

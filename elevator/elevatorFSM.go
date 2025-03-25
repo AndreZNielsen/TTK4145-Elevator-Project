@@ -120,7 +120,6 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		SetAllLights(elevator, SharedData)
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		Start_if_idle(elevator)
-		// startMotor() // doesnt exist yet, but this function should be created. Or something similar
 		
 
 	case "floor":
@@ -135,8 +134,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 			transmitter.Send_update(updates[i], externalConn)
 		}
 		
-		//StopMotor() these two could be here, but the current solution might be good too
-		//DoorOpen(elevator)
+
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		SetAllLights(elevator, SharedData)
 
@@ -155,7 +153,6 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 	}
 }
 
-// func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event config.Update, externalConn sharedData.ExternalConn) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
 func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event config.RemoteEvent, externalConn sharedData.ExternalConn) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
 
 	switch event.EventType {
@@ -171,15 +168,7 @@ func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData
 	
 	AssignLocalHallRequests(elevator, SharedData, externalConn)
 	SetAllLights(elevator, SharedData)
-	Start_if_idle(elevator) // should be called here instead of in ChangeLocalHallRequests
-
-
-	// A swtich needs to be added here, in the same way as in FSM_HandleLocalEvent
-	// Update, elevatorData and hallreqquests. Maybe be also requestHallRequests
-
-	// This also requires that a remoteEvent Type is created
-
-	// Once this change is made I am very happy with this function
+	Start_if_idle(elevator)
 }
 
 func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {

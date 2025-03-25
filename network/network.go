@@ -113,3 +113,4 @@ func handleRequestHallRequests(requestHallRequests chan string,externalConn *sha
 		transmitter.Send_Hall_Requests(id,externalConn,sharedData)
 	}
 }
+
