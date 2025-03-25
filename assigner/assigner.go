@@ -86,9 +86,9 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	}
 	
 	//fmt.Printf("output: \n")
-	for k, v := range output {
+	//for k, v := range output {
 		//fmt.Printf("%6v :  %+v\n", k, v)
-	}
+	//}
 	
 	return output[config.Elevator_id]
 }
