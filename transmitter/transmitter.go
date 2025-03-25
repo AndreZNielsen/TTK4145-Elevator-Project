@@ -85,13 +85,16 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
                 TypeID: "elevator_data", 
                 Data:   data,             
             }
-
+            
             encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
-            err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
-            if err != nil {
-                fmt.Println("Error encoding data:", err)
-                sendMu[id].Unlock()
-                return
+
+            for i := 0; i < 10; i++ { 
+                err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+                if err != nil {
+                    fmt.Println("Error encoding data:", err)
+                    sendMu[id].Unlock()
+                    return
+                }
             }
 
             sendMu[id].Unlock()
@@ -104,6 +107,7 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
 
 
 func Send_update(update config.Update,externalConn *sharedData.ExternalConn){
+    
 	for _, id := range config.RemoteIDs{
 		if externalConn.ConnectedConn[id]{
 			go transmitt_update(update,id,externalConn)
@@ -127,19 +131,21 @@ func transmitt_update(update config.Update, id string, externalConn *sharedData.
     }
 
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
-    err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
-    if err != nil {
-        if errors.As(err, &netErr) {
-            fmt.Println("Network error while encoding update:", netErr)
-            externalConn.ConnectedConn[id] = false
-            Disconnected <- id
-        } else {
-            fmt.Println("Error encoding update:", err)
+
+    for i := 0; i < 10; i++{
+        err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+        if err != nil {
+            if errors.As(err, &netErr) {
+                fmt.Println("Network error while encoding update:", netErr)
+                externalConn.ConnectedConn[id] = false
+                Disconnected <- id
+            } else {
+                fmt.Println("Error encoding update:", err)
+            }
+            return
         }
-        return
     }
 }
-
 
 func Send_alive(externalConn *sharedData.ExternalConn){
 	for _, id := range config.RemoteIDs{

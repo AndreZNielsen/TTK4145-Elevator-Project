@@ -7,6 +7,7 @@ import (
 	"time"
 	"root/sharedData"
 	"root/config"
+    "bufio"
 )
 
 
@@ -61,10 +62,10 @@ func Recive(receiver chan<- config.RemoteEvent,
     externalConn *sharedData.ExternalConn,
     aliveRecievd chan<- string,
     requestHallRequests chan<- string) {
-    
-    for {
+    scann := bufio.NewScanner(externalConn.RemoteElevatorConnections[id])
+    for scann.Scan(){
         if externalConn.ConnectedConn[id] {
-            decoder := json.NewDecoder(externalConn.RemoteElevatorConnections[id])
+            //decoder := json.NewDecoder(externalConn.RemoteElevatorConnections[id])
 
             var message struct {
                 TypeID string          `json:"typeID"` 
@@ -72,7 +73,9 @@ func Recive(receiver chan<- config.RemoteEvent,
             }
 
             
-            err := decoder.Decode(&message)
+            //err := decoder.Decode(&message)
+            err := json.Unmarshal(scann.Bytes(),&message)
+            
             if err != nil {
                 fmt.Println("Error decoding message:", err)
                 time.Sleep(1 * time.Second)
@@ -133,6 +136,7 @@ func Recive(receiver chan<- config.RemoteEvent,
             default:
                 fmt.Println("Unknown type received:", message.TypeID)
             }
+            aliveRecievd <- id  //every message restarts alivetimer
         } else {
             return
         }
