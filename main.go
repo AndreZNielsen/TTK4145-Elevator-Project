@@ -50,7 +50,9 @@ func main() {
     fmt.Println(cabBackup)
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
-        transmitter.RequestHallRequests(externalConn,config.RemoteIDs[0])
+
+        transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
+
     }
     
     go backup.Start_backup(&elev)
@@ -66,11 +68,13 @@ func main() {
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
             
-        case id := <-disconnected:
-            fmt.Println("disconnect triggered")
+
+        case id := <-disconnected:     
             if externalConn.ConnectedConn[id]{
                 externalConn.ConnectedConn[id]=false
                 network.StopAliveTimer(id)
+                fmt.Println("disconnect triggered")
+
                 go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
             }
         }

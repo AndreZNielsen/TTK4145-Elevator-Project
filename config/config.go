@@ -13,7 +13,8 @@ var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 var Elevatoip = map[string]string{
 	"A": "localhost",
 
-	"B": "10.100.23.26",
+	"B": "10.100.23.23",
+
     //"C": "10.100.23.32",
 
 }

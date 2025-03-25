@@ -7,9 +7,13 @@ import (
 	"time"
 	"root/sharedData"
 	"root/config"
+
+	"errors"
+
     "bufio"
 )
 
+var netErr *net.OpError
 
 
 
@@ -48,7 +52,7 @@ func Listen_recive(receiver chan<- config.RemoteEvent,
 	externalData *sharedData.SharedData,
 	externalConn *sharedData.ExternalConn,
 	aliveRecievd chan<- string,
-	requestHallRequests chan<- string) {
+	requestHallRequests chan<- [][2]bool) {
 	for _, id := range config.RemoteIDs{
 		go Recive(receiver,id,disconnected,externalData,externalConn,aliveRecievd,requestHallRequests)
 	}
@@ -61,7 +65,9 @@ func Recive(receiver chan<- config.RemoteEvent,
     externalData *sharedData.SharedData,
     externalConn *sharedData.ExternalConn,
     aliveRecievd chan<- string,
-    requestHallRequests chan<- string) {
+
+    requestHallRequests chan<- [][2]bool) {
+
     scann := bufio.NewScanner(externalConn.RemoteElevatorConnections[id])
     for scann.Scan(){
         if externalConn.ConnectedConn[id] {
@@ -75,9 +81,16 @@ func Recive(receiver chan<- config.RemoteEvent,
             
             //err := decoder.Decode(&message)
             err := json.Unmarshal(scann.Bytes(),&message)
-            
+
+
             if err != nil {
-                fmt.Println("Error decoding message:", err)
+                if errors.As(err, &netErr) { 
+                    fmt.Println("Network error while encoding alive:", netErr)
+                    disconnected <- id
+                } else {
+                    fmt.Println("Error decoding message:", err)
+                }
+
                 time.Sleep(1 * time.Second)
                 continue
             }
@@ -117,7 +130,15 @@ func Recive(receiver chan<- config.RemoteEvent,
                 aliveRecievd <- id
 
             case "RequestHallRequests":
-                requestHallRequests <- id
+
+                 var hallRequests [][2]bool
+                err := json.Unmarshal(message.Data, &hallRequests) 
+                if err != nil {
+                    fmt.Println("Error decoding Update:", err)
+                    return
+                }
+                requestHallRequests <- hallRequests
+
 
             case "HallRequests":
                 var hallRequests [][2]bool
