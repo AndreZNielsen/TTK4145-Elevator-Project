@@ -77,7 +77,7 @@ func handleConnection() {
 			return
 		}
 
-		fmt.Printf("Received: %+v\n", msg.Content)
+		//fmt.Printf("Received: %+v\n", msg.Content)
 
 		if msg.Type == "message" {
 			Reset_timer()
@@ -96,7 +96,7 @@ func sendCabHartBeat(elev *elevator.Elevator){
 			fmt.Println("Error sending message:", err)
 			break
 		}
-		fmt.Println("Sent backup heartbeat")
+		//fmt.Println("Sent backup heartbeat")
 		time.Sleep(5 * time.Second)
 	}
 	}
