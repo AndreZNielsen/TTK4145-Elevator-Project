@@ -111,8 +111,32 @@ func handleRequestHallRequests(requestHallRequests chan [][2]bool,externalConn *
 	for{
 
 		remoteHallRequests := <-requestHallRequests
-		sharedData.hallRequests = remoteHallRequests + sharedData.HallRequests
-		transmitter.Send_Hall_Requests(id,externalConn,sharedData.hallRequests)
+		sharedData.HallRequests = mergeHallRequests(remoteHallRequests,sharedData.HallRequests)
+		transmitter.Send_Hall_Requests(externalConn,sharedData.HallRequests)
 	}
 }
 
+func mergeHallRequests(a, b [][2]bool) [][2]bool {
+	maxLen := len(a)
+	if len(b) > maxLen {
+		maxLen = len(b)
+	}
+
+	// Create result slice
+	result := make([][2]bool, maxLen)
+
+
+	for i := 0; i < maxLen; i++ {
+		var aVal, bVal [2]bool
+
+		if i < len(a) {
+			aVal = a[i]
+		}
+		if i < len(b) {
+			bVal = b[i]
+		}
+		result[i] = [2]bool{aVal[0] || bVal[0], aVal[1] || bVal[1]}
+	}
+
+	return result
+}

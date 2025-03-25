@@ -189,7 +189,7 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
 }
 
 
-func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests *sharedData.SharedData.HallRequests, id string) {
+func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests [][2]bool, id string) {
     sendMu[id].Lock() 
     defer sendMu[id].Unlock() 
 
@@ -207,11 +207,11 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests *sh
     }
 }
 
-func Send_Hall_Requests(id string, externalConn *sharedData.ExternalConn, sharedData *sharedData.SharedData) {
+func Send_Hall_Requests(externalConn *sharedData.ExternalConn, hallRequests [][2]bool) {
 
     message := Message{
         TypeID: "HallRequests",
-        Data:   sharedData.HallRequests,  
+        Data:   hallRequests,  
     }
 
     for _, id := range config.RemoteIDs{

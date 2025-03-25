@@ -163,7 +163,7 @@ func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData
 		SharedData.RemoteElevatorData[event.Id]=event.ElevatorData
 
 	case "hallRequests":
-		SharedData.HallRequests = haredData.HallRequests + event.HallRequests
+		SharedData.HallRequests = event.HallRequests
 	}
 	
 	AssignLocalHallRequests(elevator, SharedData, externalConn)
