@@ -4,7 +4,6 @@ import (
 	"net"
 	"root/config"
 	"root/customStructs"
-	//"fmt"
 )
 
 
@@ -26,7 +25,6 @@ func InitSharedData() *SharedData {
 	return &SharedData{
 		HallRequests:               make(customStructs.HallRequests, config.Num_floors),
 		RemoteElevatorData:         make(map[string]customStructs.Elevator_data),
-		//ObstrutedElevators:   		make(map[string]bool) ,	
 	}
 }
 

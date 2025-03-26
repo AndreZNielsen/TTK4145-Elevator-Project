@@ -8,10 +8,7 @@ import (
 	"root/sharedData"
 	"root/config"
 	"root/customStructs"
-
-
 	"errors"
-
     "bufio"
 )
 
@@ -33,6 +30,7 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
         return nil
     }
     defer ln.Close()
+
     // Accept a new connection.
     conn, err := ln.Accept()
     if err != nil {
@@ -71,25 +69,19 @@ func Recive(receiver chan<- customStructs.RemoteEvent,
     externalConn *sharedData.ExternalConn,
     aliveRecievd chan<- string,
 
-
     requestHallRequests chan<- customStructs.HallRequests) {
 
+    scann := bufio.NewScanner(externalConn.RemoteElevatorConnections[id])//stores the incoming messages
 
-    scann := bufio.NewScanner(externalConn.RemoteElevatorConnections[id])
     for scann.Scan(){
         if externalConn.ConnectedConn[id] {
-            //decoder := json.NewDecoder(externalConn.RemoteElevatorConnections[id])
 
             var message struct {
                 TypeID string          `json:"typeID"` 
                 Data   json.RawMessage `json:"data"`   
             }
 
-            
-            //err := decoder.Decode(&message)
             err := json.Unmarshal(scann.Bytes(),&message)
-
-
 
             if err != nil {
                 if errors.As(err, &netErr) { 
@@ -98,7 +90,6 @@ func Recive(receiver chan<- customStructs.RemoteEvent,
                 } else {
                     fmt.Println("Error decoding message:", err)
                 }
-
 
                 time.Sleep(1 * time.Second)
                 continue
@@ -139,20 +130,21 @@ func Recive(receiver chan<- customStructs.RemoteEvent,
                 aliveRecievd <- id
 
             case "RequestHallRequests":
-
-
                  var hallRequests customStructs.HallRequests
+
                 err := json.Unmarshal(message.Data, &hallRequests) 
+
                 if err != nil {
                     fmt.Println("Error decoding Update:", err)
                     return
                 }
                 requestHallRequests <- hallRequests
 
-
             case "HallRequests":
                 var hallRequests customStructs.HallRequests
+
                 err := json.Unmarshal(message.Data, &hallRequests) 
+
                 if err != nil {
                     fmt.Println("Error decoding HallRequests:", err)
                     return
@@ -162,6 +154,7 @@ func Recive(receiver chan<- customStructs.RemoteEvent,
                     EventType:  "hallRequests",
                     HallRequests: hallRequests,
                 }
+
                 receiver <- event
 
             default:
@@ -169,7 +162,7 @@ func Recive(receiver chan<- customStructs.RemoteEvent,
             }
             aliveRecievd <- id  //every message restarts alivetimer
         } else {
-            return
+            return // If the connection is closed, return so the goroutine can exit.
         }
     }
 }
