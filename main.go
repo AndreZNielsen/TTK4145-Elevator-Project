@@ -7,7 +7,7 @@ import (
 	"root/network"
 	//"root/reciver"
 	"flag"
-	"root/reviver"
+	//"root/reviver"
 	SharedData "root/sharedData"
 	"root/transmitter"
 )
@@ -55,7 +55,7 @@ func main() {
 
     }
     
-    go reviver.StartReviver(&elev)
+    //go reviver.StartReviver(&elev)
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     for {
