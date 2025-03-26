@@ -39,6 +39,7 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 		return nil
 	}
 	
+
 	if localelvator.Floor == -1 { // kan kanje fjernes
 		return make([][2]bool,config.Num_floors)
 	}
@@ -53,6 +54,7 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	for _, id := range config.RemoteIDs {
 
 		// Only add the remote elevator if its data exists and the elavator is not obstructed and the elavator is in network.
+
 		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] {
 			states[id] = remote
 		}
@@ -88,7 +90,8 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	//for k, v := range output {
 		//fmt.Printf("%6v :  %+v\n", k, v)
 	//}
-	
+
 	return output[config.Elevator_id] // returns the hall requests for the local elevator
+
 }
 

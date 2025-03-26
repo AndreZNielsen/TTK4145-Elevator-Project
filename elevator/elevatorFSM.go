@@ -15,6 +15,9 @@ type LocalEvent struct {
 	Button     elevio.ButtonEvent
 	Floor      int
 	Obstructed bool
+
+	Stuck 	   bool
+
 }
 
 func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
@@ -23,7 +26,9 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	FSM_InitBetweenFloors(elevator)
 }
 
-func FSM_InitBetweenFloors(elevator *Elevator) { 
+
+func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
+
 	if elevio.GetFloor() == -1 {
 	elevio.SetMotorDirection(elevio.MD_Down)
 	elevator.direction = Dir_down
@@ -70,6 +75,10 @@ func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *shared
 		elevio.SetMotorDirection(elevio.MD_Stop)
 		updates = elevator.RequestsClearAtCurrentFloor(SharedData)
 		DoorOpen(elevator)
+
+	} else{
+		StartStuckTimer()
+
 	}
 	
 	return updates
@@ -77,27 +86,36 @@ func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *shared
 
 func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData, externalConn *sharedData.ExternalConn) {
 	DoorClose(elevator)
+
 	nextBehaviourPair := elevator.SelectNextDirection()
 	elevator.direction = nextBehaviourPair.dir
 	elevator.behaviour = nextBehaviourPair.behaviour
 
 	switch elevator.behaviour {
+
 	case Behaviour_door_open: // if next state is "door_open", the door opens
+
 		DoorOpen(elevator)
 		updates := elevator.RequestsClearAtCurrentFloor(SharedData)
 		if len(updates) == 0 {
 			return
 		}
 
-		fmt.Println("lenght of updates:", len(updates))
+
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			transmitter.Send_update(updates[i], externalConn)
 
 		}
 
-	case Behaviour_moving, Behaviour_idle:
+
+	case Behaviour_moving:
 		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
+		StartStuckTimer()
+	
+	case Behaviour_idle:
+		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))		
+
 	}
 }
 
@@ -120,16 +138,21 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		Start_if_idle(elevator)
 		
+
 	case "floor":
 		updates := FSM_HandleFloorArrival(elevator, event.Floor, SharedData)
 
 		if len(updates) == 0 {
 			return
-		}	
+
+		}
+		
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			transmitter.Send_update(updates[i], externalConn)
-		}	
+		}
+		
+
 
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		SetAllLights(elevator, SharedData)
@@ -137,9 +160,15 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 	case "obstructed":
 		FSM_HandleObstruction(elevator, event.Obstructed)
 
+		//send_elevator_data for å sende obstruction
+
+	case "stuck":
+		elevator.Stuck = event.Stuck
+
 	case "timer":
 		if IsDoorObstructed(elevator) {
-			DoorOpen(elevator) // Door is kept open if it is obstructed
+			DoorOpen(elevator,) // Door is kept open if it is obstructed
+
 						
 		} else {
 			FSM_startNextRequest(elevator, SharedData, externalConn) 
@@ -172,10 +201,16 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 	obstructionEvents 	:= make(chan bool)
 	timerEvents 		:= make(chan bool)
 
+	stuckEvents 		:= make(chan bool)
+
+
 	go elevio.PollButtons(buttonEvents)
 	go elevio.PollFloorSensor(floorEvents)
 	go elevio.PollObstructionSwitch(obstructionEvents)
 	go TimerIsDone(timerEvents)
+
+	go StuckTimerIsDone(stuckEvents)
+
 
 	for {
 		select {
@@ -185,6 +220,15 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 			localEvents <- LocalEvent{EventType: "floor", Floor: floor}
 		case obstructed := <-obstructionEvents:
 			localEvents <- LocalEvent{EventType: "obstructed", Obstructed: obstructed}
+
+		case stuck := <-stuckEvents:
+			localEvents <- LocalEvent{EventType: "stuck", Stuck: stuck}
+			if stuck {
+				fmt.Println("stuck event happend, stuck is true")
+			} else {
+				fmt.Println("stuck event happend, stuck is false")
+			}
+
 		case <-timerEvents:
 			localEvents <- LocalEvent{EventType: "timer"}
 		}
@@ -197,4 +241,5 @@ func FSM_HandleObstruction(elevator *Elevator, obstructed bool){
 	} else {
 		elevator.obstructed = false
 	}
+
 }

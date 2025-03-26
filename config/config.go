@@ -2,7 +2,11 @@ package config
 
 const Num_floors = 4
 
-var Elevator_id = "A"
+var Elevator_id = "B"
+
+
+var PossibleIDs = []string{"A","B"}
+
 
 var LocalElevatorServerPort = "localhost:15657"
 
@@ -16,10 +20,16 @@ var Elevators_ip = map[string]string{
 
 	"B": "10.100.23.23",
 
+
     //"C": "10.100.23.32",
 
 }
 
+type Update struct { // This type will allow us to improve a few functions that use updates
+    Floor       int
+    ButtonType  int
+    Value       bool
+}
 
 type Update struct { 
     Floor       int
@@ -32,7 +42,10 @@ type Elevator_data struct {//data struct that contains all the data that the ass
 	Floor       int    `json:"floor"`
 	Direction   string `json:"direction"`
 	CabRequests []bool `json:"cabRequests"` 
-    Obstructed bool  
+
+    Obstructed  bool  
+    Stuck       bool
+
 }
 
 type HallRequests [][2]bool

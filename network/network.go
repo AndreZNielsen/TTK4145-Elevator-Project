@@ -12,19 +12,24 @@ import(
 )
 var aliveRecievd = make(chan string)
 var aliveTimeOut = make(chan string)
+
 var requestHallRequests = make(chan [][2]bool)
+
 
 func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
 	InitAliveTimer()
 
+
 	for _, id := range config.RemoteIDs{
 
 
 		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
 
+
 		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevators_ip[id],id,externalConn)	
+
 		}else{
 
 		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
@@ -44,9 +49,11 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	totalDicvonnect := allFalse(externalConn.ConnectedConn)
 
+
 	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {// the elavator with the lowest index will dial 
 
 		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevators_ip[reConnID],reConnID,externalConn)	
+
 		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 
 	}else{
@@ -61,6 +68,7 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	if(totalDicvonnect){
 		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
+
 	}
 	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 }
@@ -108,6 +116,7 @@ func handleAliveTimer(aliveRecievd chan string,aliveTimeOut chan string,external
 
 	}
 }
+
 func handleRequestHallRequests(requestHallRequests chan [][2]bool,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
 	for{
 
@@ -141,5 +150,6 @@ func mergeHallRequests(a, b [][2]bool) [][2]bool {
 	}
 
 	return result
+
 }
 
