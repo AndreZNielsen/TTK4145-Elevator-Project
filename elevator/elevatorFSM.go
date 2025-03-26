@@ -17,7 +17,6 @@ type LocalEvent struct {
 	Button     elevio.ButtonEvent
 	Floor      int
 	Obstructed bool
-
 	Stuck 	   bool
 
 }
