@@ -8,17 +8,16 @@ var Elevator_id = "B"
 var PossibleIDs = []string{"A","B"}
 
 
-var LocalElevatorServerPort = "localhost:15657"
+var LocalElevatorServerPort = "localhost:12345"
 
-var PossibleIDs = []string{"A"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevators_ip = map[string]string{
-	"A": "localhost",
+	"A": "10.100.23.24",
 
-	"B": "10.100.23.23",
+	"B": "localhost",
 
 
     //"C": "10.100.23.32",
@@ -31,11 +30,7 @@ type Update struct { // This type will allow us to improve a few functions that 
     Value       bool
 }
 
-type Update struct { 
-    Floor       int
-    ButtonType  int
-    Value       bool
-}
+
 
 type Elevator_data struct {//data struct that contains all the data that the assigner needs to know about the elevator 
 	Behavior    string `json:"behaviour"`

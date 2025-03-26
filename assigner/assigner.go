@@ -53,9 +53,13 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 	// Loop over Remote IDs and add remote data if available.
 	for _, id := range config.RemoteIDs {
 
-		// Only add the remote elevator if its data exists and the elavator is not obstructed and the elavator is in network.
+		// Only add the remote elevator if 
+		// data exists 
+		// the elavator is not obstructed 
+		// the elavator is in network
+		// the elavator is not stuck
 
-		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] {
+		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] && !remote.Stuck {
 			states[id] = remote
 		}
 	}
