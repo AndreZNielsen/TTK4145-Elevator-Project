@@ -16,13 +16,17 @@ func StartConn(){
 	}
 
 	var err error
-	Conn, err = net.Dial("tcp", "localhost:5000")
-	if err != nil {
-		fmt.Println("Failed to connect to backup server:", err)
-		time.Sleep(5 * time.Second)
-		
-	}
+	for {
+		Conn, err = net.Dial("tcp", "localhost:5000")
+		if err != nil {
+			fmt.Println("Failed to connect to backup server:", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+		return
 }
+}
+
 func HandleConnection(backupAlive chan bool) {
 	decoder := json.NewDecoder(Conn)
 
@@ -36,7 +40,7 @@ func HandleConnection(backupAlive chan bool) {
 
 		//fmt.Printf("Received: %+v\n", msg.Content)
 
-		if msg.Type == "message" {
+		if msg.Type == "message" { //aslong as it recives messages  will it restart the backupAlive timer
 			backupAlive<-true
 		}
 	}
@@ -45,7 +49,7 @@ func HandleConnection(backupAlive chan bool) {
 func SendCabHartBeat(elev *elevator.Elevator){
 	encoder := json.NewEncoder(Conn)
 
-	// Send heartbeats
+	// Sends local cab requests as a heartbeats to the backup 
 	for {
 		msg := Message{"message", elevator.GetCabRequests(elev.Requests)}
 		err := encoder.Encode(msg)
@@ -54,7 +58,7 @@ func SendCabHartBeat(elev *elevator.Elevator){
 			break
 		}
 		//fmt.Println("Sent backup heartbeat")
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 	}
 

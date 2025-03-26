@@ -12,20 +12,7 @@ type Message struct {
 	Content []bool `json:"content"`
 }
 var Conn net.Conn
-func SendHartBeat() {
-	encoder := json.NewEncoder(Conn)
 
-	for {
-		msg := Message{"message", make([]bool, 2)}
-		err := encoder.Encode(msg)
-		if err != nil {
-			fmt.Println("Error sending message:", err)
-			break
-		}
-		fmt.Println("Sent heartbeat")
-		time.Sleep(5 * time.Second)
-	}
-}
 
 
 func StartTCPLis() {
@@ -58,8 +45,23 @@ func HandleConnection(alive chan []bool) {
 
 		fmt.Printf("Received: %+v\n", msg.Content)
 
-		if msg.Type == "message" {
+		if msg.Type == "message" {// as long as it recives messages it will restart the backupAlive timer and store cab requests
 			alive <- msg.Content
 		}
+	}
+}
+
+func SendHartBeat() {// sends a heartbeat to the elevator to show that the backup is alive
+	encoder := json.NewEncoder(Conn)
+
+	for {
+		msg := Message{"message", make([]bool, 2)}
+		err := encoder.Encode(msg)
+		if err != nil {
+			fmt.Println("Error sending message:", err)
+			break
+		}
+		fmt.Println("Sent heartbeat")
+		time.Sleep(3 * time.Second)
 	}
 }

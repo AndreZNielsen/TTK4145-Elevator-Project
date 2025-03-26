@@ -29,7 +29,7 @@ func Start_backup(elev *elevator.Elevator) {
 		select{
 			case<-backupAlive:
 				Reset_timer()
-			case<-backupDead:// Restarts the backup
+			case<-backupDead:// Restarts the backup if it dies
 				Stop_timer()
 				startBackupProcess(elev,backupAlive,backupDead)
 		}

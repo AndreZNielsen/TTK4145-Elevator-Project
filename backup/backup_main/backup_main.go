@@ -26,12 +26,12 @@ func main() {
 	go util.HandleConnection(alive)
 	for{
 		select {
-		case CabBackup = <-alive:
+		case CabBackup = <-alive: // Stores the cab requests from the elevator and resets the backup timer
 			util.Reset_timer()
 		case <-dead:
 			fmt.Println("Elevator is dead, restarting...")
 			util.Conn.Close()
-			restart_elavator()
+			restartElavator()
 			return // Kills the backup after restarting the elevator
 
 		}
@@ -39,7 +39,7 @@ func main() {
 }
 
 
-func restart_elavator(){
+func restartElavator(){
 	var cmd *exec.Cmd
 
 	strCabBackup := strings.Trim(fmt.Sprint(CabBackup), "[]")

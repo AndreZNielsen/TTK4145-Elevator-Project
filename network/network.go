@@ -17,7 +17,7 @@ var requestHallRequests = make(chan [][2]bool)
 func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
-	//InitAlive()
+	InitAlive()
 
 	for _, id := range config.RemoteIDs{
 
