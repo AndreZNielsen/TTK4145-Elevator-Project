@@ -32,7 +32,7 @@ type Elevator struct {
 	behaviour 	ElevatorBehaviour
 	config   	elevatorConfig
 	obstructed 	bool
-	stuck	   	bool
+	Stuck	   	bool
 }
 
 type elevatorConfig struct {
@@ -146,7 +146,7 @@ func MakeUninitializedelevator() Elevator {
 		direction: Dir_stop,
 		behaviour: Behaviour_idle,
 		obstructed: false,
-		stuck: false,
+		Stuck: false,
 		config: elevatorConfig{
 			clearRequestVariation: CV_InDirn,
 			doorOpenDuration:      3.0,

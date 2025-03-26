@@ -1,6 +1,7 @@
 package elevator
 
 import (
+	"fmt"
 	"root/assigner"
 	"root/config"
 	"root/elevio"
@@ -57,6 +58,7 @@ func Start_if_idle(elevator *Elevator) {
             DoorOpen(elevator)
         }
         elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
-        StartStuckTimer() 
+        StartStuckTimer()
+        fmt.Println("start if idle")
     }
 }

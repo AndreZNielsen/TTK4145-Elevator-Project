@@ -13,7 +13,7 @@ var (
 	timerActive    bool
 	stuckTimeOfStart time.Time
 	stuckTimerActive bool
-	stuckTimeOut = 10 * time.Second
+	stuckTimeOut = 7 * time.Second
 )
 
 func StartTimer() {
@@ -41,15 +41,21 @@ func TimedOut() bool {
 	return timerActive && time.Since(timeOfStart) > timeOut
 }
 
+var StuckEvents chan<- bool
+
 func StartStuckTimer(){
 	fmt.Println("stucktimer started")
 	stuckTimeOfStart = time.Now()
 	stuckTimerActive = true
 }
 
-func StopStuckTimer() {
+func StopStuckTimer(elevator *Elevator) {
 	fmt.Println("stucktimer stopped")
     stuckTimerActive = false
+	if elevator.Stuck {
+		StuckEvents <- false
+	}
+
 }
 
 func StuckTimedOut() bool {
@@ -58,9 +64,10 @@ func StuckTimedOut() bool {
 
 func StuckTimerIsDone(stuckEvents chan<- bool) {
 	prev := false
+	StuckEvents = stuckEvents
 	for {
 		time.Sleep(pollRate)
-		timedOut := stuckTimerActive && time.Since(timeOfStart) > timeOut
+		timedOut := stuckTimerActive && time.Since(stuckTimeOfStart) > stuckTimeOut
 		if timedOut && timedOut != prev {
 			stuckEvents <- true
 		}
