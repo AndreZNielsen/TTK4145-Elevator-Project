@@ -9,7 +9,6 @@ import (
 )
 var Conn net.Conn
 
-
 func StartConn(){
 	if Conn !=nil{
 		Conn.Close()
@@ -24,7 +23,7 @@ func StartConn(){
 			continue
 		}
 		return
-}
+	}
 }
 
 func HandleConnection(reviverAlive chan bool) {
@@ -37,9 +36,6 @@ func HandleConnection(reviverAlive chan bool) {
 			fmt.Println("Error decoding message:", err)
 			return
 		}
-
-		//fmt.Printf("Received: %+v\n", msg.Content)
-
 		if msg.Type == "message" { //aslong as it recives messages  will it restart the reviverAlive timer
 			reviverAlive<-true
 		}
@@ -48,7 +44,6 @@ func HandleConnection(reviverAlive chan bool) {
 
 func SendCabHartBeat(elev *elevator.Elevator){
 	encoder := json.NewEncoder(Conn)
-
 	// Sends local cab requests as a heartbeats to the reviver 
 	for {
 		msg := Message{"message", elevator.GetCabRequests(elev.Requests)}
@@ -57,8 +52,7 @@ func SendCabHartBeat(elev *elevator.Elevator){
 			fmt.Println("Error sending message:", err)
 			break
 		}
-		//fmt.Println("Sent reviver heartbeat")
 		time.Sleep(1 * time.Second)
 	}
-	}
+}
 
