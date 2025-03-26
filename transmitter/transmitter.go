@@ -19,10 +19,8 @@ type Message struct {
 }
 
 
-//var sendMu sync.Mutex 
 var sendMu = make(map[string]*sync.Mutex)
 var Disconnected chan<- string
-
 var netErr *net.OpError
 
 
@@ -46,7 +44,6 @@ func Start_tcp_call(port string, ip string, id string,externalConn *sharedData.E
 			existingConn.Close()
 		}
 		
-
 		conn_lift, err := net.Dial("tcp", ip+":"+port)//connects to the other elevatoe
 		
 		if err != nil {
@@ -57,42 +54,23 @@ func Start_tcp_call(port string, ip string, id string,externalConn *sharedData.E
 		externalConn.ConnectedConn[id]=true
 
 		return conn_lift
-
-		}
+	}
 }
 
 
 
 func Send_Elevator_data(data customStructs.Elevator_data,externalConn *sharedData.ExternalConn) {
-	for _, id := range config.RemoteIDs{
+	for _, id := range config.RemoteIDs{//sends the elevator data to all the other elevators
 		if externalConn.ConnectedConn[id] {
 			go transmitt_Elevator_data(data,id,externalConn)
-			
 		}
 	}
 }
 
-var prevData = customStructs.Elevator_data{Behavior: "doorOpen",Floor: 1,Direction: "down",CabRequests: make([]bool, config.Num_floors)}
-
 func transmitt_Elevator_data(data customStructs.Elevator_data, id string, externalConn *sharedData.ExternalConn) {
-
-
-
-    /*
-
-
-    if data.Floor == -1 {
-        data = prevData
-    } else {
-        prevData = data
-    }
-
-
-    */
     for {
         sendMu[id].Lock()  // Locking before sending
         if externalConn.ConnectedConn[id] {
-
 
             message := Message{
                 TypeID: "elevator_data", 
@@ -102,24 +80,20 @@ func transmitt_Elevator_data(data customStructs.Elevator_data, id string, extern
             encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
 
             for i := 0; i < 10; i++ { 
-                err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+                err := encoder.Encode(message) // Sends the message as a JSON package
                 if err != nil {
-
 
                     if errors.As(err, &netErr) {
                         fmt.Println("Network error while encoding update:", netErr)
                         Disconnected <- id
-
                     } else {
                         fmt.Println("Error encoding data:", err)                       
                     }
-
 
                     sendMu[id].Unlock()
                     return
                 }
             }
-
             sendMu[id].Unlock()
             return
         }
@@ -130,34 +104,27 @@ func transmitt_Elevator_data(data customStructs.Elevator_data, id string, extern
 
 
 func Send_update(update customStructs.Update,externalConn *sharedData.ExternalConn){
-    
-	for _, id := range config.RemoteIDs{
+	for _, id := range config.RemoteIDs{//sends the update to all the other elevators
 		if externalConn.ConnectedConn[id]{
 			go transmitt_update(update,id,externalConn)
-			
 		}
 	}
 }
 
 func transmitt_update(update customStructs.Update, id string, externalConn *sharedData.ExternalConn) {
-
-
-    // Lock for this specific id to ensure only one thread sends at a time
-    sendMu[id].Lock() 
+    sendMu[id].Lock() // Lock for this specific id to ensure only one thread sends at a time
     defer sendMu[id].Unlock() // Ensure the mutex is unlocked after sending
 
-    time.Sleep(7 * time.Millisecond)
-
 	message:= Message{
-        TypeID: "Update",   // Type ID for å indikere at dette er en oppdatering
-        Data:   update,     // Inneholder selve oppdateringsdataen
+        TypeID: "Update",   // Type ID to identify the message as an update
+        Data:   update,     // contains the update data
     }
 
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
 
     for i := 0; i < 10; i++{
 
-        err := encoder.Encode(message) // Send hele meldingen som en JSON-pakke
+        err := encoder.Encode(message) // Sends the message as a JSON package
         if  err != nil {
 
             if errors.As(err, &netErr) {
@@ -170,8 +137,6 @@ func transmitt_update(update customStructs.Update, id string, externalConn *shar
             return
         } 
         
-
-
     }
 }
 
@@ -179,13 +144,9 @@ func Send_alive(externalConn *sharedData.ExternalConn){
 	for _, id := range config.RemoteIDs{
 		go transmitt_alive(id,externalConn)
 	}
-
 }
 
 func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
-
-
-    
     for {
         sendMu[id].Lock() 
         if externalConn.ConnectedConn[id] {
@@ -197,6 +158,7 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
 
             encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
             err := encoder.Encode(message) 
+
             if err != nil {
                 if errors.As(err, &netErr) { 
                     fmt.Println("Network error while encoding alive:", netErr)
@@ -209,9 +171,6 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
                 time.Sleep(1 * time.Second)
                 continue
             }
-
-            
-            //fmt.Println("Sent alive message to", id)
         }
         sendMu[id].Unlock() 
         time.Sleep(1 * time.Second) //this can be adjusted to lower risk of case: disconnect because of packetloss
@@ -224,10 +183,8 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests cus
     sendMu[id].Lock() 
     defer sendMu[id].Unlock() 
 
-    // Lag en melding som inneholder typeID og data
     message := Message{
         TypeID: "RequestHallRequests", 
-
     }
 
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
@@ -241,7 +198,6 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests cus
             fmt.Println("Error encoding RequestHallRequests:", err)
         }
         return
-
     }
 }
 
