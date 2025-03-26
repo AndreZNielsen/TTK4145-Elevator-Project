@@ -7,11 +7,10 @@ import (
 	"root/network"
 	//"root/reciver"
 	"flag"
-	"root/backup"
+	"root/reviver"
 	SharedData "root/sharedData"
 	"root/transmitter"
 )
-
 
 
 
@@ -49,7 +48,7 @@ func main() {
 
     }
     
-    go backup.Start_backup(&elev)
+    go reviver.StartReviver(&elev)
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     for {

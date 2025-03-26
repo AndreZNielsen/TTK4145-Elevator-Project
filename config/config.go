@@ -6,7 +6,7 @@ var Elevator_id = "A"
 
 var LocalElevatorServerPort = "localhost:15657"
 
-var PossibleIDs = []string{"A","B","C"}
+var PossibleIDs = []string{"A"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
