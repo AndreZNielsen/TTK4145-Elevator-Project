@@ -20,20 +20,11 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
     localData := GetElevatorData(elevator)
     remoteData := SharedData.RemoteElevatorData
     sharedHallRequests := SharedData.HallRequests
-
-
-    // Prevents invalid data from crashing the assigner
-    // We might be able to find a better solution here.
-    // The same problem can happen with data from remoteElevators. That will require a separate fix. Probably similar, but not implemented yet
-    //fmt.Println("Direction: ",localData.Direction)
-    //fmt.Println("Behaviour: ", localData.Behavior)
-
     correctedLocalData := localData
     
+    // Prevents invalid data from crashing the assigner
     if localData.Floor == 0 && localData.Direction == "down" || localData.Floor == 3 && localData.Direction == "up" {
-        //fmt.Println("Invalid data sent to assigner executealbe, hard coded fix triggered!")
         correctedLocalData.Direction = "stop"
-
     } 
     
     updatedRequests := assigner.Assigner(correctedLocalData, remoteData, sharedHallRequests, externalConn)
