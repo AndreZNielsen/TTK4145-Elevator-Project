@@ -5,12 +5,9 @@ import (
 	"root/config"
 	"root/elevator"
 	"root/network"
-	//"root/reciver"
 	"flag"
     "root/customStructs"
-
-	//"root/reviver"
-
+	"root/reviver"
 	SharedData "root/sharedData"
 	"root/transmitter"
 )
@@ -24,7 +21,7 @@ func main() {
 	var cabBackup string
 
 	// Parse the flags
-	flag.BoolVar(&isRestart, "isRestart", false, "Indicates if restart is required")
+	flag.BoolVar(&isRestart, "isRestart", false, "Indicates if this is a restart")
 	flag.StringVar(&cabBackup, "cabBackup", "", "Space-separated list for CabBackup")
 	flag.Parse()
     
@@ -38,25 +35,19 @@ func main() {
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
 
-	go network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
-    
-    
     elevator.FSM_MakeElevator(&elev, config.LocalElevatorServerPort, config.Num_floors)
 
+	go network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn,&elev)
+
+    go reviver.StartReviver(&elev)
+
     go elevator.FSM_DetectLocalEvents(localEventRecived)
-    fmt.Println(cabBackup)
+    
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
-
-
         transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
-
     }
-    
-    //go reviver.StartReviver(&elev)
 
-
-    transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     for {
         select {
         case localEvent := <-localEventRecived:
@@ -66,16 +57,11 @@ func main() {
 
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
-            
-
 
         case id := <-disconnected:     
             if externalConn.ConnectedConn[id]{
                 externalConn.ConnectedConn[id]=false
                 network.StopAliveTimer(id)
-                fmt.Println("disconnect triggered")
-
-
                 go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
             }
         }

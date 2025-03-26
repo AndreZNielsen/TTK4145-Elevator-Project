@@ -1,7 +1,7 @@
 package network
 
 import(
-	"root/reciver"
+	"root/receiver"
 	"root/transmitter"
 	"root/sharedData"
 	"root/config"
@@ -17,7 +17,7 @@ var aliveTimeOut = make(chan string)
 var requestHallRequests = make(chan customStructs.HallRequests)
 
 
-func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
 	InitAliveTimer()
@@ -33,15 +33,16 @@ func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected 
 
 		}else{
 
-		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
+		externalConn.RemoteElevatorConnections[id] = receiver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
 		}
 		go StartAliveTimer(aliveTimeOut,id)
 		
 	}
 	go handleAliveTimer(aliveRecievd,aliveTimeOut,externalConn,disconnected)
-	go reciver.Listen_recive(remoteEvent,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
+	go receiver.Listen_recive(remoteEvent,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 	go transmitter.Send_alive(externalConn)
 	go handleRequestHallRequests(requestHallRequests,externalConn,sharedData)
+	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 	
 
 }
@@ -55,12 +56,12 @@ func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected cha
 
 		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevators_ip[reConnID],reConnID,externalConn)	
 
-		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
+		go receiver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 
 	}else{
 
-		externalConn.RemoteElevatorConnections[reConnID] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,reConnID),reConnID,externalConn)
-		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
+		externalConn.RemoteElevatorConnections[reConnID] = receiver.Start_tcp_listen(portGenerateor(config.Elevator_id,reConnID),reConnID,externalConn)
+		go receiver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 
 	}
 

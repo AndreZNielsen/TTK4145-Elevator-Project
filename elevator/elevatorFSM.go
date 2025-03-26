@@ -25,6 +25,7 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	elevio.Init(elevator_ip, Num_floors)
 	*elevator = MakeUninitializedelevator()
 	FSM_InitBetweenFloors(elevator)
+	
 }
 
 
