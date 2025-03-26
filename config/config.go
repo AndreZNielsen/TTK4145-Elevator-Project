@@ -4,13 +4,14 @@ const Num_floors = 4
 
 var Elevator_id = "A"
 
+var LocalElevatorServerPort = "localhost:15657"
 
 var PossibleIDs = []string{"A","B","C"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
-var Elevatoip = map[string]string{
+var Elevators_ip = map[string]string{
 	"A": "localhost",
 
 	"B": "10.100.23.23",
@@ -19,7 +20,8 @@ var Elevatoip = map[string]string{
 
 }
 
-type Update struct { // This type will allow us to improve a few functions that use updates
+
+type Update struct { 
     Floor       int
     ButtonType  int
     Value       bool
