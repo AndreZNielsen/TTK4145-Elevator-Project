@@ -1,15 +1,12 @@
 package elevator
 
 import (
-
 	"fmt"
 	"root/assigner"
-	//"root/config"
 	"root/elevio"
 	"root/sharedData"
 	"root/transmitter"
 	"root/customStructs"
-
 )
 
 
@@ -24,15 +21,12 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
     localData := GetElevatorData(elevator)
     remoteData := SharedData.RemoteElevatorData
     sharedHallRequests := SharedData.HallRequests
-
     correctedLocalData := localData
-    
+
     // Prevents invalid data from crashing the assigner
     if localData.Floor == 0 && localData.Direction == "down" || localData.Floor == 3 && localData.Direction == "up" {
         correctedLocalData.Direction = "stop"
-
     } 
-    
     updatedRequests := assigner.Assigner(correctedLocalData, remoteData, sharedHallRequests, externalConn)
     elevator.Requests = MakeRequests(updatedRequests, GetCabRequests(elevator.Requests))
 }
@@ -45,7 +39,6 @@ func Send_Elevator_data(elevatorData customStructs.Elevator_data, externalConn *
 }
 
 func Start_if_idle(elevator *Elevator) {
-
     if elevator.behaviour == Behaviour_idle {
         pair := elevator.SelectNextDirection()
         elevator.direction = pair.dir
