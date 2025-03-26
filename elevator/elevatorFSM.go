@@ -23,7 +23,7 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	FSM_InitBetweenFloors(elevator)
 }
 
-func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
+func FSM_InitBetweenFloors(elevator *Elevator) { 
 	if elevio.GetFloor() == -1 {
 	elevio.SetMotorDirection(elevio.MD_Down)
 	elevator.direction = Dir_down
@@ -82,7 +82,7 @@ func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData,
 	elevator.behaviour = nextBehaviourPair.behaviour
 
 	switch elevator.behaviour {
-	case Behaviour_door_open: //hvis neste tilstand er "door_open", skal døra åpnes
+	case Behaviour_door_open: // if next state is "door_open", the door opens
 		DoorOpen(elevator)
 		updates := elevator.RequestsClearAtCurrentFloor(SharedData)
 		if len(updates) == 0 {
@@ -99,7 +99,6 @@ func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData,
 	case Behaviour_moving, Behaviour_idle:
 		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
 	}
-	//Send_Elevator_data(GetElevatorData(elevator), externalConn)
 }
 
 
@@ -121,26 +120,22 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		Start_if_idle(elevator)
 		
-
 	case "floor":
 		updates := FSM_HandleFloorArrival(elevator, event.Floor, SharedData)
 
 		if len(updates) == 0 {
 			return
-		}
-		
+		}	
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			transmitter.Send_update(updates[i], externalConn)
-		}
-		
+		}	
 
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		SetAllLights(elevator, SharedData)
 
 	case "obstructed":
 		FSM_HandleObstruction(elevator, event.Obstructed)
-		//send_elevator_data for å sende obstruction
 
 	case "timer":
 		if IsDoorObstructed(elevator) {
