@@ -48,7 +48,7 @@ func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected 
 
 func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 
-	totalDicvonnect := allFalse(externalConn.ConnectedConn)
+	totalDiconnect := allFalse(externalConn.ConnectedConn)
 
 
 	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {// the elavator with the lowest index will dial 
@@ -67,7 +67,7 @@ func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected cha
 	go StartAliveTimer(aliveTimeOut,reConnID)
 
 
-	if(totalDicvonnect){
+	if(totalDisconnect){
 		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
 
 	}
