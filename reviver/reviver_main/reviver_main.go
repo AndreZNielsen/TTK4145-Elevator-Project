@@ -2,13 +2,10 @@ package main
 
 import (
 	"fmt"
-	//"time"
 	"root/util"
 	"os/exec"
 	"strings"
-	"runtime"
-	//"strconv"
-	
+	"runtime"	
 )
 
 var alive = make(chan []bool)
@@ -37,7 +34,6 @@ func main() {
 		}
 	}
 }
-
 
 func restartElavator(){
 	var cmd *exec.Cmd
