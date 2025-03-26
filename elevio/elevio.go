@@ -15,7 +15,7 @@ var _mtx sync.Mutex
 var _mtx_initialized bool = false
 
 var _conn net.Conn
-var DisconnectedElevSever = make(chan bool)
+var DisconnectedElevSever  chan<- bool
 var ServerAdrr string
 
 type MotorDirection int
@@ -47,11 +47,12 @@ type ButtonEvent struct {
 	Button ButtonType
 }
 
-func Init(addr string, numFloors int) {
+func Init(addr string, numFloors int,disconnectedElevSever chan<- bool) {
 	if _initialized {
 		fmt.Println("Driver already initialized!")
 		return
 	}
+	DisconnectedElevSever = disconnectedElevSever
 	ServerAdrr = addr
 	NumFloors = numFloors
 	if !_mtx_initialized {
@@ -67,7 +68,6 @@ func Init(addr string, numFloors int) {
 			continue
 		}
 	_initialized = true
-	go handleDisconnect()
 	return
 	}
 }
@@ -199,6 +199,7 @@ func read(in [4]byte) [4]byte {
 
 			if err != nil {
 				//panic("Lost connection to Elevator Server")
+				_initialized = false
 				DisconnectedElevSever<-true
 			
 				return [4]byte{0, 0, 0, 0}
@@ -207,6 +208,7 @@ func read(in [4]byte) [4]byte {
 			_, err = _conn.Read(out[:])
 			if err != nil {
 				//panic("Lost connection to Elevator Server")
+				_initialized = false
 				DisconnectedElevSever<-true
 				return [4]byte{0, 0, 0, 0}
 
@@ -230,6 +232,7 @@ func write(in [4]byte) {
 			_, err := _conn.Write(in[:])
 			if err != nil {
 				//panic("Lost connection to Elevator Server")
+				_initialized = false
 				DisconnectedElevSever<-true
 			}
 		} else {
@@ -256,11 +259,11 @@ func toBool(a byte) bool {
 	return b
 }
 
-
+/*
 func handleDisconnect(){
 	
 	<-DisconnectedElevSever
-	_initialized = false
 	go Init(ServerAdrr, 4)
 	
 }		
+*/

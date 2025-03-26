@@ -16,12 +16,24 @@ type LocalEvent struct {
 	Stuck 	   bool
 }
 
+
+
 func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
-	elevio.Init(elevator_ip, Num_floors)
+	var disconnectedElevSever = make(chan bool)
+	elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
 	*elevator = MakeUninitializedelevator()
 	FSM_InitBetweenFloors(elevator)	
+	go restartElevatorServer(elevator_ip, Num_floors, disconnectedElevSever, elevator)
 }
 
+func restartElevatorServer(elevator_ip string, Num_floors int, disconnectedElevSever chan bool,elevator *Elevator) {
+	for {//restarts the elevator server if it gets disconnected
+		<-disconnectedElevSever
+		elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
+		FSM_InitBetweenFloors(elevator)	
+	}
+	
+}
 
 func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
 	if elevio.GetFloor() == -1 {

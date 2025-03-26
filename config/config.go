@@ -3,7 +3,7 @@ package config
 const Num_floors = 4
 
 var Elevator_id = "A"
-var PossibleIDs = []string{"A","B"}
+var PossibleIDs = []string{"A"}
 var LocalElevatorServerPort = "localhost:12345"
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 var Elevators_ip = map[string]string{
