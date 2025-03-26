@@ -16,18 +16,14 @@ var aliveTimeOut = make(chan string)
 
 var requestHallRequests = make(chan customStructs.HallRequests)
 
-
 func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
 	InitAliveTimer()
 
-
 	for _, id := range config.RemoteIDs{
 
-
 		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
-
 
 		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevators_ip[id],id,externalConn)	
 
@@ -44,13 +40,11 @@ func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected 
 	go handleRequestHallRequests(requestHallRequests,externalConn,sharedData)
 	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 	
-
 }
 
 func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 
-	totalDisconnect := allFalse(externalConn.ConnectedConn)
-
+	totalDisconnect := allFalse(externalConn.ConnectedConn)//checks if all the connections are down
 
 	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {// the elavator with the lowest index will dial 
 
@@ -68,9 +62,8 @@ func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected cha
 	go StartAliveTimer(aliveTimeOut,reConnID)
 
 
-	if(totalDisconnect){
+	if(totalDisconnect){//when it reenters the network it will request the hall requests from the first elevator in the list
 		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
-
 	}
 	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 }
@@ -79,7 +72,6 @@ func portGenerateor(localID, targetID string) string {
 	localIndex := indexOfElevatorID(localID)
 	targetIndex := indexOfElevatorID(targetID)
 	port := 8000 + localIndex + targetIndex 
-
 
 	return fmt.Sprintf("%d", port)
 }
@@ -128,16 +120,15 @@ func handleRequestHallRequests(requestHallRequests chan customStructs.HallReques
 	}
 }
 
+// mergeHallRequests merges two HallRequests into one new HallRequests
 func mergeHallRequests(a, b customStructs.HallRequests) customStructs.HallRequests {
 	maxLen := len(a)
 	if len(b) > maxLen {
 		maxLen = len(b)
 	}
 
-
 	// Create result slice
 	result := make(customStructs.HallRequests, maxLen)
-
 
 	for i := 0; i < maxLen; i++ {
 		var aVal, bVal [2]bool
