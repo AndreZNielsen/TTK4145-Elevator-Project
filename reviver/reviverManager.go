@@ -13,17 +13,13 @@ type Message struct {
 	Content []bool `json:"content"`
 }
 
-
-
 func StartReviver(elev *elevator.Elevator) {
 	var reviverDead = make(chan bool)
 	var reviverAlive = make(chan bool)
 
 	fmt.Println("Starting reviver in 5 sec...")
 	time.Sleep(5 * time.Second)
-	
 	startReviverProcess(elev,reviverAlive,reviverDead)
-
 
 	for {// makes sure that the reviver is alive
 		select{
@@ -40,8 +36,7 @@ func startReviverProcess(elev *elevator.Elevator,reviverAlive chan bool,reviverD
 	var cmd *exec.Cmd
 
 	switch runtime.GOOS {
-	case "linux":
-		
+	case "linux":	
 		cmd = exec.Command("gnome-terminal", "--", "bash", "-c", "go run reviver_main.go")				
 	
 	case "windows":
