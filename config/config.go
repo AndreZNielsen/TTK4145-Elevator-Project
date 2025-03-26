@@ -15,7 +15,7 @@ var LocalElevatorServerPort = "localhost:12345"
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
 
 var Elevators_ip = map[string]string{
-	"A": "10.100.23.24",
+	"A": "10.22.92.31",
 
 	"B": "localhost",
 
