@@ -198,7 +198,6 @@ func read(in [4]byte) [4]byte {
 			_, err := _conn.Write(in[:])
 
 			if err != nil {
-				//panic("Lost connection to Elevator Server")
 				_initialized = false
 				DisconnectedElevSever<-true
 			
@@ -207,7 +206,6 @@ func read(in [4]byte) [4]byte {
 
 			_, err = _conn.Read(out[:])
 			if err != nil {
-				//panic("Lost connection to Elevator Server")
 				_initialized = false
 				DisconnectedElevSever<-true
 				return [4]byte{0, 0, 0, 0}
@@ -231,7 +229,6 @@ func write(in [4]byte) {
 
 			_, err := _conn.Write(in[:])
 			if err != nil {
-				//panic("Lost connection to Elevator Server")
 				_initialized = false
 				DisconnectedElevSever<-true
 			}
@@ -259,11 +256,3 @@ func toBool(a byte) bool {
 	return b
 }
 
-/*
-func handleDisconnect(){
-	
-	<-DisconnectedElevSever
-	go Init(ServerAdrr, 4)
-	
-}		
-*/

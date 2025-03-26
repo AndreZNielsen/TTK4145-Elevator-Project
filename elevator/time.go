@@ -1,7 +1,6 @@
 package elevator
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -45,13 +44,11 @@ func TimedOut() bool {
 var StuckEvents chan<- bool
 
 func StartStuckTimer(){
-	fmt.Println("stucktimer started")
 	stuckTimeOfStart = time.Now()
 	stuckTimerActive = true
 }
 
 func StopStuckTimer(elevator *Elevator) {
-	fmt.Println("stucktimer stopped")
     stuckTimerActive = false
 	if elevator.Stuck {
 		StuckEvents <- false

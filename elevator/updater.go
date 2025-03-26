@@ -1,7 +1,6 @@
 package elevator
 
 import (
-	"fmt"
 	"root/assigner"
 	"root/elevio"
 	"root/sharedData"
@@ -49,7 +48,6 @@ func Start_if_idle(elevator *Elevator) {
         elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
         if elevio.MotorDirection(elevator.direction) != 0 {
         StartStuckTimer()
-        fmt.Println("start if idle")
     }
 
     }

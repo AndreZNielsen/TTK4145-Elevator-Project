@@ -118,7 +118,7 @@ func MakeUninitializedelevator() Elevator {
 		floor:     -1,
 		direction: Dir_stop,
 		behaviour: Behaviour_idle,
-		obstructed: false,
+		obstructed: elevio.GetObstruction(),
 
 		Stuck: false,
 

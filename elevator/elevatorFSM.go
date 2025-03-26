@@ -1,7 +1,6 @@
 package elevator
 
 import (
-	"fmt"
 	"root/elevio"
 	"root/sharedData"
 	"root/transmitter"
@@ -23,19 +22,21 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
 	*elevator = MakeUninitializedelevator()
 	FSM_InitBetweenFloors(elevator)	
-	go restartElevatorServer(elevator_ip, Num_floors, disconnectedElevSever, elevator)
+	go elevatorServerReconnect(elevator_ip, Num_floors, disconnectedElevSever, elevator)
 }
 
-func restartElevatorServer(elevator_ip string, Num_floors int, disconnectedElevSever chan bool,elevator *Elevator) {
-	for {//restarts the elevator server if it gets disconnected
+func elevatorServerReconnect(elevator_ip string, Num_floors int, disconnectedElevSever chan bool,elevator *Elevator) {
+	for {
 		<-disconnectedElevSever
+		StuckEvents <- true
 		elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
+		StuckEvents <- false
 		FSM_InitBetweenFloors(elevator)	
 	}
 	
 }
 
-func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
+func FSM_InitBetweenFloors(elevator *Elevator) { 
 	if elevio.GetFloor() == -1 {
 	elevio.SetMotorDirection(elevio.MD_Down)
 	elevator.direction = Dir_down
@@ -182,13 +183,12 @@ func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData
 	SetAllLights(elevator, SharedData)
 	Start_if_idle(elevator)
 }
-
+var stuckEvents = make(chan bool)
 func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 	buttonEvents 		:= make(chan elevio.ButtonEvent)
 	floorEvents 		:= make(chan int)
 	obstructionEvents 	:= make(chan bool)
 	timerEvents 		:= make(chan bool)
-	stuckEvents 		:= make(chan bool)
 
 
 	go elevio.PollButtons(buttonEvents)
@@ -209,11 +209,6 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 
 		case stuck := <-stuckEvents:
 			localEvents <- LocalEvent{EventType: "stuck", Stuck: stuck}
-			if stuck {
-				fmt.Println("stuck event happend, stuck is true")
-			} else {
-				fmt.Println("stuck event happend, stuck is false")
-			}
 
 		case <-timerEvents:
 			localEvents <- LocalEvent{EventType: "timer"}
