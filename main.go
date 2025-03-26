@@ -7,20 +7,14 @@ import (
 	"root/network"
 	//"root/reciver"
 	"flag"
-	"root/backup"
+
+	//"root/reviver"
+
 	SharedData "root/sharedData"
 	"root/transmitter"
 )
 
-var elevator_1_ip = "localhost:15657"
 
-/*
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
-og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
-på samme maskin
-*/
 
 func main() {
     fmt.Println("Started!")
@@ -42,18 +36,24 @@ func main() {
 	
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
-	go network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
+
+	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
-    elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
+    elevator.FSM_MakeElevator(&elev, config.LocalElevatorServerPort, config.Num_floors)
+
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     fmt.Println(cabBackup)
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
-        transmitter.RequestHallRequests(externalConn,config.RemoteIDs[0])
+
+
+        transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
+
     }
     
-    go backup.Start_backup(&elev)
+    //go reviver.StartReviver(&elev)
+
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     for {
@@ -66,11 +66,15 @@ func main() {
         case remoteEvent := <-remoteEventRecived:
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
             
-        case id := <-disconnected:
-            fmt.Println("disconnect triggered")
+
+
+        case id := <-disconnected:     
             if externalConn.ConnectedConn[id]{
                 externalConn.ConnectedConn[id]=false
                 network.StopAliveTimer(id)
+                fmt.Println("disconnect triggered")
+
+
                 go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
             }
         }

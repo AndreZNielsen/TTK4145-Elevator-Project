@@ -26,6 +26,7 @@ const (
 )
 
 type Elevator struct {
+
 	floor     	int
 	direction 	Dir
 	Requests  	[Num_floors][Num_buttons]bool
@@ -33,6 +34,7 @@ type Elevator struct {
 	config   	elevatorConfig
 	obstructed 	bool
 	Stuck	   	bool
+
 }
 
 type elevatorConfig struct {
@@ -56,17 +58,21 @@ const (
 type Dir int
 
 const (
-	Dir_down Dir = iota - 1
-	Dir_stop
-	Dir_up
+
+	Dir_down Dir = - 1
+	Dir_stop Dir = 0
+	Dir_up   Dir = 1
+
 )
 
 type Button int
 
 const (
-	Btn_hallup Button = iota
-	Btn_halldown
-	Btn_hallcab
+
+	Btn_hallup   Button = 0
+	Btn_halldown Button = 1
+	Btn_hallcab  Button = 2
+
 )
 
 
@@ -110,34 +116,6 @@ func EbToString(behaviour ElevatorBehaviour) string {
 }
 
 
-/* 
-func (e *Elevator) print() {
-	fmt.Println("  +--------------------+")
-	fmt.Printf("  |floor = %-2d          |\n", e.floor)
-	fmt.Printf("  |dirn  = %-12.12s|\n", ElevioDirToString(e.direction))
-	fmt.Printf("  |behav = %-12.12s|\n", EbToString(e.behaviour))
-
-	fmt.Println("  +--------------------+")
-	fmt.Println("  |  | up  | dn  | cab |")
-	for f := Num_floors - 1; f >= 0; f-- {
-		fmt.Printf("  | %d", f)
-		for btn := 0; btn < Num_buttons; btn++ {
-			if (f == Num_floors-1 && btn == int(Btn_hallup)) || (f == 0 && btn == int(Btn_halldown)) {
-				fmt.Print("|     ")
-			} else {
-				if e.requests[f][btn] {
-					fmt.Print("|  #  ")
-				} else {
-					fmt.Print("|  -  ")
-				}
-					}
-		}
-		fmt.Println("|")
-	}
-	fmt.Println("  +--------------------+")
-
-
-} */
 
 
 func MakeUninitializedelevator() Elevator {
@@ -146,7 +124,9 @@ func MakeUninitializedelevator() Elevator {
 		direction: Dir_stop,
 		behaviour: Behaviour_idle,
 		obstructed: false,
+
 		Stuck: false,
+
 		config: elevatorConfig{
 			clearRequestVariation: CV_InDirn,
 			doorOpenDuration:      3.0,

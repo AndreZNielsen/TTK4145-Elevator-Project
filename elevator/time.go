@@ -1,19 +1,23 @@
 package elevator
 
+
 import (
 	"fmt"
 	"time"
 
 )
 
+
 var (
 	pollRate  = 20 * time.Millisecond
 	timeOut   = 3 * time.Second
 	timeOfStart time.Time
 	timerActive    bool
+
 	stuckTimeOfStart time.Time
 	stuckTimerActive bool
 	stuckTimeOut = 7 * time.Second
+
 )
 
 func StartTimer() {
@@ -40,6 +44,7 @@ func TimerIsDone(receiver chan<- bool) {
 func TimedOut() bool {
 	return timerActive && time.Since(timeOfStart) > timeOut
 }
+
 
 var StuckEvents chan<- bool
 
@@ -74,4 +79,5 @@ func StuckTimerIsDone(stuckEvents chan<- bool) {
 		prev = timedOut
 	}
 }
+
 
