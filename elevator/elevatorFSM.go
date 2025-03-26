@@ -142,7 +142,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 		//send_elevator_data for å sende obstruction
 	case "stuck":
 		elevator.Stuck = event.Stuck
-		
+		Send_Elevator_data(GetElevatorData(elevator), externalConn)
 	case "timer":
 		if IsDoorObstructed(elevator) {
 			DoorOpen(elevator,) // Door is kept open if it is obstructed						

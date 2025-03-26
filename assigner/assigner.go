@@ -50,7 +50,7 @@ func Assigner(localelvator customStructs.Elevator_data,RemoteElevatorData map[st
 		// elavator is not obstructed 
 		// elavator is in network
 		// elavator is not stuck
-		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] && !remote.Stuck {
+		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] && !remote.Stuck && remote.Floor != -1 {
 			states[id] = remote
 		}
 	}

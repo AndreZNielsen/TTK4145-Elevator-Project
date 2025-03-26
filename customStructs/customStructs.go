@@ -14,7 +14,6 @@ type Elevator_data struct {//data struct that contains all the data that the ass
 	Floor       int    `json:"floor"`
 	Direction   string `json:"direction"`
 	CabRequests []bool `json:"cabRequests"` 
-
     Obstructed  bool  
     Stuck       bool
 

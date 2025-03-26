@@ -173,6 +173,7 @@ func GetElevatorData(elevator *Elevator) customStructs.Elevator_data {
         Direction:   ElevioDirToString(elevator.direction), 
         CabRequests: GetCabRequests(elevator.Requests),
 		Obstructed:  elevator.obstructed,
+		Stuck:       elevator.Stuck,
     }
 }
 
