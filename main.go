@@ -12,15 +12,8 @@ import (
 	"root/transmitter"
 )
 
-var elevator_1_ip = "localhost:12345"
 
-/*
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
-og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
-på samme maskin
-*/
+
 
 func main() {
     fmt.Println("Started!")
@@ -45,7 +38,7 @@ func main() {
 	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
-    elevator.FSM_MakeElevator(&elev, elevator_1_ip, config.Num_floors)
+    elevator.FSM_MakeElevator(&elev, config.LocalElevatorServerPort, config.Num_floors)
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     fmt.Println(cabBackup)
     if isRestart{

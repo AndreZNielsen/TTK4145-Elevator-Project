@@ -24,7 +24,7 @@ func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- 
 
 		if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(id) {// the elavator with the lowest index will dial 
 
-		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevatoip[id],id,externalConn)	
+		externalConn.RemoteElevatorConnections[id] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,id),config.Elevators_ip[id],id,externalConn)	
 		}else{
 
 		externalConn.RemoteElevatorConnections[id] = reciver.Start_tcp_listen(portGenerateor(config.Elevator_id,id),id,externalConn)
@@ -46,7 +46,7 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {// the elavator with the lowest index will dial 
 
-		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevatoip[reConnID],reConnID,externalConn)	
+		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevators_ip[reConnID],reConnID,externalConn)	
 		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)
 
 	}else{
