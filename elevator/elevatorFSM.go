@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"root/elevio"
 	"root/sharedData"
-	"root/config"
+	//"root/config"
 	"root/transmitter"
+	"root/customStructs"
+
 
 )
 
@@ -39,9 +41,9 @@ func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
 
 }
 
-func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, SharedData *sharedData.SharedData) []config.Update {
+func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, SharedData *sharedData.SharedData) []customStructs.Update {
 	
-	updates := []config.Update{}
+	updates := []customStructs.Update{}
 
 	if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
 		DoorOpen(elevator) 
@@ -52,7 +54,7 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, S
 		elevator.Requests[btn_floor][btn_type] = true
 	}
 	
-	update := config.Update{
+	update := customStructs.Update{
 		Floor:		btn_floor, 
 		ButtonType: int(btn_type), 
 		Value: 		true,
@@ -60,9 +62,9 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, S
 	return append(updates, update)
 }
 
-func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *sharedData.SharedData) []config.Update {
+func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *sharedData.SharedData) []customStructs.Update {
 	
-	updates := []config.Update{}
+	updates := []customStructs.Update{}
 
 	elevator.floor = newFloor
 	elevio.SetFloorIndicator(elevator.floor)
@@ -177,7 +179,7 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 	}
 }
 
-func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event config.RemoteEvent, externalConn sharedData.ExternalConn) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
+func FSM_HandleRemoteEvent(elevator *Elevator, SharedData *sharedData.SharedData, event customStructs.RemoteEvent, externalConn sharedData.ExternalConn) { // Ideally this should say RemoteEvent, instead of [3]int, maybe fix this later
 
 	switch event.EventType {
 	case "update":

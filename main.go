@@ -7,6 +7,7 @@ import (
 	"root/network"
 	//"root/reciver"
 	"flag"
+    "root/customStructs"
 
 	//"root/reviver"
 
@@ -26,11 +27,11 @@ func main() {
 	flag.BoolVar(&isRestart, "isRestart", false, "Indicates if restart is required")
 	flag.StringVar(&cabBackup, "cabBackup", "", "Space-separated list for CabBackup")
 	flag.Parse()
-
+    
     var elev elevator.Elevator
-
+    
     localEventRecived 	:= make(chan elevator.LocalEvent)
-    remoteEventRecived 	:= make(chan config.RemoteEvent)
+    remoteEventRecived 	:= make(chan customStructs.RemoteEvent)
     disconnected 		:= make(chan string)
 
 	

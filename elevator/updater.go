@@ -4,15 +4,17 @@ import (
 
 	"fmt"
 	"root/assigner"
-	"root/config"
+	//"root/config"
 	"root/elevio"
 	"root/sharedData"
 	"root/transmitter"
+	"root/customStructs"
+
 )
 
 
 
-func UpdatesharedHallRequests(elevator *Elevator, sharedData *sharedData.SharedData, update config.Update) {
+func UpdatesharedHallRequests(elevator *Elevator, sharedData *sharedData.SharedData, update customStructs.Update) {
     if  update.ButtonType != 2 { // ignores updates to cab requests (update[1] != 2)
         sharedData.HallRequests[update.Floor][update.ButtonType] = update.Value
     }
@@ -38,7 +40,7 @@ func AssignLocalHallRequests(elevator *Elevator, SharedData *sharedData.SharedDa
 
 
 
-func Send_Elevator_data(elevatorData config.Elevator_data, externalConn *sharedData.ExternalConn) {
+func Send_Elevator_data(elevatorData customStructs.Elevator_data, externalConn *sharedData.ExternalConn) {
     transmitter.Send_Elevator_data(elevatorData, externalConn)
 }
 

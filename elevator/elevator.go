@@ -6,6 +6,7 @@ import (
 	"root/sharedData"
 	"root/elevio"
 	Config "root/config"
+	"root/customStructs"
 	"strings"
 )
 
@@ -171,8 +172,8 @@ func GetElevator(elevator *Elevator) Elevator {
     return *elevator
 }
 
-func GetElevatorData(elevator *Elevator) Config.Elevator_data {
-    return Config.Elevator_data{
+func GetElevatorData(elevator *Elevator) customStructs.Elevator_data {
+    return customStructs.Elevator_data{
         Behavior:    EbToString(elevator.behaviour), 
         Floor:       elevator.floor, 
         Direction:   ElevioDirToString(elevator.direction), 

@@ -7,6 +7,7 @@ import (
 	"time"
 	"root/sharedData"
 	"root/config"
+	"root/customStructs"
 
 
 	"errors"
@@ -49,13 +50,13 @@ func Start_tcp_listen(port string, id string,externalConn *sharedData.ExternalCo
 }
 
 
-func Listen_recive(receiver chan<- config.RemoteEvent,
+func Listen_recive(receiver chan<- customStructs.RemoteEvent,
 	disconnected chan<- string,
 	externalData *sharedData.SharedData,
 	externalConn *sharedData.ExternalConn,
 	aliveRecievd chan<- string,
 
-	requestHallRequests chan<- [][2]bool) {
+	requestHallRequests chan<- customStructs.HallRequests) {
 
 	for _, id := range config.RemoteIDs{
 		go Recive(receiver,id,disconnected,externalData,externalConn,aliveRecievd,requestHallRequests)
@@ -63,7 +64,7 @@ func Listen_recive(receiver chan<- config.RemoteEvent,
 }
 
 
-func Recive(receiver chan<- config.RemoteEvent,
+func Recive(receiver chan<- customStructs.RemoteEvent,
     id string,
     disconnected chan<- string,
     externalData *sharedData.SharedData,
@@ -71,7 +72,7 @@ func Recive(receiver chan<- config.RemoteEvent,
     aliveRecievd chan<- string,
 
 
-    requestHallRequests chan<- [][2]bool) {
+    requestHallRequests chan<- customStructs.HallRequests) {
 
 
     scann := bufio.NewScanner(externalConn.RemoteElevatorConnections[id])
@@ -106,14 +107,14 @@ func Recive(receiver chan<- config.RemoteEvent,
           
             switch message.TypeID {
             case "elevator_data":
-                var data config.Elevator_data
+                var data customStructs.Elevator_data
                 err := json.Unmarshal(message.Data, &data) 
                 if err != nil {
                     fmt.Println("Error decoding Elevator_data:", err)
                     return
                 }
 
-                event := config.RemoteEvent{
+                event := customStructs.RemoteEvent{
                     EventType:    "elevatorData",
                     Id:           id,
                     ElevatorData: data,
@@ -121,14 +122,14 @@ func Recive(receiver chan<- config.RemoteEvent,
                 receiver <- event
 
             case "Update":
-                var update config.Update
+                var update customStructs.Update
                 err := json.Unmarshal(message.Data, &update) 
                 if err != nil {
                     fmt.Println("Error decoding Update:", err)
                     return
                 }
 
-                event := config.RemoteEvent{
+                event := customStructs.RemoteEvent{
                     EventType: "update",
                     Update:    update,
                 }
@@ -140,7 +141,7 @@ func Recive(receiver chan<- config.RemoteEvent,
             case "RequestHallRequests":
 
 
-                 var hallRequests [][2]bool
+                 var hallRequests customStructs.HallRequests
                 err := json.Unmarshal(message.Data, &hallRequests) 
                 if err != nil {
                     fmt.Println("Error decoding Update:", err)
@@ -150,14 +151,14 @@ func Recive(receiver chan<- config.RemoteEvent,
 
 
             case "HallRequests":
-                var hallRequests [][2]bool
+                var hallRequests customStructs.HallRequests
                 err := json.Unmarshal(message.Data, &hallRequests) 
                 if err != nil {
                     fmt.Println("Error decoding HallRequests:", err)
                     return
                 }
 
-                event := config.RemoteEvent{
+                event := customStructs.RemoteEvent{
                     EventType:  "hallRequests",
                     HallRequests: hallRequests,
                 }

@@ -1,8 +1,10 @@
 package elevator
 
 import (
-	"root/config"
+	//"root/config"
 	"root/sharedData"
+	"root/customStructs"
+
 )
 
 func (e *Elevator) RequestsAbove() bool {
@@ -98,33 +100,33 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
 
 
 
-func (e *Elevator) RequestsClearAtCurrentFloor(SharedData *sharedData.SharedData) []config.Update {
+func (e *Elevator) RequestsClearAtCurrentFloor(SharedData *sharedData.SharedData) []customStructs.Update {
 
-    updates := []config.Update{}
+    updates := []customStructs.Update{}
 
     e.Requests[e.floor][Btn_hallcab] = false
     switch e.direction {
     case Dir_up:
         if !e.RequestsAbove() && !e.Requests[e.floor][Btn_hallup] {
             e.Requests[e.floor][Btn_halldown] = false
-            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
+            updates = append(updates, customStructs.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
         }
         e.Requests[e.floor][Btn_hallup] = false
-        updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+        updates = append(updates, customStructs.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
     
     case Dir_down:
         if !e.RequestsBelow() && !e.Requests[e.floor][Btn_halldown] {
             e.Requests[e.floor][Btn_hallup] = false
-            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+            updates = append(updates, customStructs.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
         }
         e.Requests[e.floor][Btn_halldown] = false
-        updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
+        updates = append(updates, customStructs.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
     default:
             e.Requests[e.floor][Btn_hallup] = false
-            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
+            updates = append(updates, customStructs.Update{Floor: e.floor, ButtonType: int(Btn_hallup), Value: false})
         
             e.Requests[e.floor][Btn_halldown] = false
-            updates = append(updates, config.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
+            updates = append(updates, customStructs.Update{Floor: e.floor, ButtonType: int(Btn_halldown), Value: false})
     }
     return updates
 }

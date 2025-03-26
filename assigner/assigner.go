@@ -8,6 +8,8 @@ import (
 	"root/sharedData"
 	"runtime"
 	"os"
+	"root/customStructs"
+
 )
 
 // Struct members must be public in order to be accessible by json.Marshal/.Unmarshal
@@ -15,12 +17,12 @@ import (
 
 type HRAInput struct {
 	HallRequests [][2]bool               `json:"hallRequests"`
-	States       map[string]config.Elevator_data `json:"states"`
+	States       map[string]customStructs.Elevator_data `json:"states"`
 }
 
 
 
-func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]config.Elevator_data, hallRequests [][2]bool, externalConn sharedData.ExternalConn) [][2]bool{
+func Assigner(localelvator customStructs.Elevator_data,RemoteElevatorData map[string]customStructs.Elevator_data, hallRequests [][2]bool, externalConn sharedData.ExternalConn) [][2]bool{
 	var input HRAInput
 	hraExecutable := ""
 	switch runtime.GOOS {
@@ -44,7 +46,7 @@ func Assigner(localelvator config.Elevator_data,RemoteElevatorData map[string]co
 		return make([][2]bool,config.Num_floors)
 	}
 
-	states := map[string]config.Elevator_data{//adds the local elevator to the states
+	states := map[string]customStructs.Elevator_data{//adds the local elevator to the states
 		config.Elevator_id: localelvator,
 	}
 

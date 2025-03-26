@@ -6,6 +6,7 @@ import(
 	"root/sharedData"
 	"root/config"
 	"root/elevator"
+	"root/customStructs"
 	"fmt"
 	
 
@@ -13,10 +14,10 @@ import(
 var aliveRecievd = make(chan string)
 var aliveTimeOut = make(chan string)
 
-var requestHallRequests = make(chan [][2]bool)
+var requestHallRequests = make(chan customStructs.HallRequests)
 
 
-func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
+func StartPeerNetwork(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
 	InitAliveTimer()
@@ -45,7 +46,7 @@ func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- 
 
 }
 
-func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
+func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected chan<- string, reConnID string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn,elev *elevator.Elevator){
 
 	totalDicvonnect := allFalse(externalConn.ConnectedConn)
 
@@ -117,7 +118,7 @@ func handleAliveTimer(aliveRecievd chan string,aliveTimeOut chan string,external
 	}
 }
 
-func handleRequestHallRequests(requestHallRequests chan [][2]bool,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
+func handleRequestHallRequests(requestHallRequests chan customStructs.HallRequests,externalConn *sharedData.ExternalConn,sharedData *sharedData.SharedData){
 	for{
 
 		remoteHallRequests := <-requestHallRequests
@@ -126,7 +127,7 @@ func handleRequestHallRequests(requestHallRequests chan [][2]bool,externalConn *
 	}
 }
 
-func mergeHallRequests(a, b [][2]bool) [][2]bool {
+func mergeHallRequests(a, b customStructs.HallRequests) customStructs.HallRequests {
 	maxLen := len(a)
 	if len(b) > maxLen {
 		maxLen = len(b)
@@ -134,7 +135,7 @@ func mergeHallRequests(a, b [][2]bool) [][2]bool {
 
 
 	// Create result slice
-	result := make([][2]bool, maxLen)
+	result := make(customStructs.HallRequests, maxLen)
 
 
 	for i := 0; i < maxLen; i++ {

@@ -9,6 +9,8 @@ import (
 	"time"
 	"errors"
 	"encoding/json"
+    "root/customStructs"
+
 )
 
 type Message struct {
@@ -61,7 +63,7 @@ func Start_tcp_call(port string, ip string, id string,externalConn *sharedData.E
 
 
 
-func Send_Elevator_data(data config.Elevator_data,externalConn *sharedData.ExternalConn) {
+func Send_Elevator_data(data customStructs.Elevator_data,externalConn *sharedData.ExternalConn) {
 	for _, id := range config.RemoteIDs{
 		if externalConn.ConnectedConn[id] {
 			go transmitt_Elevator_data(data,id,externalConn)
@@ -70,9 +72,9 @@ func Send_Elevator_data(data config.Elevator_data,externalConn *sharedData.Exter
 	}
 }
 
-var prevData = config.Elevator_data{Behavior: "doorOpen",Floor: 1,Direction: "down",CabRequests: make([]bool, config.Num_floors)}
+var prevData = customStructs.Elevator_data{Behavior: "doorOpen",Floor: 1,Direction: "down",CabRequests: make([]bool, config.Num_floors)}
 
-func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn *sharedData.ExternalConn) {
+func transmitt_Elevator_data(data customStructs.Elevator_data, id string, externalConn *sharedData.ExternalConn) {
 
 
 
@@ -127,7 +129,7 @@ func transmitt_Elevator_data(data config.Elevator_data, id string, externalConn 
 }
 
 
-func Send_update(update config.Update,externalConn *sharedData.ExternalConn){
+func Send_update(update customStructs.Update,externalConn *sharedData.ExternalConn){
     
 	for _, id := range config.RemoteIDs{
 		if externalConn.ConnectedConn[id]{
@@ -137,7 +139,7 @@ func Send_update(update config.Update,externalConn *sharedData.ExternalConn){
 	}
 }
 
-func transmitt_update(update config.Update, id string, externalConn *sharedData.ExternalConn) {
+func transmitt_update(update customStructs.Update, id string, externalConn *sharedData.ExternalConn) {
 
 
     // Lock for this specific id to ensure only one thread sends at a time
@@ -218,7 +220,7 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
 
 
 
-func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests [][2]bool, id string) {
+func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests customStructs.HallRequests, id string) {
     sendMu[id].Lock() 
     defer sendMu[id].Unlock() 
 
@@ -243,7 +245,7 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests [][
     }
 }
 
-func Send_Hall_Requests(externalConn *sharedData.ExternalConn, hallRequests [][2]bool) {
+func Send_Hall_Requests(externalConn *sharedData.ExternalConn, hallRequests customStructs.HallRequests) {
 
     message := Message{
         TypeID: "HallRequests",
