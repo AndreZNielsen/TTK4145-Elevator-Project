@@ -1,23 +1,19 @@
 package elevator
 
-
 import (
 	"fmt"
 	"time"
-
 )
-
 
 var (
 	pollRate  = 20 * time.Millisecond
 	timeOut   = 3 * time.Second
 	timeOfStart time.Time
 	timerActive    bool
-
+	
 	stuckTimeOfStart time.Time
 	stuckTimerActive bool
 	stuckTimeOut = 7 * time.Second
-
 )
 
 func StartTimer() {
