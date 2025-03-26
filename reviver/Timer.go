@@ -1,4 +1,4 @@
-package backup
+package reviver
 import(
 	"time"
 	"fmt"
@@ -7,11 +7,11 @@ import(
 
 var timer *time.Timer
 
-func Start_timer(backupDead chan bool) {
+func Start_timer(reviverDead chan bool) {
 	timer = time.NewTimer(10 * time.Second)
 	<-timer.C
-	fmt.Println("backup process not detected, restarting...")
-	backupDead <- true
+	fmt.Println("reviver process not detected, restarting...")
+	reviverDead <- true
 }
 	
 

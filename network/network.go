@@ -17,7 +17,7 @@ var requestHallRequests = make(chan [][2]bool)
 func StartPeerNetwork(remoteEvent chan<- config.RemoteEvent,disconnected chan<- string,sharedData *sharedData.SharedData,externalConn *sharedData.ExternalConn){
 	transmitter.InitDiscEventChan(disconnected)
 	transmitter.InitMutex()
-	InitAlive()
+	InitAliveTimer()
 
 	for _, id := range config.RemoteIDs{
 
@@ -44,7 +44,7 @@ func ReconnectPeer(remoteEvent chan<- config.RemoteEvent,disconnected chan<- str
 
 	totalDicvonnect := allFalse(externalConn.ConnectedConn)
 
-	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {
+	if indexOfElevatorID(config.Elevator_id)< indexOfElevatorID(reConnID) {// the elavator with the lowest index will dial 
 
 		externalConn.RemoteElevatorConnections[reConnID] = transmitter.Start_tcp_call(portGenerateor(config.Elevator_id,reConnID),config.Elevatoip[reConnID],reConnID,externalConn)	
 		go reciver.Recive(remoteEvent,reConnID,disconnected,sharedData,externalConn,aliveRecievd,requestHallRequests)

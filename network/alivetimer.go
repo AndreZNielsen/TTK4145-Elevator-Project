@@ -9,7 +9,7 @@ var (
 	ini = make(map[string]bool)
 )
 
-func InitAlive(){
+func InitAliveTimer(){
 	for _, id := range config.RemoteIDs{
 		ini[id]=false
 	}
@@ -33,4 +33,5 @@ func ResetAliveTimer(id string){
 
 func StopAliveTimer(id string){
 	timer[id].Stop()
+	ini[id] = false
 }

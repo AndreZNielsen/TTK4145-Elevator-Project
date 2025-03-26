@@ -51,11 +51,16 @@ func Init(addr string, numFloors int) {
 	NumFloors = numFloors
 	_mtx = sync.Mutex{}
 	var err error
-	_conn, err = net.Dial("tcp", addr)
-	if err != nil {
-		panic(err.Error())
-	}
+	for {
+		_conn, err = net.Dial("tcp", addr)
+		if err != nil {
+			fmt.Println("Error connecting to local elavator:",err.Error())
+			time.Sleep(5 * time.Second)
+			continue
+		}
 	_initialized = true
+	return
+	}
 }
 
 func SetMotorDirection(dir MotorDirection) {

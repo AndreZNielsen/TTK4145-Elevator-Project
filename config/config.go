@@ -5,7 +5,7 @@ const Num_floors = 4
 var Elevator_id = "A"
 
 
-var PossibleIDs = []string{"A","B","C"}
+var PossibleIDs = []string{"A"}
 
 
 var RemoteIDs = RemoveElement(PossibleIDs, Elevator_id)
