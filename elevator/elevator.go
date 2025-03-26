@@ -45,10 +45,7 @@ type elevatorConfig struct {
 
 type DirBehaviourPair struct {
 	dir Dir
-	//direction of the elevator: Dir_down, Dir_stop, Dir_up
-
 	behaviour ElevatorBehaviour
-	//states of the elevator: 	Behaviour_idle, Behaviour_door_open, Behaviour_moving
 }
 
 const (
@@ -115,9 +112,6 @@ func EbToString(behaviour ElevatorBehaviour) string {
 		return "undefined"
 	}
 }
-
-
-
 
 func MakeUninitializedelevator() Elevator {
 	return Elevator{

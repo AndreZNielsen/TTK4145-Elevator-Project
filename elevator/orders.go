@@ -1,10 +1,8 @@
 package elevator
 
 import (
-	//"root/config"
 	"root/sharedData"
 	"root/customStructs"
-
 )
 
 func (e *Elevator) RequestsAbove() bool {
@@ -97,8 +95,6 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
         e.direction == Dir_stop ||
         buttonType == Btn_hallcab)
 }
-
-
 
 func (e *Elevator) RequestsClearAtCurrentFloor(SharedData *sharedData.SharedData) []customStructs.Update {
 
