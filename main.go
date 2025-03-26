@@ -7,11 +7,12 @@ import (
 	"root/network"
 	//"root/reciver"
 	"flag"
+
 	//"root/reviver"
+
 	SharedData "root/sharedData"
 	"root/transmitter"
 )
-
 
 
 
@@ -35,20 +36,24 @@ func main() {
 	
 	sharedData := SharedData.InitSharedData()
     externalConn := SharedData.InitExternalConn()
-	network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
+
+	go network.StartPeerNetwork(remoteEventRecived, disconnected, sharedData, externalConn)
     
     
     elevator.FSM_MakeElevator(&elev, config.LocalElevatorServerPort, config.Num_floors)
+
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     fmt.Println(cabBackup)
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
+
 
         transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
 
     }
     
     //go reviver.StartReviver(&elev)
+
 
     transmitter.Send_Elevator_data(elevator.GetElevatorData(&elev), externalConn) 
     for {
@@ -62,11 +67,13 @@ func main() {
 			elevator.FSM_HandleRemoteEvent(&elev, sharedData, remoteEvent, *externalConn)
             
 
+
         case id := <-disconnected:     
             if externalConn.ConnectedConn[id]{
                 externalConn.ConnectedConn[id]=false
                 network.StopAliveTimer(id)
                 fmt.Println("disconnect triggered")
+
 
                 go network.ReconnectPeer(remoteEventRecived, disconnected, id, sharedData, externalConn,&elev)
             }
