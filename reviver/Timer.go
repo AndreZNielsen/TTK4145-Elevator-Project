@@ -4,7 +4,6 @@ import(
 	"fmt"
 )
 
-
 var timer *time.Timer
 
 func Start_timer(reviverDead chan bool) {
@@ -14,7 +13,6 @@ func Start_timer(reviverDead chan bool) {
 	reviverDead <- true
 }
 	
-
 func Reset_timer(){
 	timer.Reset(10 * time.Second)
 }
