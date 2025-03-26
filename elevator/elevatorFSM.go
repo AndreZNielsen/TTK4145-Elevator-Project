@@ -1,15 +1,11 @@
 package elevator
 
 import (
-	//"container/list"
 	"fmt"
 	"root/elevio"
 	"root/sharedData"
-	//"root/config"
 	"root/transmitter"
 	"root/customStructs"
-
-
 )
 
 type LocalEvent struct {
@@ -18,19 +14,16 @@ type LocalEvent struct {
 	Floor      int
 	Obstructed bool
 	Stuck 	   bool
-
 }
 
 func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	elevio.Init(elevator_ip, Num_floors)
 	*elevator = MakeUninitializedelevator()
-	FSM_InitBetweenFloors(elevator)
-	
+	FSM_InitBetweenFloors(elevator)	
 }
 
 
 func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
-
 	if elevio.GetFloor() == -1 {
 	elevio.SetMotorDirection(elevio.MD_Down)
 	elevator.direction = Dir_down
@@ -38,7 +31,6 @@ func FSM_InitBetweenFloors(elevator *Elevator) { // Create Move-down function
 	} else {
 		elevator.floor = elevio.GetFloor()
 	}
-
 }
 
 func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, SharedData *sharedData.SharedData) []customStructs.Update {
@@ -49,7 +41,6 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, S
 		DoorOpen(elevator) 
 		return updates
 	}
-
 	if btn_type == Btn_hallcab {
 		elevator.Requests[btn_floor][btn_type] = true
 	}
@@ -80,9 +71,7 @@ func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *shared
 
 	} else{
 		StartStuckTimer()
-
-	}
-	
+	}	
 	return updates
 }
 
@@ -94,30 +83,22 @@ func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData,
 	elevator.behaviour = nextBehaviourPair.behaviour
 
 	switch elevator.behaviour {
-
 	case Behaviour_door_open: // if next state is "door_open", the door opens
-
 		DoorOpen(elevator)
 		updates := elevator.RequestsClearAtCurrentFloor(SharedData)
 		if len(updates) == 0 {
 			return
 		}
-
-
 		for i:=0; i<len(updates); i++  {
 			UpdatesharedHallRequests(elevator, SharedData, updates[i])
 			transmitter.Send_update(updates[i], externalConn)
-
 		}
-
-
 	case Behaviour_moving:
 		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))
 		StartStuckTimer()
 	
 	case Behaviour_idle:
 		elevio.SetMotorDirection(elevio.MotorDirection(elevator.direction))		
-
 	}
 }
 
@@ -146,7 +127,6 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 
 		if len(updates) == 0 {
 			return
-
 		}
 		
 		for i:=0; i<len(updates); i++  {
@@ -154,24 +134,18 @@ func FSM_HandleLocalEvent(elevator *Elevator, event LocalEvent, SharedData *shar
 			transmitter.Send_update(updates[i], externalConn)
 		}
 		
-
-
 		AssignLocalHallRequests(elevator, SharedData, *externalConn)
 		SetAllLights(elevator, SharedData)
 
 	case "obstructed":
 		FSM_HandleObstruction(elevator, event.Obstructed)
-
 		//send_elevator_data for å sende obstruction
-
 	case "stuck":
 		elevator.Stuck = event.Stuck
-
+		
 	case "timer":
 		if IsDoorObstructed(elevator) {
-			DoorOpen(elevator,) // Door is kept open if it is obstructed
-
-						
+			DoorOpen(elevator,) // Door is kept open if it is obstructed						
 		} else {
 			FSM_startNextRequest(elevator, SharedData, externalConn) 
 			SetAllLights(elevator, SharedData)
@@ -202,7 +176,6 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 	floorEvents 		:= make(chan int)
 	obstructionEvents 	:= make(chan bool)
 	timerEvents 		:= make(chan bool)
-
 	stuckEvents 		:= make(chan bool)
 
 
@@ -212,7 +185,6 @@ func FSM_DetectLocalEvents(localEvents chan<- LocalEvent) {
 	go TimerIsDone(timerEvents)
 
 	go StuckTimerIsDone(stuckEvents)
-
 
 	for {
 		select {
