@@ -20,8 +20,6 @@ type HRAInput struct {
 	States       map[string]customStructs.Elevator_data `json:"states"`
 }
 
-
-
 func Assigner(localelvator customStructs.Elevator_data,RemoteElevatorData map[string]customStructs.Elevator_data, hallRequests [][2]bool, externalConn sharedData.ExternalConn) [][2]bool{
 	var input HRAInput
 	hraExecutable := ""
@@ -33,44 +31,33 @@ func Assigner(localelvator customStructs.Elevator_data,RemoteElevatorData map[st
 	default:
 		panic("OS not supported")
 	}
-
 	// added this so that you dont have to run chmod +x on the executable
 	err := os.Chmod("assignerExecutables/" + hraExecutable, 0755)
 	if err != nil {
 		fmt.Println("os.Chmod error: ", err)
 		return nil
 	}
-	
-
-	if localelvator.Floor == -1 { // kan kanje fjernes
+	if localelvator.Floor == -1 { 
 		return make([][2]bool,config.Num_floors)
 	}
-
 	states := map[string]customStructs.Elevator_data{//adds the local elevator to the states
 		config.Elevator_id: localelvator,
 	}
-
-
-
 	// Loop over Remote IDs and add remote data if available.
 	for _, id := range config.RemoteIDs {
-
-		// Only add the remote elevator if 
+		// Only add the remote elevator if:
 		// data exists 
-		// the elavator is not obstructed 
-		// the elavator is in network
-		// the elavator is not stuck
-
+		// elavator is not obstructed 
+		// elavator is in network
+		// elavator is not stuck
 		if remote, ok := RemoteElevatorData[id]; ok && !remote.Obstructed && externalConn.ConnectedConn[id] && !remote.Stuck {
 			states[id] = remote
 		}
 	}
-
 	input = HRAInput{
 		HallRequests: hallRequests,
 		States:       states,
 	}
-
 
 	jsonBytes, err := json.Marshal(input)
 	if err != nil {
@@ -91,13 +78,6 @@ func Assigner(localelvator customStructs.Elevator_data,RemoteElevatorData map[st
 		fmt.Println("json.Unmarshal error: ", err)
 		return nil
 	}
-	
-	//fmt.Printf("output: \n")
-	//for k, v := range output {
-		//fmt.Printf("%6v :  %+v\n", k, v)
-	//}
-
 	return output[config.Elevator_id] // returns the hall requests for the local elevator
-
 }
 
