@@ -8,7 +8,7 @@ var Elevator_id = "B"
 var PossibleIDs = []string{"A","B"}
 
 
-var LocalElevatorServerPort = "localhost:12345"
+var LocalElevatorServerPort = "localhost:12346"
 
 
 
