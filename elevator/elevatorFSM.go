@@ -77,7 +77,7 @@ func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *shared
 		return updates
 	}
 
-	if elevator.ShouldStop() {
+	if elevator.RequestsShouldStop() {
 		elevio.SetMotorDirection(elevio.MD_Stop)
 		updates = elevator.ClearRequestsAtFloor(SharedData)
 		DoorOpen(elevator)

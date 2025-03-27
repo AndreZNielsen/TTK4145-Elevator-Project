@@ -5,28 +5,6 @@ import (
 	"root/customStructs"
 )
 
-func (e *Elevator) RequestsAbove() bool {
-    for f := e.floor + 1; f < Num_floors; f++ {
-        for btn := 0; btn < Num_buttons; btn++ {
-            if e.Requests[f][btn] {
-                return true
-            }
-        }
-    }
-    return false
-}
-
-func (e *Elevator) RequestsBelow() bool {
-    for f := 0; f < e.floor; f++ {
-        for btn := 0; btn < Num_buttons; btn++ {
-            if e.Requests[f][btn] {
-                return true
-            }
-        }
-    }
-    return false
-}
-
 func (e *Elevator) RequestsHere() bool {
     for btn := 0; btn < Num_buttons; btn++ {
         if e.Requests[e.floor][btn] {
@@ -36,18 +14,32 @@ func (e *Elevator) RequestsHere() bool {
     return false
 }
 
-func (e *Elevator) SelectNextDirection() DirBehaviourPair {
-    switch e.direction {
-    case Dir_up:
-        if e.RequestsAbove() {
-            return DirBehaviourPair{Dir_up, Behaviour_moving}
-        } else if e.RequestsHere() {
-            return DirBehaviourPair{Dir_stop, Behaviour_door_open}
-        } else if e.RequestsBelow() {
-            return DirBehaviourPair{Dir_down, Behaviour_moving}
-        } else {
-            return DirBehaviourPair{Dir_stop, Behaviour_idle}
+func (e *Elevator) RequestsAbove() bool {
+    for flr := e.floor + 1; flr < Num_floors; flr++ {
+        for btn := 0; btn < Num_buttons; btn++ {
+            if e.Requests[flr][btn] {
+                return true
+            }
         }
+    }
+    return false
+}
+
+func (e *Elevator) RequestsBelow() bool {
+    for flr := 0; flr < e.floor; flr++ {
+        for btn := 0; btn < Num_buttons; btn++ {
+            if e.Requests[flr][btn] {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+
+func (e *Elevator) SelectNextDirection() DirBehaviourPair { //Determines the next direction and behavior of the elevator based on current requests and state. 
+    //logic is based on the C code from TTK4145 Project-resources.
+    switch e.direction {
     case Dir_down:
         if e.RequestsBelow() {
             return DirBehaviourPair{Dir_down, Behaviour_moving}
@@ -58,6 +50,18 @@ func (e *Elevator) SelectNextDirection() DirBehaviourPair {
         } else {
             return DirBehaviourPair{Dir_stop, Behaviour_idle}
         }
+
+    case Dir_up:
+        if e.RequestsAbove() {
+            return DirBehaviourPair{Dir_up, Behaviour_moving}
+        } else if e.RequestsHere() {
+            return DirBehaviourPair{Dir_stop, Behaviour_door_open}
+        } else if e.RequestsBelow() {
+            return DirBehaviourPair{Dir_down, Behaviour_moving}
+        } else {
+            return DirBehaviourPair{Dir_stop, Behaviour_idle}
+        }
+
     case Dir_stop:
         if e.RequestsHere() {
             return DirBehaviourPair{Dir_stop, Behaviour_door_open}
@@ -73,7 +77,7 @@ func (e *Elevator) SelectNextDirection() DirBehaviourPair {
     }
 }
 
-func (e *Elevator) ShouldStop() bool {
+func (e *Elevator) RequestsShouldStop() bool {
     switch e.direction {
     case Dir_down:
         return e.Requests[e.floor][Btn_halldown] || e.Requests[e.floor][Btn_hallcab] || !e.RequestsBelow()
