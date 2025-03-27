@@ -63,7 +63,7 @@ func ReconnectPeer(remoteEvent chan<- customStructs.RemoteEvent,disconnected cha
 
 
 	if(totalDisconnect){//when it reenters the network it will request the hall requests from the first elevator in the list
-		transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, reConnID)
+		transmitter.MergeHallRequests(externalConn, sharedData.HallRequests, reConnID)
 	}
 	transmitter.Send_Elevator_data(elevator.GetElevatorData(elev), externalConn) 
 }
@@ -103,7 +103,6 @@ func handleAliveTimer(aliveRecievd chan string,aliveTimeOut chan string,external
 
 		case id := <-aliveTimeOut:
 			if externalConn.ConnectedConn[id]{
-				fmt.Println("handleAliveTimer triggered disconnect")
 				disconnected <- id
 			}
 		}

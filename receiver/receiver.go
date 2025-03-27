@@ -129,13 +129,13 @@ func Recive(receiver chan<- customStructs.RemoteEvent,
             case "alive":
                 aliveRecievd <- id
 
-            case "RequestHallRequests":
-                 var hallRequests customStructs.HallRequests
+            case "mergeHallRequests":
+                var hallRequests customStructs.HallRequests
 
                 err := json.Unmarshal(message.Data, &hallRequests) 
 
                 if err != nil {
-                    fmt.Println("Error decoding Update:", err)
+                    fmt.Println("Error decoding RequestHallRequests:", err)
                     return
                 }
                 requestHallRequests <- hallRequests

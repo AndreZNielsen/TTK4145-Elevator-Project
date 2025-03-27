@@ -45,7 +45,7 @@ func main() {
     
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
-        transmitter.RequestHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
+        transmitter.MergeHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
     }
 
     for {

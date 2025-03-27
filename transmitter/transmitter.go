@@ -179,12 +179,13 @@ func transmitt_alive(id string, externalConn *sharedData.ExternalConn) {
 
 
 
-func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests customStructs.HallRequests, id string) {
+func MergeHallRequests(externalConn *sharedData.ExternalConn, hallRequests customStructs.HallRequests, id string) {
     sendMu[id].Lock() 
     defer sendMu[id].Unlock() 
 
     message := Message{
-        TypeID: "RequestHallRequests", 
+        TypeID: "mergeHallRequests",
+        Data:   hallRequests,   
     }
 
     encoder := json.NewEncoder(externalConn.RemoteElevatorConnections[id])
@@ -192,10 +193,10 @@ func RequestHallRequests(externalConn *sharedData.ExternalConn, hallRequests cus
     if err != nil {
 
         if errors.As(err, &netErr) {
-            fmt.Println("Network error while encoding update:", netErr)
+            fmt.Println("Network error while encoding mergeHallRequests:", netErr)
             Disconnected <- id
         } else {
-            fmt.Println("Error encoding RequestHallRequests:", err)
+            fmt.Println("Error encoding mergeHallRequests:", err)
         }
         return
     }
