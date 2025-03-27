@@ -43,7 +43,7 @@ func main() {
     go elevator.FSM_DetectLocalEvents(localEventRecived)
     
     if isRestart{
-        elevator.RestorCabRequests(&elev,cabBackup)
+        elevator.RestoreCabRequests(&elev,cabBackup)
         go transmitter.MergeHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
     }
 

@@ -113,7 +113,7 @@ func ElevatorBehaviourToString(behaviour ElevatorBehaviour) string {
 	}
 }
 
-func MakeUninitializedelevator() Elevator {
+func MakeElevatorInstance() Elevator {
 	return Elevator{
 		floor:     -1,
 		direction: Dir_stop,
@@ -186,7 +186,7 @@ func SetAllLights(elevator *Elevator, SharedData *sharedData.SharedData) {
     }
 }
 
-func RestorCabRequests(elevator *Elevator, cabBackup string){
+func RestoreCabRequests(elevator *Elevator, cabBackup string){
 	var cabBackupBool []bool
 
 	// Split the string by space

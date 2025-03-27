@@ -20,7 +20,7 @@ type LocalEvent struct {
 func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	var disconnectedElevSever = make(chan bool)
 	elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
-	*elevator = MakeUninitializedelevator()
+	*elevator = MakeElevatorInstance()
 	FSM_InitializeBetweenFloors(elevator)	
 	go elevatorServerReconnect(elevator_ip, Num_floors, disconnectedElevSever, elevator)
 }
@@ -50,7 +50,7 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, S
 	
 	updates := []customStructs.Update{}
 
-	if elevator.RequestsClearImmediately(btn_floor, btn_type) {
+	if elevator.ClearRequestsImmediately(btn_floor, btn_type) {
 		DoorOpen(elevator) 
 		return updates
 	}

@@ -84,7 +84,7 @@ func (e *Elevator) ShouldStop() bool {
     }
 }
 
-func (e *Elevator) RequestsClearImmediately(buttonFloor int, buttonType Button) bool {
+func (e *Elevator) ClearRequestsImmediately(buttonFloor int, buttonType Button) bool {
     if e.direction != Dir_stop {
         return false
     }
