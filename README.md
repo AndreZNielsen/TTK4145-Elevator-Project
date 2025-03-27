@@ -1,8 +1,13 @@
 # How to run the elevators
 
+Start elevatorserver
 
-hvordan kjøre:
-start to simulatorer med port 12345 og 12346 (./SimElevatorServer --port ______ i simulator mappen)
-kjør go run -ldflags="-X root/config.Elevator_id=A" main.go
-og så go run -ldflags="-X root/config.Elevator_id=B" main2.go
-på samme maskin
+Adjust Config:
+  Set LocalElevatorServerPort to match elevatorservers port (e.g., "localhost:15657")
+  Define the wanted number of floors
+  Assign the elevator ID in Elevator_id (e.g., "A" or "B")
+  List IDs of other elevators in possibleIDs (e.g., "A","B","C" for 3 elevators)
+  Set IP addresses for the other elevators in Elevators_ip
+
+Run the program:
+  run with "go run main.go"
