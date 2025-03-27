@@ -1,12 +1,12 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"root/config"
+	"root/customStructs"
 	"root/elevator"
 	"root/network"
-	"flag"
-    "root/customStructs"
 	"root/reviver"
 	SharedData "root/sharedData"
 	"root/transmitter"
@@ -19,7 +19,6 @@ func main() {
     // Define flags
 	var isRestart bool
 	var cabBackup string
-
 	// Parse the flags
 	flag.BoolVar(&isRestart, "isRestart", false, "Indicates if this is a restart")
 	flag.StringVar(&cabBackup, "cabBackup", "", "Space-separated list for CabBackup")
@@ -45,7 +44,7 @@ func main() {
     
     if isRestart{
         elevator.RestorCabRequests(&elev,cabBackup)
-        transmitter.MergeHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
+        go transmitter.MergeHallRequests(externalConn, sharedData.HallRequests, config.RemoteIDs[0])
     }
 
     for {

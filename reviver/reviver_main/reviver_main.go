@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"root/util"
 	"os/exec"
+	"root/util"
+	"runtime"
 	"strings"
-	"runtime"	
 )
 
 var alive = make(chan []bool)
@@ -43,12 +43,11 @@ func restartElavator(){
 	switch runtime.GOOS {
 		case "linux":
 			gCommand := fmt.Sprintf(// Adds the cab info to the restart command
-			"go run main.go -isRestart=true -cabBackup='%s'",
+			"go run main.go -isRestart=true -cabBackup='%s'; exec bash",
 			strCabBackup)
 
 			cmd = exec.Command("gnome-terminal", "--", "bash", "-c", gCommand)
 
-			fmt.Println(gCommand)
 		case "windows":
 
 			psCommand := fmt.Sprintf( // Adds the cab info to the restart command
