@@ -11,3 +11,5 @@
 
 - Run the program:
   run with "go run main.go"
+
+- Due to permission issues, the program may not boot properly if launched from the integrated terminal in VS Code on Linux. In this case, try running it directly from the GNOME terminal instead.
