@@ -100,7 +100,7 @@ func ElevioButtonToString(b Button) string {
 	}
 }
 
-func EbToString(behaviour ElevatorBehaviour) string {
+func ElevatorBehaviourToString(behaviour ElevatorBehaviour) string {
 	switch behaviour {
 	case Behaviour_idle:
 		return "idle"
@@ -168,7 +168,7 @@ func GetElevator(elevator *Elevator) Elevator {
 
 func GetElevatorData(elevator *Elevator) customStructs.Elevator_data {
     return customStructs.Elevator_data{
-        Behavior:    EbToString(elevator.behaviour), 
+        Behavior:    ElevatorBehaviourToString(elevator.behaviour), 
         Floor:       elevator.floor, 
         Direction:   ElevioDirToString(elevator.direction), 
         CabRequests: GetCabRequests(elevator.Requests),

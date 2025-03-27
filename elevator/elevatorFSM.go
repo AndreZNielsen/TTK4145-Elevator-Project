@@ -21,7 +21,7 @@ func FSM_MakeElevator(elevator *Elevator, elevator_ip string, Num_floors int) {
 	var disconnectedElevSever = make(chan bool)
 	elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
 	*elevator = MakeUninitializedelevator()
-	FSM_InitBetweenFloors(elevator)	
+	FSM_InitializeBetweenFloors(elevator)	
 	go elevatorServerReconnect(elevator_ip, Num_floors, disconnectedElevSever, elevator)
 }
 
@@ -31,12 +31,12 @@ func elevatorServerReconnect(elevator_ip string, Num_floors int, disconnectedEle
 		StuckEvents <- true
 		elevio.Init(elevator_ip, Num_floors, disconnectedElevSever)
 		StuckEvents <- false
-		FSM_InitBetweenFloors(elevator)	
+		FSM_InitializeBetweenFloors(elevator)	
 	}
 	
 }
 
-func FSM_InitBetweenFloors(elevator *Elevator) { 
+func FSM_InitializeBetweenFloors(elevator *Elevator) { 
 	if elevio.GetFloor() == -1 {
 	elevio.SetMotorDirection(elevio.MD_Down)
 	elevator.direction = Dir_down
@@ -50,7 +50,7 @@ func FSM_HandleButtonPress(elevator *Elevator, btn_floor int, btn_type Button, S
 	
 	updates := []customStructs.Update{}
 
-	if elevator.RequestsShouldClearImmediately(btn_floor, btn_type) {
+	if elevator.RequestsClearImmediately(btn_floor, btn_type) {
 		DoorOpen(elevator) 
 		return updates
 	}
@@ -79,7 +79,7 @@ func FSM_HandleFloorArrival(elevator *Elevator, newFloor int, SharedData *shared
 
 	if elevator.ShouldStop() {
 		elevio.SetMotorDirection(elevio.MD_Stop)
-		updates = elevator.RequestsClearAtCurrentFloor(SharedData)
+		updates = elevator.ClearRequestsAtFloor(SharedData)
 		DoorOpen(elevator)
 
 	} else{
@@ -98,7 +98,7 @@ func FSM_startNextRequest(elevator *Elevator, SharedData *sharedData.SharedData,
 	switch elevator.behaviour {
 	case Behaviour_door_open: // if next state is "door_open", the door opens
 		DoorOpen(elevator)
-		updates := elevator.RequestsClearAtCurrentFloor(SharedData)
+		updates := elevator.ClearRequestsAtFloor(SharedData)
 		if len(updates) == 0 {
 			return
 		}

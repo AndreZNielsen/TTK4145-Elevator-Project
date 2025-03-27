@@ -84,7 +84,7 @@ func (e *Elevator) ShouldStop() bool {
     }
 }
 
-func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Button) bool {
+func (e *Elevator) RequestsClearImmediately(buttonFloor int, buttonType Button) bool {
     if e.direction != Dir_stop {
         return false
     }
@@ -96,7 +96,7 @@ func (e *Elevator) RequestsShouldClearImmediately(buttonFloor int, buttonType Bu
         buttonType == Btn_hallcab)
 }
 
-func (e *Elevator) RequestsClearAtCurrentFloor(SharedData *sharedData.SharedData) []customStructs.Update {
+func (e *Elevator) ClearRequestsAtFloor(SharedData *sharedData.SharedData) []customStructs.Update {
 
     updates := []customStructs.Update{}
 
